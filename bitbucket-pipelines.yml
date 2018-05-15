@@ -1,0 +1,35 @@
+# This is a sample build configuration for JavaScript.
+# Check our guides at https://confluence.atlassian.com/x/14UWN for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+pipelines:
+ branches:
+  master:
+    - step:
+        name: Build Project
+        image: node:8.9.3
+        script:
+          - npm install
+          - npm run build
+        artifacts:
+          - build_webpack/**
+    - step:
+        name: Deploy Project
+        image: cgswong/aws
+        script:  # --cache-control "public, max-age=14400"
+          - aws s3 --region "ap-southeast-2" sync build_webpack/ s3://transcendence-dapp --delete
+  development:
+    - step:
+        name: Build Project
+        image: node:8.9.3
+        script:
+          - npm install
+          - npm run build
+        artifacts:
+          - build_webpack/**
+    - step:
+        name: Deploy Project
+        image: cgswong/aws
+        script:  # --cache-control "public, max-age=14400"
+          - aws s3 --region "ap-southeast-2" sync build_webpack/ s3://transcendence-dapp --delete
