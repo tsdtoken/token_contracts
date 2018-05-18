@@ -11,18 +11,17 @@ contract TSDSubsequentSupply is Ownable {
     uint exchangeRate = 0;
     address newTokensWallet;
     bool isOpen;
-
-    // NOTE: when this contract is opened the owner of the newTokensWallet
-    // needs to approve this wallet as the spender
-    // This will be done through the approve function in the main contract 
     
     constructor(address _contractAddress) public {
         dc = TSD(_contractAddress);
-        newTokensWallet = owner;
     }
     
     event Transfer(address _from, address _to, uint _amount);
     event EthRaisedUpdated(uint _previousTotal, uint _newTotal);
+
+    // NOTE: when this contract is opened the owner of the newTokensWallet
+    // needs to approve this wallet as the spender
+    // This will be done through the approve function in the main contract 
     
     function setTokenHolderAddressAndExchangeRate(address _newTokensWallet, uint _rate) onlyOwner public {
         exchangeRate = _rate;
