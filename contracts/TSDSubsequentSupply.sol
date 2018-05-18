@@ -2,6 +2,7 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/ERC20/Standard.sol";
+import "./TSD.sol"
 
 contract TSDSubsequentSupply is Ownable {
     using SafeMath for uint;

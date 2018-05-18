@@ -1,7 +1,8 @@
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "openzeppelin-solidity/contracts/ERC20/Standard.sol";
+import "openzeppelin-solidity/contracts/ERC20/Standard.sol"
+import "./TSD.sol";
 
 contract PRETSD is ERC20Interface, Ownable {
     using SafeMath for uint;
@@ -104,12 +105,14 @@ contract PRETSD is ERC20Interface, Ownable {
         }
     }
     
-    function burnRemainingTokens() public {
-        require(currentTime() >= endTime);
+    function burnRemainingTokensAfterClose() public returns (bool) {
+        require(currentTime() >= endTime || balances[fundsWallet] == 0);
         if (balances[fundsWallet] > 0) {
-            // burn any remaining tokens
+            // burn unsold tokens
             balances[fundsWallet] = 0;
         }
+
+        return true;
     }
     
     // Functionality to token balances to the main contract
