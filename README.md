@@ -5,22 +5,22 @@ The dApp project contains two independent yet related aspects to the successful 
 We also have the 4 independent contracts that will be used for **4 phases** of the the project
 
 - The **Private Sale Contract** which will host a set of rules for the private sale buyers.
-	> Standard ERC20 contract with a buy in asset freeze of 9 Months from main ICO close.
+> Standard ERC20 contract with a buy in asset freeze of 9 Months from main ICO close.
 	
 - The **Pre Sale Contract** which will host a set of rules for the private sale buyers.
-	> Standard ERC20 contract with a buy in asset freeze of 12 Months from main ICO close.
+> Standard ERC20 contract with a buy in asset freeze of 12 Months from main ICO close.
 	
 - The **Main Sale Contract** which will host a set of rules for the private sale buyers.
-	> Standard ERC20 contract with rules regarding whitelisting.
-	> Time lockouts
-	> Refunds
-	> Transfer of ownership
-	> Burnable tokens
+> Standard ERC20 contract with rules regarding whitelisting.
+> Time lockouts
+> Refunds
+> Transfer of ownership
+> Burnable tokens
 	
 - The **Subsequent Sale Contract** which will host a set of rules for the private sale buyers.
-	> Standard ERC20 contract with the option to toggle the ability to accept Eth.
-	> Raise the token number in the main ICO
-	> Distribute tokens to subsequent purchases
+> Standard ERC20 contract with the option to toggle the ability to accept Eth.
+> Raise the token number in the main ICO
+> Distribute tokens to subsequent purchases
 
 
 # Contracts
@@ -112,12 +112,12 @@ An increase in supply is thus indicative of a well performing platform.
 Functions available:
 
 - `setTokenHolderAddressAndExchangeRate`
-	> Sets the exchange rate, which is dynamic per contract round, and sets the wallet that will initially hold the tokens
+> Sets the exchange rate, which is dynamic per contract round, and sets the wallet that will initially hold the tokens
 - `increaseTotalSupplyAndAllocateTokens`
-	> Sets the new token wallet in the main contract and allocates it the designated increased supply
+> Sets the new token wallet in the main contract and allocates it the designated increased supply
 - `openSubsequentSale`
-	> The contract will by default state be shut, this function is accessible only by the owner (the person who deployed this contract in the first place) and sets the contract active
+> The contract will by default state be shut, this function is accessible only by the owner (the person who deployed this contract in the first place) and sets the contract active
 - `closeSubsequentSale`
-	> Closes the current active subsequent contract token sale
+> Closes the current active subsequent contract token sale
 - `buySubsequentTokens`
-	> Considering we want to encourage people to buy through our dApp, we set this function to a payable modifier enabling it to receive real ETH, the tokens are calculated with the exchange rate, and the allocated to the sender in the main token sale
+> Considering we want to encourage people to buy through our dApp, we set this function to a payable modifier enabling it to receive real ETH, the tokens are calculated with the exchange rate, and the allocated to the sender in the main token sale
