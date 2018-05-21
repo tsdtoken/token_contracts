@@ -99,6 +99,28 @@ We keep track of the total ETH raised, to help with a easy infographic in the we
 
 > Transfer and TransferFrom are wrapped with modifications to prevent the use of them until token release date has reached.
 
+## Main token sale Contract
+This is the contract that will, in conclusion, hold **all** wallet addresses that own TSD coin. This is the contract where no bonus will be offered during sale. The length of the ICO will be subjective to which of the following milestones are achieved first:
+
+- End of sale date
+- Token depletion (all tokens sold out)
+
+On contract initialisation:
+- The total supply is allocated to the funds wallet which is the owner wallet i.e the wallet used to deploy the contract
+- Private and Presale supply is subtracted from the total supply to prevent over sell
+- Tokens are transferred to the respective private and presale wallets
+- Events are emitted
+- Exchange rate is decided
+- Start and End dates are decided
+
+Fallback payable function is used to absorb ETH and reward senders with TSD tokens based on the assigned exchange rate.
+
+Similar refund logic to the private and pre token sale contracts is implemented here.
+
+Subsequent supply functions which are own owner accessible are present in the mainsale to allow for an increase in token supply as well as assign the new tokens to a new holding wallet.
+
+No tokens purchased can be traded until the ICO is closed, in perspective to the endTime, not the depletion of tokens.
+
 ## Subsequent Contract
 
 The uniqueness of the Transcendence project is the close tie between the utility token and assets the tokens back in the eventual platform Transcendence will create.
@@ -121,3 +143,6 @@ Functions available:
 > Closes the current active subsequent contract token sale
 - `buySubsequentTokens`
 > Considering we want to encourage people to buy through our dApp, we set this function to a payable modifier enabling it to receive real ETH, the tokens are calculated with the exchange rate, and the allocated to the sender in the main token sale
+
+# Distribution of tokens
+At present the logic is assumed such that tokens from private and pre sale will be held in the respective smart contracts until said release dates have not reached, which will then allow the owners of the contracts to call the distribute function, that will assign the private or pre sale token owners their equivalent TSD tokens
