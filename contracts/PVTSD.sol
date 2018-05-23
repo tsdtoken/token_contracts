@@ -67,7 +67,8 @@ contract PVTSD is Standard, Ownable {
         require(msg.value >= minPurchase);
         require(whiteListed[msg.sender]);
         uint ethAmount = msg.value;
-        uint tokenAmount = msg.value.mul(exchangeRate);
+        // 1.4 accounts for the 40% discount.
+        uint tokenAmount = msg.value.mul(exchangeRate).mul(1.40);
         uint availableTokens;
         uint currentEthRaised = totalEthRaised;
         uint ethRefund = 0;
