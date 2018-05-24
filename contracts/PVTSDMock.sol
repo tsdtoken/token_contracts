@@ -2,7 +2,7 @@ pragma solidity ^0.4.18;
 
 import "./PVTSD.sol";
 
-contract PVTSDMock is PVTSD() {
+contract PVTSDMock is PVTSD {
     uint256 public _now;
 
     constructor (
