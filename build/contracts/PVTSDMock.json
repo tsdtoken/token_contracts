@@ -697,14 +697,14 @@
     "absolutePath": "/Users/spencerdezartsmith/Documents/five2one/tsd_dapp/contracts/PVTSDMock.sol",
     "exportedSymbols": {
       "PVTSDMock": [
-        1469
+        1491
       ]
     },
-    "id": 1470,
+    "id": 1492,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1426,
+        "id": 1448,
         "literals": [
           "solidity",
           "^",
@@ -717,10 +717,10 @@
       {
         "absolutePath": "/Users/spencerdezartsmith/Documents/five2one/tsd_dapp/contracts/PVTSD.sol",
         "file": "./PVTSD.sol",
-        "id": 1427,
+        "id": 1449,
         "nodeType": "ImportDirective",
-        "scope": 1470,
-        "sourceUnit": 1425,
+        "scope": 1492,
+        "sourceUnit": 1447,
         "src": "26:21:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -731,51 +731,51 @@
             "arguments": null,
             "baseName": {
               "contractScope": null,
-              "id": 1428,
+              "id": 1450,
               "name": "PVTSD",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 1424,
+              "referencedDeclaration": 1446,
               "src": "71:5:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_PVTSD_$1424",
+                "typeIdentifier": "t_contract$_PVTSD_$1446",
                 "typeString": "contract PVTSD"
               }
             },
-            "id": 1429,
+            "id": 1451,
             "nodeType": "InheritanceSpecifier",
             "src": "71:5:3"
           }
         ],
         "contractDependencies": [
-          1424,
-          2740,
-          2836,
-          2879,
-          2911,
-          3157
+          1446,
+          2762,
+          2858,
+          2901,
+          2933,
+          3179
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 1469,
+        "id": 1491,
         "linearizedBaseContracts": [
-          1469,
-          1424,
-          2740,
-          3157,
-          2836,
-          2879,
-          2911
+          1491,
+          1446,
+          2762,
+          3179,
+          2858,
+          2901,
+          2933
         ],
         "name": "PVTSDMock",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 1431,
+            "id": 1453,
             "name": "_now",
             "nodeType": "VariableDeclaration",
-            "scope": 1469,
+            "scope": 1491,
             "src": "83:19:3",
             "stateVariable": true,
             "storageLocation": "default",
@@ -784,7 +784,7 @@
               "typeString": "uint256"
             },
             "typeName": {
-              "id": 1430,
+              "id": 1452,
               "name": "uint256",
               "nodeType": "ElementaryTypeName",
               "src": "83:7:3",
@@ -798,25 +798,25 @@
           },
           {
             "body": {
-              "id": 1449,
+              "id": 1471,
               "nodeType": "Block",
               "src": "278:36:3",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1447,
+                    "id": 1469,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1445,
+                      "id": 1467,
                       "name": "_now",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1431,
+                      "referencedDeclaration": 1453,
                       "src": "288:4:3",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -827,11 +827,11 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1446,
+                      "id": 1468,
                       "name": "_currentTime",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1433,
+                      "referencedDeclaration": 1455,
                       "src": "295:12:3",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -844,14 +844,14 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 1448,
+                  "id": 1470,
                   "nodeType": "ExpressionStatement",
                   "src": "288:19:3"
                 }
               ]
             },
             "documentation": null,
-            "id": 1450,
+            "id": 1472,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -860,11 +860,11 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1441,
+                    "id": 1463,
                     "name": "_exchangeRate",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1435,
+                    "referencedDeclaration": 1457,
                     "src": "235:13:3",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
@@ -873,11 +873,11 @@
                   },
                   {
                     "argumentTypes": null,
-                    "id": 1442,
+                    "id": 1464,
                     "name": "_whitelistAddresses",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1438,
+                    "referencedDeclaration": 1460,
                     "src": "250:19:3",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
@@ -885,17 +885,17 @@
                     }
                   }
                 ],
-                "id": 1443,
+                "id": 1465,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1440,
+                  "id": 1462,
                   "name": "PVTSD",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 1424,
+                  "referencedDeclaration": 1446,
                   "src": "228:5:3",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_type$_t_contract$_PVTSD_$1424_$",
+                    "typeIdentifier": "t_type$_t_contract$_PVTSD_$1446_$",
                     "typeString": "type(contract PVTSD)"
                   }
                 },
@@ -906,15 +906,15 @@
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1439,
+              "id": 1461,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1433,
+                  "id": 1455,
                   "name": "_currentTime",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1450,
+                  "scope": 1472,
                   "src": "131:20:3",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -923,7 +923,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1432,
+                    "id": 1454,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "131:7:3",
@@ -937,10 +937,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 1435,
+                  "id": 1457,
                   "name": "_exchangeRate",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1450,
+                  "scope": 1472,
                   "src": "161:21:3",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -949,7 +949,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1434,
+                    "id": 1456,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "161:7:3",
@@ -963,10 +963,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 1438,
+                  "id": 1460,
                   "name": "_whitelistAddresses",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1450,
+                  "scope": 1472,
                   "src": "192:29:3",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -976,7 +976,7 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 1436,
+                      "id": 1458,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
                       "src": "192:7:3",
@@ -985,7 +985,7 @@
                         "typeString": "address"
                       }
                     },
-                    "id": 1437,
+                    "id": 1459,
                     "length": null,
                     "nodeType": "ArrayTypeName",
                     "src": "192:9:3",
@@ -1002,12 +1002,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1444,
+              "id": 1466,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "278:0:3"
             },
-            "scope": 1469,
+            "scope": 1491,
             "src": "109:205:3",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -1015,33 +1015,33 @@
           },
           {
             "body": {
-              "id": 1457,
+              "id": 1479,
               "nodeType": "Block",
               "src": "373:28:3",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1455,
+                    "id": 1477,
                     "name": "_now",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1431,
+                    "referencedDeclaration": 1453,
                     "src": "390:4:3",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     }
                   },
-                  "functionReturnParameters": 1454,
-                  "id": 1456,
+                  "functionReturnParameters": 1476,
+                  "id": 1478,
                   "nodeType": "Return",
                   "src": "383:11:3"
                 }
               ]
             },
             "documentation": null,
-            "id": 1458,
+            "id": 1480,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -1049,22 +1049,22 @@
             "name": "currentTime",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1451,
+              "id": 1473,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "340:2:3"
             },
             "payable": false,
             "returnParameters": {
-              "id": 1454,
+              "id": 1476,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1453,
+                  "id": 1475,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1458,
+                  "scope": 1480,
                   "src": "364:7:3",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1073,7 +1073,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1452,
+                    "id": 1474,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "364:7:3",
@@ -1088,33 +1088,33 @@
               ],
               "src": "363:9:3"
             },
-            "scope": 1469,
+            "scope": 1491,
             "src": "320:81:3",
             "stateMutability": "view",
-            "superFunction": 998,
+            "superFunction": 1020,
             "visibility": "public"
           },
           {
             "body": {
-              "id": 1467,
+              "id": 1489,
               "nodeType": "Block",
               "src": "452:32:3",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1465,
+                    "id": 1487,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1463,
+                      "id": 1485,
                       "name": "_now",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1431,
+                      "referencedDeclaration": 1453,
                       "src": "462:4:3",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1125,11 +1125,11 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1464,
+                      "id": 1486,
                       "name": "_newTime",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1460,
+                      "referencedDeclaration": 1482,
                       "src": "469:8:3",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1142,14 +1142,14 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 1466,
+                  "id": 1488,
                   "nodeType": "ExpressionStatement",
                   "src": "462:15:3"
                 }
               ]
             },
             "documentation": null,
-            "id": 1468,
+            "id": 1490,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -1157,15 +1157,15 @@
             "name": "changeTime",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1461,
+              "id": 1483,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1460,
+                  "id": 1482,
                   "name": "_newTime",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1468,
+                  "scope": 1490,
                   "src": "427:16:3",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1174,7 +1174,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1459,
+                    "id": 1481,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "427:7:3",
@@ -1191,19 +1191,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1462,
+              "id": 1484,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "452:0:3"
             },
-            "scope": 1469,
+            "scope": 1491,
             "src": "407:77:3",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 1470,
+        "scope": 1492,
         "src": "49:437:3"
       }
     ],
@@ -1213,14 +1213,14 @@
     "absolutePath": "/Users/spencerdezartsmith/Documents/five2one/tsd_dapp/contracts/PVTSDMock.sol",
     "exportedSymbols": {
       "PVTSDMock": [
-        1469
+        1491
       ]
     },
-    "id": 1470,
+    "id": 1492,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1426,
+        "id": 1448,
         "literals": [
           "solidity",
           "^",
@@ -1233,10 +1233,10 @@
       {
         "absolutePath": "/Users/spencerdezartsmith/Documents/five2one/tsd_dapp/contracts/PVTSD.sol",
         "file": "./PVTSD.sol",
-        "id": 1427,
+        "id": 1449,
         "nodeType": "ImportDirective",
-        "scope": 1470,
-        "sourceUnit": 1425,
+        "scope": 1492,
+        "sourceUnit": 1447,
         "src": "26:21:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1247,51 +1247,51 @@
             "arguments": null,
             "baseName": {
               "contractScope": null,
-              "id": 1428,
+              "id": 1450,
               "name": "PVTSD",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 1424,
+              "referencedDeclaration": 1446,
               "src": "71:5:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_PVTSD_$1424",
+                "typeIdentifier": "t_contract$_PVTSD_$1446",
                 "typeString": "contract PVTSD"
               }
             },
-            "id": 1429,
+            "id": 1451,
             "nodeType": "InheritanceSpecifier",
             "src": "71:5:3"
           }
         ],
         "contractDependencies": [
-          1424,
-          2740,
-          2836,
-          2879,
-          2911,
-          3157
+          1446,
+          2762,
+          2858,
+          2901,
+          2933,
+          3179
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 1469,
+        "id": 1491,
         "linearizedBaseContracts": [
-          1469,
-          1424,
-          2740,
-          3157,
-          2836,
-          2879,
-          2911
+          1491,
+          1446,
+          2762,
+          3179,
+          2858,
+          2901,
+          2933
         ],
         "name": "PVTSDMock",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 1431,
+            "id": 1453,
             "name": "_now",
             "nodeType": "VariableDeclaration",
-            "scope": 1469,
+            "scope": 1491,
             "src": "83:19:3",
             "stateVariable": true,
             "storageLocation": "default",
@@ -1300,7 +1300,7 @@
               "typeString": "uint256"
             },
             "typeName": {
-              "id": 1430,
+              "id": 1452,
               "name": "uint256",
               "nodeType": "ElementaryTypeName",
               "src": "83:7:3",
@@ -1314,25 +1314,25 @@
           },
           {
             "body": {
-              "id": 1449,
+              "id": 1471,
               "nodeType": "Block",
               "src": "278:36:3",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1447,
+                    "id": 1469,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1445,
+                      "id": 1467,
                       "name": "_now",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1431,
+                      "referencedDeclaration": 1453,
                       "src": "288:4:3",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1343,11 +1343,11 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1446,
+                      "id": 1468,
                       "name": "_currentTime",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1433,
+                      "referencedDeclaration": 1455,
                       "src": "295:12:3",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1360,14 +1360,14 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 1448,
+                  "id": 1470,
                   "nodeType": "ExpressionStatement",
                   "src": "288:19:3"
                 }
               ]
             },
             "documentation": null,
-            "id": 1450,
+            "id": 1472,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -1376,11 +1376,11 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1441,
+                    "id": 1463,
                     "name": "_exchangeRate",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1435,
+                    "referencedDeclaration": 1457,
                     "src": "235:13:3",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
@@ -1389,11 +1389,11 @@
                   },
                   {
                     "argumentTypes": null,
-                    "id": 1442,
+                    "id": 1464,
                     "name": "_whitelistAddresses",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1438,
+                    "referencedDeclaration": 1460,
                     "src": "250:19:3",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
@@ -1401,17 +1401,17 @@
                     }
                   }
                 ],
-                "id": 1443,
+                "id": 1465,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1440,
+                  "id": 1462,
                   "name": "PVTSD",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 1424,
+                  "referencedDeclaration": 1446,
                   "src": "228:5:3",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_type$_t_contract$_PVTSD_$1424_$",
+                    "typeIdentifier": "t_type$_t_contract$_PVTSD_$1446_$",
                     "typeString": "type(contract PVTSD)"
                   }
                 },
@@ -1422,15 +1422,15 @@
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1439,
+              "id": 1461,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1433,
+                  "id": 1455,
                   "name": "_currentTime",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1450,
+                  "scope": 1472,
                   "src": "131:20:3",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1439,7 +1439,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1432,
+                    "id": 1454,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "131:7:3",
@@ -1453,10 +1453,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 1435,
+                  "id": 1457,
                   "name": "_exchangeRate",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1450,
+                  "scope": 1472,
                   "src": "161:21:3",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1465,7 +1465,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1434,
+                    "id": 1456,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "161:7:3",
@@ -1479,10 +1479,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 1438,
+                  "id": 1460,
                   "name": "_whitelistAddresses",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1450,
+                  "scope": 1472,
                   "src": "192:29:3",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1492,7 +1492,7 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 1436,
+                      "id": 1458,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
                       "src": "192:7:3",
@@ -1501,7 +1501,7 @@
                         "typeString": "address"
                       }
                     },
-                    "id": 1437,
+                    "id": 1459,
                     "length": null,
                     "nodeType": "ArrayTypeName",
                     "src": "192:9:3",
@@ -1518,12 +1518,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1444,
+              "id": 1466,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "278:0:3"
             },
-            "scope": 1469,
+            "scope": 1491,
             "src": "109:205:3",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -1531,33 +1531,33 @@
           },
           {
             "body": {
-              "id": 1457,
+              "id": 1479,
               "nodeType": "Block",
               "src": "373:28:3",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1455,
+                    "id": 1477,
                     "name": "_now",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1431,
+                    "referencedDeclaration": 1453,
                     "src": "390:4:3",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     }
                   },
-                  "functionReturnParameters": 1454,
-                  "id": 1456,
+                  "functionReturnParameters": 1476,
+                  "id": 1478,
                   "nodeType": "Return",
                   "src": "383:11:3"
                 }
               ]
             },
             "documentation": null,
-            "id": 1458,
+            "id": 1480,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -1565,22 +1565,22 @@
             "name": "currentTime",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1451,
+              "id": 1473,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "340:2:3"
             },
             "payable": false,
             "returnParameters": {
-              "id": 1454,
+              "id": 1476,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1453,
+                  "id": 1475,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1458,
+                  "scope": 1480,
                   "src": "364:7:3",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1589,7 +1589,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1452,
+                    "id": 1474,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "364:7:3",
@@ -1604,33 +1604,33 @@
               ],
               "src": "363:9:3"
             },
-            "scope": 1469,
+            "scope": 1491,
             "src": "320:81:3",
             "stateMutability": "view",
-            "superFunction": 998,
+            "superFunction": 1020,
             "visibility": "public"
           },
           {
             "body": {
-              "id": 1467,
+              "id": 1489,
               "nodeType": "Block",
               "src": "452:32:3",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1465,
+                    "id": 1487,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1463,
+                      "id": 1485,
                       "name": "_now",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1431,
+                      "referencedDeclaration": 1453,
                       "src": "462:4:3",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1641,11 +1641,11 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1464,
+                      "id": 1486,
                       "name": "_newTime",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1460,
+                      "referencedDeclaration": 1482,
                       "src": "469:8:3",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1658,14 +1658,14 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 1466,
+                  "id": 1488,
                   "nodeType": "ExpressionStatement",
                   "src": "462:15:3"
                 }
               ]
             },
             "documentation": null,
-            "id": 1468,
+            "id": 1490,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -1673,15 +1673,15 @@
             "name": "changeTime",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1461,
+              "id": 1483,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1460,
+                  "id": 1482,
                   "name": "_newTime",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1468,
+                  "scope": 1490,
                   "src": "427:16:3",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1690,7 +1690,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1459,
+                    "id": 1481,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "427:7:3",
@@ -1707,19 +1707,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1462,
+              "id": 1484,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "452:0:3"
             },
-            "scope": 1469,
+            "scope": 1491,
             "src": "407:77:3",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 1470,
+        "scope": 1492,
         "src": "49:437:3"
       }
     ],
@@ -1731,5 +1731,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-05-24T07:28:25.227Z"
+  "updatedAt": "2018-05-24T08:40:24.967Z"
 }

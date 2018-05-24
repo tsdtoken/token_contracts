@@ -126,7 +126,10 @@ contract PRETSD is StandardToken, Ownable {
             // subtract the refund amount from the eth amount received by the tx
             ethAmount = ethAmount.sub(ethRefund);
             // make the token purchase
-            balances[preFundsWallet] = balances[preFundsWallet].sub(finalTokenAmount);
+            // sub general token amount
+            balances[preFundsWallet] = balances[preFundsWallet].sub(availableTokens);
+            // sub bonus token amoutn
+            balances[preSaleBonusWallet] = balances[preSaleBonusWallet].sub(bonusAmount);
             balances[msg.sender] = balances[msg.sender].add(finalTokenAmount);
             emit Transfer(preFundsWallet, msg.sender, finalTokenAmount);
             icoParticipants.push(msg.sender);
@@ -142,8 +145,11 @@ contract PRETSD is StandardToken, Ownable {
             require(balances[preFundsWallet] >= tokenAmount);
             // calculate the final token sale amount
             finalTokenAmount = tokenAmount.add(bonusAmount);
-            // complete transfer and emit an event
-            balances[preFundsWallet] = balances[preFundsWallet].sub(finalTokenAmount);
+            // make the token purchase
+            // sub general token amount
+            balances[preFundsWallet] = balances[preFundsWallet].sub(tokenAmount);
+            // sub bonus token amoutn
+            balances[preSaleBonusWallet] = balances[preSaleBonusWallet].sub(bonusAmount);
             balances[msg.sender] = balances[msg.sender].add(finalTokenAmount);
             icoParticipants.push(msg.sender);
             emit Transfer(preFundsWallet, msg.sender, finalTokenAmount);
