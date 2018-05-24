@@ -208,7 +208,7 @@ contract TSD is StandardToken, Ownable {
         return super.transferFrom(_from, _to, _tokens);
     }
 
-    function transferRemainingTokensFromPriorSales(address _from, address _to, uint256 _tokens) public  returns (bool success) {
-        return super.transferFrom(_from, _to, _tokens);
-    }
+    // function transferRemainingTokensFromPriorSales(address _from, address _to, uint256 _tokens) public  returns (bool success) {
+    //     return super.transferFrom(_from, _to, _tokens);
+    // }
 }

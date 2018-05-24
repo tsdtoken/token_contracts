@@ -225,25 +225,17 @@ contract PRETSD is StandardToken, Ownable {
         TSDContractAddress = _t;
     }
 
-    // Any tokens that remain after the private sale has ended can be transferred back
-    // into the main pool of tokens which will be avaialbe in the public sale
-
-    // There will need to be an approval process happen in the main contract before we can use 
-    function transferAnyRemainingTokensToCrowdsaleBalance() public onlyOwner returns (bool) {
+    // Burn any remaining tokens 
+    function burnRemainingTokens() public onlyOwner returns (bool) {
         require(currentTime() >= endTime);
-        address preSaleTokenWallet = dc.preSaleTokenWallet();
-        address tsdFundsWallet = dc.preSaleTokenWallet();
         if (balances[preFundsWallet] > 0) {
-            // burn unsold tokens
-            dc.transferRemainingTokensFromPriorSales(preSaleTokenWallet, tsdFundsWallet, balances[preFundsWallet]);
-            emit Transfer(preSaleTokenWallet, tsdFundsWallet, balances[preFundsWallet]);
+            balances[preFundsWallet] = 0;
         }
 
         return true;
     }
     
     // This can only be called by the owner on or after the token release date.
-
     // This will be a two step process.
     // This function will be called by the preSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
@@ -251,9 +243,16 @@ contract PRETSD is StandardToken, Ownable {
     function distrubuteTokens() onlyOwner public {
         require(currentTime() >= tokensReleaseDate);
         address preSaleTokenWallet = dc.preSaleTokenWallet();
+        address mainContractFundsWallet = dc.fundsWallet();
         for (uint8 i = 0; i < icoParticipants.length; i++) {
             dc.transferFrom(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
             emit Transfer(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
+        }
+
+        if (dc.balanceOf(preSaleTokenWallet) > 0) {
+            uint256 remainingBalace = dc.balanceOf(preSaleTokenWallet);
+            dc.transferFrom(preSaleTokenWallet, mainContractFundsWallet, remainingBalace);
+            emit Transfer(preSaleTokenWallet, mainContractFundsWallet, remainingBalace);
         }
         // Event to say distribution is complete
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
