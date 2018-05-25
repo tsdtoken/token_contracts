@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./FoundationContracts/Ownable.sol";
 import "./TSD.sol";
 
 contract TSDSubsequentSupply is Ownable {

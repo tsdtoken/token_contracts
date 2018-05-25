@@ -1,10 +1,10 @@
 pragma solidity ^0.4.23;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import "./FoundationContracts/BaseToken.sol";
+import "./FoundationContracts/Ownable.sol";
 import "./TSD.sol";
 
-contract PVTSD is StandardToken, Ownable {
+contract PVTSD is BaseToken, Ownable {
     using SafeMath for uint256;
     // set up access to main contract for the future distribution
     TSD dc;
@@ -67,7 +67,9 @@ contract PVTSD is StandardToken, Ownable {
         emit Transfer(0x0, pvtFundsWallet, totalSupply);
 
         // transfer the bonus allocation to the pvtBonusWallet
-        // transfer(pvtBonusWallet, bonusAllocation);
+        balances[pvtBonusWallet] = bonusAllocation;
+        emit Transfer(0x0, pvtBonusWallet, bonusAllocation);
+
         // set up the white listing mapping
         createWhiteListedMapping(_whitelistAddresses);
     }
@@ -156,7 +158,8 @@ contract PVTSD is StandardToken, Ownable {
             totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
         } else {
-            require(balances[pvtFundsWallet] >= tokenAmount && balances[pvtBonusWallet] >= bonusAmount);
+            require(balances[pvtFundsWallet] >= tokenAmount);
+            require(balances[pvtBonusWallet] >= bonusAmount);
             // complete transfer and emit an event
             balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(tokenAmount);
             balances[pvtBonusWallet] = balances[pvtBonusWallet].sub(bonusAmount);

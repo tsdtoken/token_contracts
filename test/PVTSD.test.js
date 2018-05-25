@@ -121,12 +121,12 @@ contract('PVTSDMock', (accounts) => {
 
   it('accepts ether once the sale opens', async () => {
     const startTime = await PVTSDMockContract.startTime();
-    const pvtFundsWallet = owner;
+    // const pvtFundsWallet = owner;
     await PVTSDMockContract.changeTime(startTime);
-    console.log('=======> await PVTSDMockContact.currentTime()', await PVTSDMockContract.currentTime());
+    // console.log('=======> await PVTSDMockContact.currentTime()', await PVTSDMockContract.currentTime());
     await PVTSDMockContract.sendTransaction(buyTokens(50, buyerOne));
     const balanceOfBuyer = await PVTSDMockContract.balanceOf(buyerOne);
-    const remainingTokens = await PVTSDMockContract.balanceOf(pvtFundsWallet);
+    // const remainingTokens = await PVTSDMockContract.balanceOf(pvtFundsWallet);
     assert.equal(numFromWei(balanceOfBuyer), 70000, 'The buyers balance should be 50,000 + a bonus of 40% = 70,000')
   });
 });

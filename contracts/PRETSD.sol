@@ -1,12 +1,10 @@
 pragma solidity ^0.4.23;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
-import "openzeppelin-solidity/contracts/math/Math.sol";
+import "./FoundationContracts/BaseToken.sol";
+import "./FoundationContracts/Ownable.sol";
 import "./TSD.sol";
 
-contract PRETSD is StandardToken, Ownable {
-    using SafeMath for uint256;
+contract PRETSD is BaseToken, Ownable {
     // set up access to main contract for the future distribution
     TSD dc;
     // when the connection is set to the main contract, save a reference for event purposes

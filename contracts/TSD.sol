@@ -1,11 +1,9 @@
 pragma solidity ^0.4.23;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import "./FoundationContracts/BaseToken.sol";
+import "./FoundationContracts/Ownable.sol";
 
-contract TSD is StandardToken, Ownable {
-    using SafeMath for uint256;
-    
+contract TSD is BaseToken, Ownable {
     string public name = "TSD COIN";
     string public symbol = "TSD";
     uint256 public decimals = 18;
