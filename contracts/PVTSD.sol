@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
-import "../node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../node_modules/openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "./TSD.sol";
 
 contract PVTSD is StandardToken, Ownable {
@@ -16,6 +16,7 @@ contract PVTSD is StandardToken, Ownable {
     uint256 public decimals = 18;
     uint256 public million = 1000000 * (uint256(10) ** decimals);
     uint256 public totalSupply = 55 * million;
+    uint256 public bonusAllocation = 22 * million;
     uint256 public minPurchase = 50 ether;
     // 1 ETH = exchangeRate TSD
     uint256 public exchangeRate;
@@ -26,7 +27,7 @@ contract PVTSD is StandardToken, Ownable {
     // Start time "Fri Jun 15 2018 00:00:00 GMT+1000 (AEST)"
     // new Date(1535724000000).toUTCString() => "Thu, 14 Jun 2018 14:00:00 GMT"
     uint256 public startTime = 1528984800000;
-    // End time ""Fri Jul 15 2018 00:00:00 GMT+1000 (AEST)"
+    // End time "Fri Jul 15 2018 00:00:00 GMT+1000 (AEST)"
     // new Date(1531576800000).toUTCString() => "Sat, 14 Jul 2018 14:00:00 GMT"
     uint256 public endTime = 1531576800000;
     // Token release date 9 months post end date
@@ -36,6 +37,7 @@ contract PVTSD is StandardToken, Ownable {
 
     // Wallets
     address public pvtFundsWallet;
+    address public pvtBonusWallet;
 
     // Array of participants used when distributing tokens to main contract
     address[] public icoParticipants;
@@ -53,25 +55,34 @@ contract PVTSD is StandardToken, Ownable {
     
     constructor(
         uint256 _exchangeRate,
+        address _pvtBonusWallet,
         address[] _whitelistAddresses
     ) public {
         pvtFundsWallet = owner;
+        pvtBonusWallet = _pvtBonusWallet;
         exchangeRate = _exchangeRate;
-        
-        // transfer suppy to the funds wallet
+
+        // transfer suppy to the pvtFundsWallet
         balances[pvtFundsWallet] = totalSupply;
         emit Transfer(0x0, pvtFundsWallet, totalSupply);
+
+        // transfer the bonus allocation to the pvtBonusWallet
+        // transfer(pvtBonusWallet, bonusAllocation);
         // set up the white listing mapping
         createWhiteListedMapping(_whitelistAddresses);
     }
 
     // Contract utility functions
+
+    function balanceOf(address _address) public view returns (uint256) {
+        return balances[_address];
+    }
     
     function currentTime() public view returns (uint256) {
         return now * 1000;
     }
     
-    function createWhiteListedMapping(address[] _addresses) public {
+    function createWhiteListedMapping(address[] _addresses) public onlyOwner {
         for (uint256 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
         }
@@ -82,6 +93,23 @@ contract PVTSD is StandardToken, Ownable {
         uint256 currentRate = exchangeRate;
         exchangeRate = _newRate;
         emit ExhangeRateUpdated(currentRate, _newRate);
+        return true;
+    }
+
+    function isWhiteListed(address _address) public view returns (bool) {
+        if (whiteListed[_address]) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function removeFromWhiteList(address _address) public onlyOwner returns (bool) {
+        if (whiteListed[_address]) {
+            whiteListed[_address] = false;
+
+            return true;
+        }
     }
 
     // Buy functions
@@ -96,7 +124,9 @@ contract PVTSD is StandardToken, Ownable {
         require(whiteListed[msg.sender]);
         uint256 ethAmount = msg.value;
         // 1.4 accounts for the 40% discount.
-        uint256 tokenAmount = ethAmount.mul(exchangeRate).mul(40).div(100);
+        uint256 tokenAmount = ethAmount.mul(exchangeRate);
+        uint256 bonusAmount = tokenAmount.mul(40).div(100);
+        uint256 totalTokenAmount = tokenAmount.add(bonusAmount);
         uint256 availableTokens;
         uint256 currentEthRaised = totalEthRaised;
         uint256 ethRefund = 0;
@@ -104,6 +134,8 @@ contract PVTSD is StandardToken, Ownable {
         if (tokenAmount > balances[pvtFundsWallet]) {
             // subtract the remaining bal from the original token amount
             availableTokens = tokenAmount.sub(balances[pvtFundsWallet]);
+            bonusAmount = availableTokens.mul(40).div(100);
+            totalTokenAmount = availableTokens.add(bonusAmount);
             // determine the unused ether amount by seeing how many tokens where
             // unavailable and dividing by the exchange rate without the bonus
             ethRefund = tokenAmount.sub(availableTokens).div(exchangeRate.mul(40).div(100));
@@ -111,8 +143,9 @@ contract PVTSD is StandardToken, Ownable {
             ethAmount = ethAmount.sub(ethRefund);
             // make the token purchase
             balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(availableTokens);
-            balances[msg.sender] = balances[msg.sender].add(availableTokens);
-            emit Transfer(pvtFundsWallet, msg.sender, availableTokens);
+            balances[pvtBonusWallet] = balances[pvtBonusWallet].sub(bonusAmount);
+            balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
+            emit Transfer(pvtFundsWallet, msg.sender, totalTokenAmount);
             icoParticipants.push(msg.sender);
             // refund
             if (ethRefund > 0) {
@@ -123,12 +156,13 @@ contract PVTSD is StandardToken, Ownable {
             totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
         } else {
-            require(balances[pvtFundsWallet] >= tokenAmount);
+            require(balances[pvtFundsWallet] >= tokenAmount && balances[pvtBonusWallet] >= bonusAmount);
             // complete transfer and emit an event
             balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(tokenAmount);
-            balances[msg.sender] = balances[msg.sender].add(tokenAmount);
+            balances[pvtBonusWallet] = balances[pvtBonusWallet].sub(bonusAmount);
+            balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
             icoParticipants.push(msg.sender);
-            emit Transfer(pvtFundsWallet, msg.sender, tokenAmount);
+            emit Transfer(pvtFundsWallet, msg.sender, totalTokenAmount);
             
             // transfer ether to the wallet and emit and event regarding eth raised
             pvtFundsWallet.transfer(ethAmount);

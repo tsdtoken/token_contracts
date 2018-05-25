@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
-import "../node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../node_modules/openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
 contract TSD is StandardToken, Ownable {
     using SafeMath for uint256;
@@ -111,7 +111,7 @@ contract TSD is StandardToken, Ownable {
 
     // Utility functions 
     
-    function createWhiteListedMapping(address[] _addresses) private {
+    function createWhiteListedMapping(address[] _addresses) public onlyOwner {
         for (uint256 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
         }
@@ -132,6 +132,22 @@ contract TSD is StandardToken, Ownable {
         }
 
         return true;
+    }
+
+    function isWhiteListed(address _address) public view returns (bool) {
+        if (whiteListed[_address]) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function removeFromWhiteList(address _address) public onlyOwner returns (bool) {
+        if (whiteListed[_address]) {
+            whiteListed[_address] = false;
+
+            return true;
+        }
     }
 
     // Buy functions

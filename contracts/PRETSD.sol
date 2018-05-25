@@ -1,8 +1,8 @@
 pragma solidity ^0.4.23;
 
-import "../node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../node_modules/openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
-import "../node_modules/openzeppelin-solidity/contracts/math/Math.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import "openzeppelin-solidity/contracts/math/Math.sol";
 import "./TSD.sol";
 
 contract PRETSD is StandardToken, Ownable {
@@ -71,7 +71,7 @@ contract PRETSD is StandardToken, Ownable {
 
         // transfer bonus allocations
         // transfer event emited by inherited transfer function
-        transfer(preSaleBonusWallet, bonusAllocation);
+        // transfer(preSaleBonusWallet, bonusAllocation);
         // set up the white listing mapping
         createWhiteListedMapping(_whitelistAddresses);
     }
@@ -82,7 +82,7 @@ contract PRETSD is StandardToken, Ownable {
         return now * 1000;
     }
     
-    function createWhiteListedMapping(address[] _addresses) private {
+    function createWhiteListedMapping(address[] _addresses) public onlyOwner {
         for (uint256 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
         }
@@ -93,6 +93,22 @@ contract PRETSD is StandardToken, Ownable {
         uint256 currentRate = exchangeRate;
         exchangeRate = _newRate;
         emit ExhangeRateUpdated(currentRate, _newRate);
+    }
+
+    function isWhiteListed(address _address) public view returns (bool) {
+        if (whiteListed[_address]) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function removeFromWhiteList(address _address) public onlyOwner returns (bool) {
+        if (whiteListed[_address]) {
+            whiteListed[_address] = false;
+
+            return true;
+        }
     }
 
     // Buy functions
