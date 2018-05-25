@@ -4,7 +4,7 @@ import "./FoundationContracts/BaseToken.sol";
 import "./FoundationContracts/Ownable.sol";
 import "./TSD.sol";
 
-contract PVTSD is BaseToken, Ownable {
+contract PVTSD is Ownable, BaseToken {
     using SafeMath for uint256;
     // set up access to main contract for the future distribution
     TSD dc;
@@ -45,9 +45,6 @@ contract PVTSD is BaseToken, Ownable {
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
     
-    // token balances
-    mapping (address => uint256) public balances;
-    
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
@@ -67,18 +64,13 @@ contract PVTSD is BaseToken, Ownable {
         emit Transfer(0x0, pvtFundsWallet, totalSupply);
 
         // transfer the bonus allocation to the pvtBonusWallet
-        balances[pvtBonusWallet] = bonusAllocation;
-        emit Transfer(0x0, pvtBonusWallet, bonusAllocation);
+        transfer(pvtBonusWallet, bonusAllocation);
 
         // set up the white listing mapping
         createWhiteListedMapping(_whitelistAddresses);
     }
 
     // Contract utility functions
-
-    function balanceOf(address _address) public view returns (uint256) {
-        return balances[_address];
-    }
     
     function currentTime() public view returns (uint256) {
         return now * 1000;
@@ -111,6 +103,8 @@ contract PVTSD is BaseToken, Ownable {
             whiteListed[_address] = false;
 
             return true;
+        } else {
+            return false;
         }
     }
 

@@ -40,14 +40,11 @@ contract PRETSD is BaseToken, Ownable {
     address public preFundsWallet;
     address public preSaleBonusWallet;
     
-      // Array of participants used when distributing tokens to main contract
+    // Array of participants used when distributing tokens to main contract
     address[] public icoParticipants;
     
-        // whitelisted addresses
+    // whitelisted addresses
     mapping (address => bool) public whiteListed;
-    
-    // token balances
-    mapping (address => uint256) public balances;
     
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);

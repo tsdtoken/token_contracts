@@ -82,7 +82,7 @@ contract('PVTSDMock', (accounts) => {
     const pvtFundsWallet = owner;
     const pvtFundsWalletBalance = await PVTSDMockContract.balanceOf(pvtFundsWallet);
 
-    assert.equal(numFromWei(pvtFundsWalletBalance), 55000000, 'Balance of pvtFundsWallet should be 55 million');
+    assert.equal(numFromWei(pvtFundsWalletBalance), 33000000, 'Balance of pvtFundsWallet should be 55 million');
   });
 
   it('sets an exchange rate upon initialization', async () => {
@@ -123,7 +123,7 @@ contract('PVTSDMock', (accounts) => {
     const startTime = await PVTSDMockContract.startTime();
     // const pvtFundsWallet = owner;
     await PVTSDMockContract.changeTime(startTime);
-    // console.log('=======> await PVTSDMockContact.currentTime()', await PVTSDMockContract.currentTime());
+    console.log('balanceOf pvtBonusWallet', await PVTSDMockContract.balanceOf(owner));
     await PVTSDMockContract.sendTransaction(buyTokens(50, buyerOne));
     const balanceOfBuyer = await PVTSDMockContract.balanceOf(buyerOne);
     // const remainingTokens = await PVTSDMockContract.balanceOf(pvtFundsWallet);

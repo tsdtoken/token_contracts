@@ -45,9 +45,6 @@ contract TSD is BaseToken, Ownable {
     
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
-
-    // token balances
-    mapping (address => uint256) public balances;
     
     // events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
