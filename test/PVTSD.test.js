@@ -10,13 +10,19 @@ contract('PVTSDMock', (accounts) => {
   const whitelistAddresses = [
     accounts[1],
     accounts[2],
-    accounts[3]
+    accounts[3],
+    accounts[4],
+    accounts[5],
+    accounts[6]
   ];
   const buyerOne = accounts[1];
   const buyerTwo = accounts[2];
-  const buyerThree = accounts[6];
+  const buyerThree = accounts[3];
+  const buyerFour = accounts[4];
+  const buyerFive = accounts[5];
+  const unlistedBuyer = accounts[7];
 
-  const pvtBonusWallet = accounts[7];
+  const pvtBonusWallet = accounts[8];
 
   beforeEach('setup contract for each test', async () => {
     PVTSDMockContract = await PVTSDMock.new(
@@ -31,9 +37,8 @@ contract('PVTSDMock', (accounts) => {
     assert.equal(await PVTSDMockContract.owner(), owner);
   });
 
-  it('has a bonus wallet address', async () => {
-    console.log(await PVTSDMockContract.pvtBonusWallet())
-    console.log(await PVTSDMockContract.bonusAllocation())
+  it('has a private bonus wallet address', async () => {
+    assert.equal(await PVTSDMockContract.pvtBonusWallet(), pvtBonusWallet);
   });
 
   it('designates the owner as the pvtFundsWallet', async () => {
@@ -81,8 +86,12 @@ contract('PVTSDMock', (accounts) => {
   it('transfers total supply of tokens (55 million) to the private funds wallet', async () => {
     const pvtFundsWallet = owner;
     const pvtFundsWalletBalance = await PVTSDMockContract.balanceOf(pvtFundsWallet);
-
     assert.equal(numFromWei(pvtFundsWalletBalance), 33000000, 'Balance of pvtFundsWallet should be 55 million');
+  });
+
+  it('transfers the bonus allocation to the private bonus wallet', async () => {
+    const bonusWalletBalance = await PVTSDMockContract.balanceOf(pvtBonusWallet);
+    assert.equal(numFromWei(bonusWalletBalance), 22000000, 'Balance of the pvtBonus wallet should be 22 million or 40% of total supply');
   });
 
   it('sets an exchange rate upon initialization', async () => {
@@ -119,7 +128,7 @@ contract('PVTSDMock', (accounts) => {
     await assertExpectedError(PVTSDMockContract.sendTransaction(buyTokens(1, buyerOne)))
   });
 
-  it('accepts ether once the sale opens', async () => {
+  xit('accepts ether at the second the sale opens', async () => {
     const startTime = await PVTSDMockContract.startTime();
     // const pvtFundsWallet = owner;
     await PVTSDMockContract.changeTime(startTime);
@@ -129,4 +138,37 @@ contract('PVTSDMock', (accounts) => {
     // const remainingTokens = await PVTSDMockContract.balanceOf(pvtFundsWallet);
     assert.equal(numFromWei(balanceOfBuyer), 70000, 'The buyers balance should be 50,000 + a bonus of 40% = 70,000')
   });
+
+  it('rejects ether from an address that isn\'t whitelisted', async () => {
+    const startTime = await PVTSDMockContract.startTime();
+    // const pvtFundsWallet = owner;
+    await PVTSDMockContract.changeTime(startTime);
+    await assertExpectedError(PVTSDMockContract.sendTransaction(buyTokens(50, unlistedBuyer)))
+  });
+
+  xit('rejects a transaction that is less than the minimum buy of 50 ether', async () => {
+    const startTime = await PVTSDMockContract.startTime();
+    await PVTSDMockContract.changeTime(startTime);
+    await assertExpectedError(PVTSDMockContract.sendTransaction(buyTokens(20, buyerTwo)))
+  });
+
+  it('sells the last remaining ether even if its under the minimum buy and returns the unspent ether to the buyer', async () => {
+    const inflatedExchangeRate = new web3.BigNumber(500000);
+    const startTime = await PVTSDMockContract.startTime();
+    await PVTSDMockContract.changeTime(startTime);
+    await PVTSDMockContract.updateTheExchangeRate(inflatedExchangeRate);
+    // The total supply minus bonuses is 33 million
+    // With the inflated exchange 50 ether will get your 25 million tokens
+    // The first buy should go through and does
+    await PVTSDMockContract.sendTransaction(buyTokens(50, buyerThree));
+    // The second attempt should go into the condition where the token amount requested is > than balances[pvtfundsWallet]
+    // This is not working. 
+    await PVTSDMockContract.sendTransaction(buyTokens(50, buyerFour));
+    const buyerThreeBal = await PVTSDMockContract.balanceOf(buyerThree);
+    const fundsRemaining = await PVTSDMockContract.balanceOf(owner)
+    // console.log('=======> buyerFour', buyerFourBal);
+    console.log('=======> buyerThree', buyerThreeBal);
+    console.log('=======> fundsRemaining', fundsRemaining);
+
+  })
 });

@@ -48,7 +48,8 @@ contract PVTSD is Ownable, BaseToken {
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
-    event DistributedAllBalancesToTSDContract(address _pvtsd, address _tsd);
+    event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
+    event DebuggingAmounts(string nameOfValue, uint256 amount);
     
     constructor(
         uint256 _exchangeRate,
@@ -98,16 +99,6 @@ contract PVTSD is Ownable, BaseToken {
         }
     }
 
-    function removeFromWhiteList(address _address) public onlyOwner returns (bool) {
-        if (whiteListed[_address]) {
-            whiteListed[_address] = false;
-
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     // Buy functions
     
     function() payable public {
@@ -118,9 +109,12 @@ contract PVTSD is Ownable, BaseToken {
         require(currentTime() >= startTime && currentTime() <= endTime);
         require(msg.value >= minPurchase);
         require(whiteListed[msg.sender]);
+        emit DebuggingAmounts("buy function hit", msg.value);
+        emit DebuggingAmounts("initial balance", balances[pvtFundsWallet]);
         uint256 ethAmount = msg.value;
         // 1.4 accounts for the 40% discount.
         uint256 tokenAmount = ethAmount.mul(exchangeRate);
+        emit DebuggingAmounts("tokens asked for", tokenAmount);
         uint256 bonusAmount = tokenAmount.mul(40).div(100);
         uint256 totalTokenAmount = tokenAmount.add(bonusAmount);
         uint256 availableTokens;
@@ -130,11 +124,15 @@ contract PVTSD is Ownable, BaseToken {
         if (tokenAmount > balances[pvtFundsWallet]) {
             // subtract the remaining bal from the original token amount
             availableTokens = tokenAmount.sub(balances[pvtFundsWallet]);
+            emit DebuggingAmounts("availableTokens", availableTokens);
             bonusAmount = availableTokens.mul(40).div(100);
             totalTokenAmount = availableTokens.add(bonusAmount);
+            emit DebuggingAmounts("totalTokenAmount", totalTokenAmount);
             // determine the unused ether amount by seeing how many tokens where
             // unavailable and dividing by the exchange rate without the bonus
-            ethRefund = tokenAmount.sub(availableTokens).div(exchangeRate.mul(40).div(100));
+            ethRefund = (tokenAmount.sub(availableTokens)).div((exchangeRate.mul(40).div(100)));
+            // ethRefund = tokenAmount.sub(availableTokens).div(exchangeRate.mul(40).div(100));
+            emit DebuggingAmounts("ethRefund", ethRefund);
             // subtract the refund amount from the eth amount received by the tx
             ethAmount = ethAmount.sub(ethRefund);
             // make the token purchase
@@ -149,7 +147,7 @@ contract PVTSD is Ownable, BaseToken {
             }
             // transfer ether to funds wallet
             pvtFundsWallet.transfer(ethAmount);
-            totalEthRaised.add(ethAmount);
+            totalEthRaised = totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
         } else {
             require(balances[pvtFundsWallet] >= tokenAmount);
@@ -159,11 +157,12 @@ contract PVTSD is Ownable, BaseToken {
             balances[pvtBonusWallet] = balances[pvtBonusWallet].sub(bonusAmount);
             balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
             icoParticipants.push(msg.sender);
-            emit Transfer(pvtFundsWallet, msg.sender, totalTokenAmount);
             
             // transfer ether to the wallet and emit and event regarding eth raised
             pvtFundsWallet.transfer(ethAmount);
-            totalEthRaised.add(ethAmount);
+            totalEthRaised = totalEthRaised.add(ethAmount);
+            emit Transfer(pvtFundsWallet, msg.sender, totalTokenAmount);
+            emit DebuggingAmounts("current balance", balances[pvtFundsWallet]);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);  
         }
     }
