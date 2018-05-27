@@ -1,4 +1,6 @@
-module.exports.numFromWei = (bignumber) => web3.fromWei(bignumber, "ether").toNumber()
+module.exports.numFromWei = (bignumber, unit = "ether") => web3.fromWei(bignumber, unit).toNumber()
+
+module.exports.numToWei = (bignumber, unit = "ether") => web3.toWei(`${bignumber}`, unit)
 
 module.exports.buyTokens = (eth, addr) => (
   {

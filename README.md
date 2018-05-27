@@ -146,3 +146,6 @@ Functions available:
 
 # Distribution of tokens
 At present the logic is assumed such that tokens from private and pre sale will be held in the respective smart contracts until said release dates have not reached, which will then allow the owners of the contracts to call the distribute function, that will assign the private or pre sale token owners their equivalent TSD tokens
+
+# Testing
+Testing is a critical part of the project, we need to have the contract be as deterministic as possible, which leads to predictable results and behaviours

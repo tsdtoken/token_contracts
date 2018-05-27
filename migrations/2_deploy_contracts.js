@@ -8,5 +8,5 @@ module.exports = function(deployer, network, accounts) {
     accounts[3]
   ];
   const pvtBonusWallet = accounts[7];
-  deployer.deploy(PVTSD, exchangeRate, pvtBonusWallet, whitelistAddresses);
+  deployer.deploy(PVTSD, exchangeRate, whitelistAddresses);
 };

@@ -14,11 +14,13 @@ contract PVTSD is Ownable, BaseToken {
     string public name = "PRIVATE TSD COIN";
     string public symbol = "PVTSD";
     uint256 public decimals = 18;
-    uint256 public million = 1000000 * (uint256(10) ** decimals);
+    uint256 public decimalMultiplier = uint256(10) ** decimals;
+    uint256 public million = 1000000 * decimalMultiplier;
     uint256 public totalSupply = 55 * million;
-    uint256 public bonusAllocation = 22 * million;
-    uint256 public minPurchase = 50 ether;
-    // 1 ETH = exchangeRate TSD
+    // CHANGE TO 50 ETH
+    uint256 public minPurchase = 1 ether;
+    // 1 TSD = x ETH
+    // Unit convertsions https://github.com/ethereum/web3.js/blob/0.15.0/lib/utils/utils.js#L40
     uint256 public exchangeRate;
     uint256 public totalEthRaised = 0;
 
@@ -37,13 +39,15 @@ contract PVTSD is Ownable, BaseToken {
 
     // Wallets
     address public pvtFundsWallet;
-    address public pvtBonusWallet;
 
     // Array of participants used when distributing tokens to main contract
     address[] public icoParticipants;
     
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
+
+    // ico concluded
+    bool icoOpen = true;
     
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
@@ -53,22 +57,19 @@ contract PVTSD is Ownable, BaseToken {
     
     constructor(
         uint256 _exchangeRate,
-        address _pvtBonusWallet,
         address[] _whitelistAddresses
     ) public {
         pvtFundsWallet = owner;
-        pvtBonusWallet = _pvtBonusWallet;
-        exchangeRate = _exchangeRate;
 
         // transfer suppy to the pvtFundsWallet
         balances[pvtFundsWallet] = totalSupply;
         emit Transfer(0x0, pvtFundsWallet, totalSupply);
 
-        // transfer the bonus allocation to the pvtBonusWallet
-        transfer(pvtBonusWallet, bonusAllocation);
-
         // set up the white listing mapping
         createWhiteListedMapping(_whitelistAddresses);
+
+        // set up the exchangeRate
+        updateTheExchangeRate(_exchangeRate);
     }
 
     // Contract utility functions
@@ -86,7 +87,8 @@ contract PVTSD is Ownable, BaseToken {
     // Updates the ETH => TSD exchange rate
     function updateTheExchangeRate(uint256 _newRate) public onlyOwner returns (bool) {
         uint256 currentRate = exchangeRate;
-        exchangeRate = _newRate;
+        uint256 oneSzabo = 1 szabo;
+        exchangeRate = (oneSzabo).mul(_newRate);
         emit ExhangeRateUpdated(currentRate, _newRate);
         return true;
     }
@@ -106,40 +108,48 @@ contract PVTSD is Ownable, BaseToken {
     }
     
     function buyTokens() payable public {
+        require(icoOpen);
         require(currentTime() >= startTime && currentTime() <= endTime);
         require(msg.value >= minPurchase);
         require(whiteListed[msg.sender]);
-        emit DebuggingAmounts("buy function hit", msg.value);
-        emit DebuggingAmounts("initial balance", balances[pvtFundsWallet]);
+
+        // ETH received by spender
         uint256 ethAmount = msg.value;
-        // 1.4 accounts for the 40% discount.
-        uint256 tokenAmount = ethAmount.mul(exchangeRate);
-        emit DebuggingAmounts("tokens asked for", tokenAmount);
-        uint256 bonusAmount = tokenAmount.mul(40).div(100);
-        uint256 totalTokenAmount = tokenAmount.add(bonusAmount);
-        uint256 availableTokens;
+
+        // token amount based on ETH / exchangeRate result
+        // exchange rate is 1 TSD => x ETH
+        // with a 40% discount attached
+        uint256 discountedExchangeRate = exchangeRate.mul(60).div(100);
+        // totalTokenAmount is the total tokens offered including the discount
+        // Multiply with  to decimalMultiplier to get total tokens (to 18 decimal place)
+        uint256 totalTokenAmount = ethAmount.div(discountedExchangeRate).mul(decimalMultiplier);
+
+        // tokens avaialble to sell are the remaining tokens in the pvtFundsWallet
+        uint256 availableTokens = balances[pvtFundsWallet];
         uint256 currentEthRaised = totalEthRaised;
         uint256 ethRefund = 0;
+        uint256 additionalTokens;
         
-        if (tokenAmount > balances[pvtFundsWallet]) {
-            // subtract the remaining bal from the original token amount
-            availableTokens = tokenAmount.sub(balances[pvtFundsWallet]);
-            emit DebuggingAmounts("availableTokens", availableTokens);
-            bonusAmount = availableTokens.mul(40).div(100);
-            totalTokenAmount = availableTokens.add(bonusAmount);
-            emit DebuggingAmounts("totalTokenAmount", totalTokenAmount);
-            // determine the unused ether amount by seeing how many tokens where
-            // unavailable and dividing by the exchange rate without the bonus
-            ethRefund = (tokenAmount.sub(availableTokens)).div((exchangeRate.mul(40).div(100)));
-            // ethRefund = tokenAmount.sub(availableTokens).div(exchangeRate.mul(40).div(100));
-            emit DebuggingAmounts("ethRefund", ethRefund);
+        if (totalTokenAmount > availableTokens) {
+            // additional tokens that aren't avaialble to be sold
+            // tokenAmount is the tokens requested by buyer (not including the bonus)
+            // availableTokens are all the tokens left in the supplying wallet i.e pvtFundsWallet
+            additionalTokens = totalTokenAmount.sub(availableTokens);
+
+            // determine the unused ether amount by seeing how many tokens were surplus
+            // i.e 'availableTokens' and reverse calculating their ETH equivalent
+            // divide by decimalMultiplier as additionalTokens are 10^18
+            ethRefund = additionalTokens.mul(discountedExchangeRate).div(decimalMultiplier);
+  
             // subtract the refund amount from the eth amount received by the tx
             ethAmount = ethAmount.sub(ethRefund);
             // make the token purchase
+            // will equal to 0 after these substractions occur
             balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(availableTokens);
-            balances[pvtBonusWallet] = balances[pvtBonusWallet].sub(bonusAmount);
-            balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
-            emit Transfer(pvtFundsWallet, msg.sender, totalTokenAmount);
+
+            // add total tokens to the senders balances and Emit transfer event
+            balances[msg.sender] = balances[msg.sender].add(availableTokens);
+            emit Transfer(pvtFundsWallet, msg.sender, availableTokens);
             icoParticipants.push(msg.sender);
             // refund
             if (ethRefund > 0) {
@@ -149,12 +159,12 @@ contract PVTSD is Ownable, BaseToken {
             pvtFundsWallet.transfer(ethAmount);
             totalEthRaised = totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
+            // close token sale as tokens are sold out
+            icoOpen = false;
         } else {
-            require(balances[pvtFundsWallet] >= tokenAmount);
-            require(balances[pvtBonusWallet] >= bonusAmount);
+            require(availableTokens >= totalTokenAmount);
             // complete transfer and emit an event
-            balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(tokenAmount);
-            balances[pvtBonusWallet] = balances[pvtBonusWallet].sub(bonusAmount);
+            balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(totalTokenAmount);
             balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
             icoParticipants.push(msg.sender);
             
@@ -176,7 +186,7 @@ contract PVTSD is Ownable, BaseToken {
     }
 
    // Burn any remaining tokens 
-    function burnRemainingTokens() public onlyOwner returns (bool) {
+    function burnRemainingTokens() onlyOwner public returns (bool) {
         require(currentTime() >= endTime);
         if (balances[pvtFundsWallet] > 0) {
             balances[pvtFundsWallet] = 0;
