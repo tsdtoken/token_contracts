@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import "./FoundationContracts/BaseToken.sol";
+// import "./FoundationContracts/BaseToken.sol";
 import "./FoundationContracts/Ownable.sol";
 import "./TSD.sol";
 
@@ -46,7 +46,7 @@ contract PVTSD is Ownable, BaseToken {
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
 
-    // ico concluded
+    // ico concluded due to all tokens sold
     bool icoOpen = true;
     
     // Events
@@ -72,8 +72,7 @@ contract PVTSD is Ownable, BaseToken {
         updateTheExchangeRate(_exchangeRate);
     }
 
-    // Contract utility functions
-    
+    // Contract utility functions 
     function currentTime() public view returns (uint256) {
         return now * 1000;
     }
@@ -87,12 +86,15 @@ contract PVTSD is Ownable, BaseToken {
     // Updates the ETH => TSD exchange rate
     function updateTheExchangeRate(uint256 _newRate) public onlyOwner returns (bool) {
         uint256 currentRate = exchangeRate;
+        // 0.000001 ETHER
         uint256 oneSzabo = 1 szabo;
+        // 0.00001 ETH OTHERWISE 0.000001
         exchangeRate = (oneSzabo).mul(_newRate);
         emit ExhangeRateUpdated(currentRate, _newRate);
         return true;
     }
 
+    // Can check to see if an address is whitelisted
     function isWhiteListed(address _address) public view returns (bool) {
         if (whiteListed[_address]) {
             return true;
@@ -102,7 +104,6 @@ contract PVTSD is Ownable, BaseToken {
     }
 
     // Buy functions
-    
     function() payable public {
         buyTokens();
     }

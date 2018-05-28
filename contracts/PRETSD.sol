@@ -7,6 +7,13 @@ import "./TSD.sol";
 contract PRETSD is BaseToken, Ownable {
     // set up access to main contract for the future distribution
     TSD dc;
+    // tranche return values struct.
+    // used when evaluating the discounts for sales
+    struct TrancheState {
+        uint256 tokens;
+        uint256 eth;
+    }
+
     // when the connection is set to the main contract, save a reference for event purposes
     address public TSDContractAddress;
 
@@ -14,11 +21,9 @@ contract PRETSD is BaseToken, Ownable {
     string public symbol = "PRETSD";
     uint256 public decimals = 18;
      // Helper value from 1 million and 1 thousand
-    uint256 public million = 1000000 * (uint256(10) ** decimals);
-    uint256 public thousand = 1000 * (uint256(10) ** decimals);
-
+    uint256 public decimalMultiplier = uint256(10) ** decimals;
+    uint256 public million = 1000000 * decimalMultiplier;
     uint256 public totalSupply = 165 * million;
-    uint256 public bonusAllocation = (20 * million).add(625 * thousand);
     uint256 public minPurchase = 5 ether;
     uint256 public exchangeRate;
     uint256 public totalEthRaised = 0;
@@ -45,7 +50,13 @@ contract PRETSD is BaseToken, Ownable {
     
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
-    
+
+    // tranche discounts
+    uint8[4] tranches = [80, 85, 90, 95];
+
+    // ico concluded
+    bool icoOpen = true;
+
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
@@ -53,26 +64,20 @@ contract PRETSD is BaseToken, Ownable {
     
     constructor(
         uint256 _exchangeRate,
-        address[] _whitelistAddresses,
-        address _preSaleBonusWallet
+        address[] _whitelistAddresses
     ) public {
         preFundsWallet = owner;
         exchangeRate = _exchangeRate;
-        preSaleBonusWallet = _preSaleBonusWallet;
         
         // transfer suppy to the funds wallet
         balances[preFundsWallet] = totalSupply;
         emit Transfer(0x0, preFundsWallet, totalSupply);
 
-        // transfer bonus allocations
-        // transfer event emited by inherited transfer function
-        // transfer(preSaleBonusWallet, bonusAllocation);
         // set up the white listing mapping
         createWhiteListedMapping(_whitelistAddresses);
     }
 
     // Contract utility functions
-    
     function currentTime() public view returns (uint256) {
         return now * 1000;
     }
@@ -83,11 +88,15 @@ contract PRETSD is BaseToken, Ownable {
         }
     }
 
-    // Updates the ETH => TSD exchange rate
+     // Updates the ETH => TSD exchange rate
     function updateTheExchangeRate(uint256 _newRate) public onlyOwner returns (bool) {
         uint256 currentRate = exchangeRate;
-        exchangeRate = _newRate;
+        // 0.000001 ETHER
+        uint256 oneSzabo = 1 szabo;
+        // 0.00001 ETH OTHERWISE 0.000001
+        exchangeRate = (oneSzabo).mul(_newRate);
         emit ExhangeRateUpdated(currentRate, _newRate);
+        return true;
     }
 
     function isWhiteListed(address _address) public view returns (bool) {
@@ -98,14 +107,6 @@ contract PRETSD is BaseToken, Ownable {
         }
     }
 
-    function removeFromWhiteList(address _address) public onlyOwner returns (bool) {
-        if (whiteListed[_address]) {
-            whiteListed[_address] = false;
-
-            return true;
-        }
-    }
-
     // Buy functions
 
     function() payable public {
@@ -113,36 +114,30 @@ contract PRETSD is BaseToken, Ownable {
     }
     
     function buyTokens() payable public {
+        require(icoOpen);
         require(currentTime() >= startTime && currentTime() <= endTime);
         require(whiteListed[msg.sender]);
         uint256 ethAmount = msg.value;
-        uint256 tokenAmount = msg.value.mul(exchangeRate);
-        uint256 bonusAmount = calculateBonus(tokenAmount);
+        uint256 tokenAmount = calculateTokenAmountWithDiscounts(ethAmount);
         uint256 availableTokens;
-        uint256 finalTokenAmount;
         uint256 currentEthRaised = totalEthRaised;
         uint256 ethRefund = 0;
         
         
         if (tokenAmount > balances[preFundsWallet]) {
-            // subtract the remaining bal from the original token amount
-            availableTokens = tokenAmount.sub(balances[preFundsWallet]);
-            // calculate new bonus amount
-            bonusAmount = calculateBonus(availableTokens);
-            // calculate the final token sale amount
-            finalTokenAmount = availableTokens.add(bonusAmount);
-            // determine the unused ether amount by seeing how many tokens where
-            // unavailable and dividing by the exchange rate
-            ethRefund = tokenAmount.sub(availableTokens).div(exchangeRate);
-            // subtract the refund amount from the eth amount received by the tx
-            ethAmount = ethAmount.sub(ethRefund);
+            // recalculate the amount of eth that can be spent
+            uint256 totalCostOfTokens = (totalSupply / 4 * tranches[0] + totalSupply / 4 * tranches[1] + totalSupply / 4 * tranches[2] + totalSupply / 4 * tranches[3]) * exchangeRate;
+            // this eth amount is what we will take for the remaining tokens
+            ethAmount = totalCostOfTokens.sub(totalEthRaised);
+            // determine the refund by subtracting the the new ethamount from what was originally sent in
+            ethRefund = msg.value.sub(ethAmount);
             // make the token purchase
             // sub general token amount
-            balances[preFundsWallet] = balances[preFundsWallet].sub(availableTokens);
+            uint256 remainingTokens = balances[preFundsWallet];
+            balances[preFundsWallet] = balances[preFundsWallet].sub(remainingTokens);
             // sub bonus token amoutn
-            balances[preSaleBonusWallet] = balances[preSaleBonusWallet].sub(bonusAmount);
-            balances[msg.sender] = balances[msg.sender].add(finalTokenAmount);
-            emit Transfer(preFundsWallet, msg.sender, finalTokenAmount);
+            balances[msg.sender] = balances[msg.sender].add(remainingTokens);
+            emit Transfer(preFundsWallet, msg.sender, remainingTokens);
             icoParticipants.push(msg.sender);
             // refund
             if (ethRefund > 0) {
@@ -154,78 +149,66 @@ contract PRETSD is BaseToken, Ownable {
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
         } else {
             require(balances[preFundsWallet] >= tokenAmount);
-            // calculate the final token sale amount
-            finalTokenAmount = tokenAmount.add(bonusAmount);
             // make the token purchase
             // sub general token amount
             balances[preFundsWallet] = balances[preFundsWallet].sub(tokenAmount);
-            // sub bonus token amoutn
-            balances[preSaleBonusWallet] = balances[preSaleBonusWallet].sub(bonusAmount);
-            balances[msg.sender] = balances[msg.sender].add(finalTokenAmount);
+            balances[msg.sender] = balances[msg.sender].add(tokenAmount);
             icoParticipants.push(msg.sender);
-            emit Transfer(preFundsWallet, msg.sender, finalTokenAmount);
+            emit Transfer(preFundsWallet, msg.sender, tokenAmount);
             
             // transfer ether to the wallet and emit and event regarding eth raised
             preFundsWallet.transfer(ethAmount);
             totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);  
-        }
+        // }
     }
 
-    function calculateBonus(uint256 _tokenAmount) public view returns (uint256) {
-        uint8 bonusStage = 4;
-        // Tranche rounds are 20%, 15%, 10%, 5%
-        uint8[4] memory bonusRewards = [20, 15, 10, 5];
-        uint256 bonusAmount = 0;
-        uint256 trancheSize = totalSupply.div(4);
+    function calculateTokenAmountWithDiscounts(uint256 _ethAmount) private view returns(uint256) {
+        uint256 returnTokens = 0;
+        uint256 remainingEth = _ethAmount;
         uint256 sold = totalSupply.sub(balances[preFundsWallet]);
-
-        // Calculate the bucket index based on amount of tokens sold
-        if (sold < trancheSize) {
-            bonusStage = 1;
-        } else {
-            if (sold < trancheSize.mul(2)) {
-                bonusStage = 2;
-            } else {
-                if (sold < trancheSize.mul(3)) {
-                    bonusStage = 3;
-                }
-            }
-        }
-
-        // Begin building the bonus
-        // Accounting for zero indexed array re: 
-        // if the bonus stage is 1 then the referene will be [bonusStage - 1] to account for the zeroth index in the bonusRewards array
-        // there are 4 bonus rounds
-        // one call could potentially run through each
-        // this function will potentially break out after determining the bonus for each bonus round
-
-        // begin accumulating the bonus amounts for the requested token amount
-        bonusAmount += (_tokenAmount < trancheSize ? _tokenAmount : trancheSize).mul(bonusRewards[bonusStage - 1]);
+        TrancheState memory result;
         
-        // if the bonus amount didn't cross a bonus stage then return the bonus
-        if (_tokenAmount < trancheSize || bonusStage == 4) return bonusAmount;
-        // if it did cross a bonus round then subtract the tranche size amount from the amount of tokens requested
-        _tokenAmount.sub(trancheSize);
-        // increase the bonus round by 1
-        bonusStage += 1;
+        // First Trench
+        if (sold + returnTokens < totalSupply / 4) {
+            result = calculateAndSubtractTranches(remainingEth, returnTokens, 0);
+            returnTokens += result.tokens;
+            remainingEth = result.eth;
+            if (remainingEth == 0) return returnTokens;
+        }
+        // Second Trench
+        if (sold+returnTokens < 2 * totalSupply / 4){
+            result = calculateAndSubtractTranches(remainingEth, returnTokens, 1);
+            returnTokens += result.tokens;
+            remainingEth = result.eth;
+            if (remainingEth == 0) return returnTokens;
+        } 
+        
+        // Third Trench
+        if (sold+returnTokens < 3 * totalSupply / 4){
+            result = calculateAndSubtractTranches(remainingEth, returnTokens, 2);
+            returnTokens += result.tokens;
+            remainingEth = result.eth;
+            if (remainingEth == 0) return returnTokens;
+        }
+        
+        // Fourth Trench
+        result = calculateAndSubtractTranches(remainingEth, returnTokens, 3);
+        returnTokens += result.tokens;
+        remainingEth = result.eth;
+        if (remainingEth == 0) return returnTokens;
+    }
 
-        // with the remaining amount of tokens calculate the bonus allocation for this bonus stage
-        // repeat sequence
-        bonusAmount += (_tokenAmount < trancheSize ? _tokenAmount : trancheSize).mul(bonusRewards[bonusStage - 1]);
-        if (_tokenAmount < trancheSize || bonusStage == 4) return bonusAmount;
-        _tokenAmount.sub(trancheSize);
-        bonusStage += 1;
-
-        // Do the same again for the next bonus round
-        bonusAmount += (_tokenAmount < trancheSize ? _tokenAmount : trancheSize).mul(bonusRewards[bonusStage - 1]);
-        if (_tokenAmount < trancheSize || bonusStage == 4) return bonusAmount;
-        _tokenAmount.sub(trancheSize);
-        bonusStage += 1;
-
-        bonusAmount += (_tokenAmount < trancheSize ? _tokenAmount : trancheSize).mul(bonusRewards[bonusStage - 1]);
-
-        return bonusAmount;
+    function calculateAndSubtractTranches(uint256 _eth, uint256 _tokens, uint8 _index) internal view returns (TrancheState) {
+        uint256 trancheRemainder = totalSupply / 4 * (_index+1) - sold + _tokens;
+        uint256 trancheBuyingPower = (_eth * 100) / tranches[_index] * exchangeRate;
+        
+        if (trancheRemainder >= trancheBuyingPower) {
+            return TrancheState(trancheBuyingPower, 0);
+        } else {
+            uint256 newEthAmount = _eth - (trancheRemainder / 100 * tranches[_index]) / exchangeRate;  
+            return TrancheState(trancheRemainder, newEthAmount);
+        }
     }
 
     // After close functions
