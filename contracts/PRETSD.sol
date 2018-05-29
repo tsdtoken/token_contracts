@@ -2,9 +2,11 @@ pragma solidity ^0.4.23;
 
 import "./FoundationContracts/BaseToken.sol";
 import "./FoundationContracts/Ownable.sol";
+import "./FoundationContracts/Math.sol";
 import "./TSD.sol";
 
 contract PRETSD is BaseToken, Ownable {
+    using Math for uint256;
     // set up access to main contract for the future distribution
     TSD dc;
     // tranche return values struct.
@@ -162,8 +164,8 @@ contract PRETSD is BaseToken, Ownable {
     }
 
     function calculateTotalRemainingTokenCost() private view returns(uint256) {
-      // Initialize the totalCost to 0.
       uint256 totalCost = 0;
+      uint256 sold = totalSupply.sub(balances[preFundsWallet]);
       // Calculate the remaining tranche tokens.
       uint256 currentTrancheRemainder = (totalSupply - sold) % trancheMaxTokenSize;
       // Calculate the current tranche we are in.
@@ -199,7 +201,7 @@ contract PRETSD is BaseToken, Ownable {
       if(0 == currentTranche){
           // Find the lowest value tokens of the current tranche.
           // Either return the total tranche tokens or the the tokens we can purchase with our ether.
-          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          tokensFromTranche = Math.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
           // Add the tokens to our return value.
           returnTokens += tokensFromTranche;
           // Subtract the ether we've spent on the tokens from the total ether we supplied.
@@ -212,7 +214,7 @@ contract PRETSD is BaseToken, Ownable {
           currentTranche++;
       }
       if(1 == currentTranche){
-          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          tokensFromTranche = Math.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
           returnTokens += tokensFromTranche;
           _ethAmount -= (tokensFromTranche * tranches[currentTranche]) / 100 / exchangeRate;
           if (_ethAmount == 0) return returnTokens;
@@ -220,7 +222,7 @@ contract PRETSD is BaseToken, Ownable {
           currentTranche++;
       }
       if(2 == currentTranche){
-          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          tokensFromTranche = Math.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
           returnTokens += tokensFromTranche;
           _ethAmount -= (tokensFromTranche * tranches[currentTranche]) / 100 / exchangeRate;
           if (_ethAmount == 0) return returnTokens;
@@ -228,7 +230,7 @@ contract PRETSD is BaseToken, Ownable {
           currentTranche++;
       }
       if(3 == currentTranche){
-          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          tokensFromTranche = Math.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
           returnTokens += tokensFromTranche;
           _ethAmount -= (tokensFromTranche * tranches[currentTranche]) / 100 / exchangeRate;
           if (_ethAmount == 0) return returnTokens;
