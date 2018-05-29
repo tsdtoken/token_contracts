@@ -44,15 +44,17 @@ contract PRETSD is BaseToken, Ownable {
     // Wallets
     address public preFundsWallet;
     address public preSaleBonusWallet;
-    
+
     // Array of participants used when distributing tokens to main contract
     address[] public icoParticipants;
-    
+
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
 
     // tranche discounts
     uint8[4] tranches = [80, 85, 90, 95];
+    // tranche token size
+    uint256 trancheMaxTokenSize = totalSupply / tranches.length;
 
     // ico concluded
     bool icoOpen = true;
@@ -61,14 +63,14 @@ contract PRETSD is BaseToken, Ownable {
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
-    
+
     constructor(
         uint256 _exchangeRate,
         address[] _whitelistAddresses
     ) public {
         preFundsWallet = owner;
         exchangeRate = _exchangeRate;
-        
+
         // transfer suppy to the funds wallet
         balances[preFundsWallet] = totalSupply;
         emit Transfer(0x0, preFundsWallet, totalSupply);
@@ -81,7 +83,7 @@ contract PRETSD is BaseToken, Ownable {
     function currentTime() public view returns (uint256) {
         return now * 1000;
     }
-    
+
     function createWhiteListedMapping(address[] _addresses) public onlyOwner {
         for (uint256 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
@@ -108,11 +110,10 @@ contract PRETSD is BaseToken, Ownable {
     }
 
     // Buy functions
-
     function() payable public {
         buyTokens();
     }
-    
+
     function buyTokens() payable public {
         require(icoOpen);
         require(currentTime() >= startTime && currentTime() <= endTime);
@@ -122,15 +123,13 @@ contract PRETSD is BaseToken, Ownable {
         uint256 availableTokens;
         uint256 currentEthRaised = totalEthRaised;
         uint256 ethRefund = 0;
-        
-        
+
+
         if (tokenAmount > balances[preFundsWallet]) {
-            // recalculate the amount of eth that can be spent
-            uint256 totalCostOfTokens = (totalSupply / 4 * tranches[0] + totalSupply / 4 * tranches[1] + totalSupply / 4 * tranches[2] + totalSupply / 4 * tranches[3]) * exchangeRate;
-            // this eth amount is what we will take for the remaining tokens
-            ethAmount = totalCostOfTokens.sub(totalEthRaised);
+            // recalculate the amount of eth that can be spent for the remaining tokens.
+            uint256 totalRemainingCostOfTokens = calculateTotalRemainingTokenCost();
             // determine the refund by subtracting the the new ethamount from what was originally sent in
-            ethRefund = msg.value.sub(ethAmount);
+            ethRefund = msg.value.sub(totalRemainingCostOfTokens);
             // make the token purchase
             // sub general token amount
             uint256 remainingTokens = balances[preFundsWallet];
@@ -155,62 +154,87 @@ contract PRETSD is BaseToken, Ownable {
             balances[msg.sender] = balances[msg.sender].add(tokenAmount);
             icoParticipants.push(msg.sender);
             emit Transfer(preFundsWallet, msg.sender, tokenAmount);
-            
+
             // transfer ether to the wallet and emit and event regarding eth raised
             preFundsWallet.transfer(ethAmount);
             totalEthRaised.add(ethAmount);
-            emit EthRaisedUpdated(currentEthRaised, totalEthRaised);  
+            emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
         // }
     }
 
+    function calculateTotalRemainingTokenCost() private view returns(uint256) {
+      // Initialize the totalCost to 0.
+      uint256 totalCost = 0;
+      // Calculate the remaining tranche tokens.
+      uint256 currentTrancheRemainder = (totalSupply - sold) % trancheMaxTokenSize;
+      // Calculate the current tranche we are in.
+      uint256 currentTranche = ((sold - currentTrancheRemainder) / trancheMaxTokenSize);
+
+      // All tranches to see if they are full.
+      // If they are full. Add the calculated tranche cost to the totalCost.
+      if (currentTranche < 3 ){
+        totalCost += (trancheMaxTokenSize * tranches[3]) / 100 / exchangeRate;
+      }
+      if (currentTranche < 2 ){
+        totalCost += (trancheMaxTokenSize * tranches[2]) / 100 / exchangeRate;
+      }
+      if (currentTranche < 1 ){
+        totalCost += (trancheMaxTokenSize * tranches[1]) / 100 / exchangeRate;
+      }
+      // Add the calculated tranche remainder costs to the totalCost.
+      totalCost += (currentTrancheRemainder * tranches[currentTranche]) / 100 / exchangeRate;
+      return totalCost;
+    }
+
     function calculateTokenAmountWithDiscounts(uint256 _ethAmount) private view returns(uint256) {
-        uint256 returnTokens = 0;
-        uint256 remainingEth = _ethAmount;
-        uint256 sold = totalSupply.sub(balances[preFundsWallet]);
-        TrancheState memory result;
-        
-        // First Trench
-        if (sold + returnTokens < totalSupply / 4) {
-            result = calculateAndSubtractTranches(remainingEth, returnTokens, 0);
-            returnTokens += result.tokens;
-            remainingEth = result.eth;
-            if (remainingEth == 0) return returnTokens;
-        }
-        // Second Trench
-        if (sold+returnTokens < 2 * totalSupply / 4){
-            result = calculateAndSubtractTranches(remainingEth, returnTokens, 1);
-            returnTokens += result.tokens;
-            remainingEth = result.eth;
-            if (remainingEth == 0) return returnTokens;
-        } 
-        
-        // Third Trench
-        if (sold+returnTokens < 3 * totalSupply / 4){
-            result = calculateAndSubtractTranches(remainingEth, returnTokens, 2);
-            returnTokens += result.tokens;
-            remainingEth = result.eth;
-            if (remainingEth == 0) return returnTokens;
-        }
-        
-        // Fourth Trench
-        result = calculateAndSubtractTranches(remainingEth, returnTokens, 3);
-        returnTokens += result.tokens;
-        remainingEth = result.eth;
-        if (remainingEth == 0) return returnTokens;
-    }
+      uint256 returnTokens = 0;
+      uint256 tokensFromTranche = 0;
+      uint256 sold = totalSupply.sub(balances[preFundsWallet]);
 
-    function calculateAndSubtractTranches(uint256 _eth, uint256 _tokens, uint8 _index) internal view returns (TrancheState) {
-        uint256 trancheRemainder = totalSupply / 4 * (_index+1) - sold + _tokens;
-        uint256 trancheBuyingPower = (_eth * 100) / tranches[_index] * exchangeRate;
-        
-        if (trancheRemainder >= trancheBuyingPower) {
-            return TrancheState(trancheBuyingPower, 0);
-        } else {
-            uint256 newEthAmount = _eth - (trancheRemainder / 100 * tranches[_index]) / exchangeRate;  
-            return TrancheState(trancheRemainder, newEthAmount);
-        }
-    }
+      // Calculate the remaining tranche tokens.
+      uint256 currentTrancheRemainder = (totalSupply - sold) % trancheMaxTokenSize;
+      // Calculate the current tranche we are in.
+      uint256 currentTranche = ((sold - currentTrancheRemainder) / trancheMaxTokenSize);
 
+      // Find the first tranche that matches the current tranche.
+      if(0 == currentTranche){
+          // Find the lowest value tokens of the current tranche.
+          // Either return the total tranche tokens or the the tokens we can purchase with our ether.
+          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          // Add the tokens to our return value.
+          returnTokens += tokensFromTranche;
+          // Subtract the ether we've spent on the tokens from the total ether we supplied.
+          _ethAmount -= (tokensFromTranche * tranches[currentTranche]) / 100 / exchangeRate;
+          // Return the tokens if ether has reached 0;
+          if (_ethAmount == 0) return returnTokens;
+          // Otherwise set the next tranche remainder to a full tranche;
+          currentTrancheRemainder = trancheMaxTokenSize;
+          // Move us up one tranche.
+          currentTranche++;
+      }
+      if(1 == currentTranche){
+          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          returnTokens += tokensFromTranche;
+          _ethAmount -= (tokensFromTranche * tranches[currentTranche]) / 100 / exchangeRate;
+          if (_ethAmount == 0) return returnTokens;
+          currentTrancheRemainder = trancheMaxTokenSize;
+          currentTranche++;
+      }
+      if(2 == currentTranche){
+          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          returnTokens += tokensFromTranche;
+          _ethAmount -= (tokensFromTranche * tranches[currentTranche]) / 100 / exchangeRate;
+          if (_ethAmount == 0) return returnTokens;
+          currentTrancheRemainder = trancheMaxTokenSize;
+          currentTranche++;
+      }
+      if(3 == currentTranche){
+          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          returnTokens += tokensFromTranche;
+          _ethAmount -= (tokensFromTranche * tranches[currentTranche]) / 100 / exchangeRate;
+          if (_ethAmount == 0) return returnTokens;
+      }
+    }
     // After close functions
 
     // Create an instance of the main contract
@@ -219,7 +243,7 @@ contract PRETSD is BaseToken, Ownable {
         TSDContractAddress = _t;
     }
 
-    // Burn any remaining tokens 
+    // Burn any remaining tokens
     function burnRemainingTokens() public onlyOwner returns (bool) {
         require(currentTime() >= endTime);
         if (balances[preFundsWallet] > 0) {
@@ -228,12 +252,12 @@ contract PRETSD is BaseToken, Ownable {
 
         return true;
     }
-    
+
     // This can only be called by the owner on or after the token release date.
     // This will be a two step process.
     // This function will be called by the preSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
-    
+
     function distrubuteTokens() onlyOwner public {
         require(currentTime() >= tokensReleaseDate);
         address preSaleTokenWallet = dc.preSaleTokenWallet();
@@ -251,5 +275,5 @@ contract PRETSD is BaseToken, Ownable {
         // Event to say distribution is complete
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
     }
-    
+
 }
