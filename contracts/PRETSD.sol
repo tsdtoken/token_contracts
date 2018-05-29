@@ -201,7 +201,7 @@ contract PRETSD is BaseToken, Ownable {
       if(0 == currentTranche){
           // Find the lowest value tokens of the current tranche.
           // Either return the total tranche tokens or the the tokens we can purchase with our ether.
-          tokensFromTranche = Math.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
           // Add the tokens to our return value.
           returnTokens += tokensFromTranche;
           // Subtract the ether we've spent on the tokens from the total ether we supplied.
@@ -214,7 +214,7 @@ contract PRETSD is BaseToken, Ownable {
           currentTranche++;
       }
       if(1 == currentTranche){
-          tokensFromTranche = Math.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
           returnTokens += tokensFromTranche;
           _ethAmount -= (tokensFromTranche * tranches[currentTranche]) / 100 / exchangeRate;
           if (_ethAmount == 0) return returnTokens;
@@ -222,7 +222,7 @@ contract PRETSD is BaseToken, Ownable {
           currentTranche++;
       }
       if(2 == currentTranche){
-          tokensFromTranche = Math.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
           returnTokens += tokensFromTranche;
           _ethAmount -= (tokensFromTranche * tranches[currentTranche]) / 100 / exchangeRate;
           if (_ethAmount == 0) return returnTokens;
@@ -230,7 +230,7 @@ contract PRETSD is BaseToken, Ownable {
           currentTranche++;
       }
       if(3 == currentTranche){
-          tokensFromTranche = Math.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
+          tokensFromTranche = SafeMath.min256(currentTrancheRemainder, (_ethAmount / tranches[currentTranche]) * 100 * exchangeRate);
           returnTokens += tokensFromTranche;
           _ethAmount -= (tokensFromTranche * tranches[currentTranche]) / 100 / exchangeRate;
           if (_ethAmount == 0) return returnTokens;
