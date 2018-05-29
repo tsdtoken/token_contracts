@@ -119,7 +119,6 @@ contract PRETSD is BaseToken, Ownable {
         require(whiteListed[msg.sender]);
         uint256 ethAmount = msg.value;
         uint256 tokenAmount = calculateTokenAmountWithDiscounts(ethAmount);
-        uint256 availableTokens;
         uint256 currentEthRaised = totalEthRaised;
         uint256 ethRefund = 0;
         
@@ -160,7 +159,7 @@ contract PRETSD is BaseToken, Ownable {
             preFundsWallet.transfer(ethAmount);
             totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);  
-        // }
+        }
     }
 
     function calculateTokenAmountWithDiscounts(uint256 _ethAmount) private view returns(uint256) {
@@ -200,6 +199,7 @@ contract PRETSD is BaseToken, Ownable {
     }
 
     function calculateAndSubtractTranches(uint256 _eth, uint256 _tokens, uint8 _index) internal view returns (TrancheState) {
+        uint256 sold = totalSupply.sub(balances[preFundsWallet]);
         uint256 trancheRemainder = totalSupply / 4 * (_index+1) - sold + _tokens;
         uint256 trancheBuyingPower = (_eth * 100) / tranches[_index] * exchangeRate;
         

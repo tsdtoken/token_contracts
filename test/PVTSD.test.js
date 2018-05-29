@@ -5,23 +5,27 @@ const { numFromWei, numToWei, buyTokens, assertExpectedError, } = require('./tes
 contract('PVTSDMock', (accounts) => {
   let PVTSDMockContract;
   const currentTime = moment().unix();
-  // exchange rate is 1 szabo or 0.000001
-  const exchangeRate = new web3.BigNumber(1);
+  // exchange rate is 1 szabo or 0.001
+  const exchangeRate = new web3.BigNumber(1000);
   const owner = accounts[0];
+  const pvtFundsWallet = owner;
   const whitelistAddresses = [
     accounts[1],
     accounts[2],
     accounts[3],
     accounts[4],
     accounts[5],
-    accounts[6]
+    accounts[6],
+    accounts[7]
   ];
   const buyerOne = accounts[1];
   const buyerTwo = accounts[2];
   const buyerThree = accounts[3];
   const buyerFour = accounts[4];
   const buyerFive = accounts[5];
-  const unlistedBuyer = accounts[7];
+  const buyerSix = accounts[6];
+  const buyerSeven = accounts[7];
+  const unlistedBuyer = accounts[9];
 
   beforeEach('setup contract for each test', async () => {
     PVTSDMockContract = await PVTSDMock.new(
@@ -83,29 +87,34 @@ contract('PVTSDMock', (accounts) => {
     assert.equal(numFromWei(pvtFundsWalletBalance), 55000000, 'Balance of pvtFundsWallet should be 55 million');
   });
 
-  it('sets an exchange rate upon initialization', async () => {
-    // Exchange rate was passed in as 1
-    const exchangeRateInContract = await PVTSDMockContract.exchangeRate();
-    assert.equal(numFromWei(exchangeRateInContract, 'szabo'), 1, 'Exchange rate should be set to the passed in szabo value (1)')
+  // exchange rate functionality
+
+  it('sets the exchange rate upon initialization', async () => {
+    // exchange rate passed in was 1 szabo or 0.000001ETH
+    const exchangeRate = await PVTSDMockContract.exchangeRate();
+    assert.ok(exchangeRate);
+    assert.equal(numFromWei(exchangeRate, 'szabo'), 1000, 'Exchange rate should be set to 1 szabo (0.000001 ETH)')
   });
 
   it('can change the exchange rate if called by the owner only', async () => {
-    const newRate = new web3.BigNumber(200);
+    // the exhange rate being passed in is 1 TSD => 0.002 ETH
+    const newRate = new web3.BigNumber(2000);
     const beforeExchangeRate = await PVTSDMockContract.exchangeRate();
     const updatedFromOwner = await PVTSDMockContract.updateTheExchangeRate(newRate, { from: owner });
     const afterExchangeRate = await PVTSDMockContract.exchangeRate();
-    // 1 szabo is the inital amount passed to the constructor
-    assert.equal(numFromWei(beforeExchangeRate, 'szabo'), 1, 'Exchange rate should be set to the passed in value of 1 szabo');
-    assert.equal(numFromWei(afterExchangeRate, 'szabo'), 200, 'Exchange rate should be set to the new rate of 200');
+    // 1000 szabo is the inital amount passed to the constructor
+    assert.equal(numFromWei(beforeExchangeRate, 'szabo'), 1000, 'Exchange rate should be set to the passed in value of 1 szabo');
+    assert.equal(numFromWei(afterExchangeRate, 'szabo'), 2000, 'Exchange rate should be set to the new rate of 200');
     assert.ok(updatedFromOwner);
   });
 
   it('cannot change exchange rate from an address that isn\'t the owner', async () => {
-    const newRate = new web3.BigNumber(200);
+    const newRate = new web3.BigNumber(2000);
     await assertExpectedError(PVTSDMockContract.updateTheExchangeRate(newRate, { from: accounts[6] }));
   });
 
-  // Buy functions
+  // Buy functionality
+
   it('refuses a sale before the private sale\'s start time', async () => {
     await assertExpectedError(PVTSDMockContract.sendTransaction(buyTokens(1, buyerOne)))
   });
@@ -118,44 +127,75 @@ contract('PVTSDMock', (accounts) => {
   });
 
   it('accepts ether at the exact moment the sale opens', async () => {
+    // exchange rate 1000 szabo or 0.001ETH
+    // buyer sends in 50 ether
+    // discount of 40% is applied
+    // echange rate becaome 600 szabo pr 0.0006ETH
+    // 50ETH / 0.0006 = 83333 Tokens
     const startTime = await PVTSDMockContract.startTime();
-    // const pvtFundsWallet = owner;
     await PVTSDMockContract.changeTime(startTime);
-    console.log('balanceOf pvtBonusWallet', await PVTSDMockContract.balanceOf(owner));
     await PVTSDMockContract.sendTransaction(buyTokens(50, buyerOne));
     const balanceOfBuyer = await PVTSDMockContract.balanceOf(buyerOne);
-    // const remainingTokens = await PVTSDMockContract.balanceOf(pvtFundsWallet);
-    assert.equal(numFromWei(balanceOfBuyer), 70000, 'The buyers balance should be 50,000 + a bonus of 40% = 70,000')
+    const remainingTokens = await PVTSDMockContract.balanceOf(pvtFundsWallet);
+    assert.equal(numFromWei(balanceOfBuyer), 83333, 'The buyers balance should 83,333 tokens')
+    assert.equal(numFromWei(remainingTokens), 54916667, 'The remaining tokens should be 54,916,667')
   });
 
-  xit('rejects ether from an address that isn\'t whitelisted', async () => {
+  it('transfer the ether to the funds wallet', async () => {
     const startTime = await PVTSDMockContract.startTime();
-    // const pvtFundsWallet = owner;
+    await PVTSDMockContract.changeTime(startTime);
+    const balPriorEthTransfer = web3.eth.getBalance(pvtFundsWallet);
+    await PVTSDMockContract.sendTransaction(buyTokens(50, buyerTwo));
+    const balPostEthTransfer = web3.eth.getBalance(pvtFundsWallet);
+    const ethDiff = numFromWei(balPostEthTransfer, 'ether') - numFromWei(balPriorEthTransfer, 'ether')
+    assert.equal(ethDiff, 50, 'Funds wallet should have received 50 ether from the sale');
+  });
+
+  it('rejects ether from an address that isn\'t whitelisted', async () => {
+    const startTime = await PVTSDMockContract.startTime();
     await PVTSDMockContract.changeTime(startTime);
     await assertExpectedError(PVTSDMockContract.sendTransaction(buyTokens(50, unlistedBuyer)))
   });
 
-  // xxit('rejects a transaction that is less than the minimum buy of 50 ether', async () => {
-  //   const startTime = await PVTSDMockContract.startTime();
-  //   await PVTSDMockContract.changeTime(startTime);
-  //   await assertExpectedError(PVTSDMockContract.sendTransaction(buyTokens(20, buyerTwo)))
-  // });
+  it('rejects a transaction that is less than the minimum buy of 50 ether', async () => {
+    const startTime = await PVTSDMockContract.startTime();
+    await PVTSDMockContract.changeTime(startTime);
+    await assertExpectedError(PVTSDMockContract.sendTransaction(buyTokens(20, buyerThree)))
+  });
 
-  it('sells the last remaining ether even if its under the minimum buy and returns the unspent ether to the buyer', async () => {
-    const inflatedExchangeRate = new web3.BigNumber(1);
+  it('sells the last remaining ether if less than minimum buy, returns unspent ether to the buyer, closes ICO', async () => {
+    // 1 szabo = 0.000003 ETH
+    const inflatedExchangeRate = new web3.BigNumber(3);
+    const defaultGanacheGasPrice = 100000000000;
     const startTime = await PVTSDMockContract.startTime();
     await PVTSDMockContract.changeTime(startTime);
     await PVTSDMockContract.updateTheExchangeRate(inflatedExchangeRate);
-    const beforeBuyBalance = await new web3.eth.getBalance(buyerThree);
-    await PVTSDMockContract.sendTransaction(buyTokens(36, buyerThree));
-
-    const buyerThreeBal = await PVTSDMockContract.balanceOf(buyerThree);
-    const fundsRemaining = await PVTSDMockContract.balanceOf(owner);
-    const buyerThreeEThBal = await new web3.eth.getBalance(buyerThree);
-    console.log('=======> buyerThree', buyerThreeBal);
-    console.log('=======> BEFORE buyerThreeEThBal', numFromWei(beforeBuyBalance));
-    console.log('=======> AFTER buyerThreeEThBal', numFromWei(buyerThreeEThBal));
-    console.log('=======> fundsRemaining', fundsRemaining);
-
+    // first purchase removes 50,000,000 tokens
+    await PVTSDMockContract.sendTransaction(buyTokens(90, buyerThree));
+    // // remaining tokens are now 5,000,000
+    // // buyer should be allowed to purchase 5 million
+    // // rate will be 5 million tokens at the rate of 1 TSD => 0.0000018 ETH (discounted rate)
+    // // this should cost the user 9.0000014 ETH
+    const costOfRemainingTokens = 9.0000014;
+    // // buyer should be transfered the 5 million tokens
+    // // 9.0000014 ether should be transfered to the funds wallet 
+    // // buyer should be returned 25.9999986 eth - tx costs
+    // // buyers balance before tx
+    const fundsWalletEthBalPrior = web3.eth.getBalance(pvtFundsWallet);
+    const buyerEThBalPrior = web3.eth.getBalance(buyerFour).toNumber();
+    const tx = await PVTSDMockContract.sendTransaction(buyTokens(50, buyerFour));
+    // balances after sale
+    const fundsWalletEthBalPost = web3.eth.getBalance(pvtFundsWallet);
+    const buyerTokenBalance = await PVTSDMockContract.balanceOf(buyerFour);
+    const buyerEThBalPost = web3.eth.getBalance(buyerFour);
+    const tokensRemaining = await PVTSDMockContract.balanceOf(owner);
+    const totalGasSpent = tx.receipt.gasUsed * defaultGanacheGasPrice;
+    const expectedEthBal = buyerEThBalPrior - numToWei(costOfRemainingTokens) - totalGasSpent;
+    assert.equal(numFromWei(buyerTokenBalance), 5000000, 'Buyer should be transfered the remaining 5 million tokens');
+    assert.equal(numFromWei(buyerEThBalPost), numFromWei(new web3.BigNumber(expectedEthBal)), 'The current balance should equal token cost + trasaction cost');
+    assert.equal(tokensRemaining, 0, 'There should be no remaining tokens');
+    assert.equal(numFromWei(fundsWalletEthBalPrior) + costOfRemainingTokens, numFromWei(fundsWalletEthBalPost));
+    // icoOpen is set to false when no tokens remain
+    assert.equal(await PVTSDMockContract.icoOpen(), false);
   })
 });

@@ -18,7 +18,7 @@ contract PVTSD is Ownable, BaseToken {
     uint256 public million = 1000000 * decimalMultiplier;
     uint256 public totalSupply = 55 * million;
     // CHANGE TO 50 ETH
-    uint256 public minPurchase = 1 ether;
+    uint256 public minPurchase = 50 ether;
     // 1 TSD = x ETH
     // Unit convertsions https://github.com/ethereum/web3.js/blob/0.15.0/lib/utils/utils.js#L40
     uint256 public exchangeRate;
@@ -47,7 +47,7 @@ contract PVTSD is Ownable, BaseToken {
     mapping (address => bool) public whiteListed;
 
     // ico concluded due to all tokens sold
-    bool icoOpen = true;
+    bool public icoOpen = true;
     
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
@@ -116,34 +116,37 @@ contract PVTSD is Ownable, BaseToken {
 
         // ETH received by spender
         uint256 ethAmount = msg.value;
+        emit DebuggingAmounts("ether passed in", ethAmount);
 
         // token amount based on ETH / exchangeRate result
         // exchange rate is 1 TSD => x ETH
         // with a 40% discount attached
         uint256 discountedExchangeRate = exchangeRate.mul(60).div(100);
+        emit DebuggingAmounts("discounted exch", discountedExchangeRate);
         // totalTokenAmount is the total tokens offered including the discount
-        // Multiply with  to decimalMultiplier to get total tokens (to 18 decimal place)
+        // Multiply with the decimalMultiplier to get total tokens (to 18 decimal place)
         uint256 totalTokenAmount = ethAmount.div(discountedExchangeRate).mul(decimalMultiplier);
-
+        emit DebuggingAmounts("total tokens", totalTokenAmount);
         // tokens avaialble to sell are the remaining tokens in the pvtFundsWallet
         uint256 availableTokens = balances[pvtFundsWallet];
         uint256 currentEthRaised = totalEthRaised;
         uint256 ethRefund = 0;
-        uint256 additionalTokens;
+        uint256 unavailableTokens;
         
         if (totalTokenAmount > availableTokens) {
             // additional tokens that aren't avaialble to be sold
-            // tokenAmount is the tokens requested by buyer (not including the bonus)
+            // tokenAmount is the tokens requested by buyer (not including the discount)
             // availableTokens are all the tokens left in the supplying wallet i.e pvtFundsWallet
-            additionalTokens = totalTokenAmount.sub(availableTokens);
+            unavailableTokens = totalTokenAmount.sub(availableTokens);
 
             // determine the unused ether amount by seeing how many tokens were surplus
             // i.e 'availableTokens' and reverse calculating their ETH equivalent
-            // divide by decimalMultiplier as additionalTokens are 10^18
-            ethRefund = additionalTokens.mul(discountedExchangeRate).div(decimalMultiplier);
-  
+            // divide by decimalMultiplier as unavailableTokens are 10^18
+            ethRefund = unavailableTokens.mul(discountedExchangeRate).div(decimalMultiplier);
+            emit DebuggingAmounts("ether refund", ethRefund);
             // subtract the refund amount from the eth amount received by the tx
             ethAmount = ethAmount.sub(ethRefund);
+            emit DebuggingAmounts("eth cost", ethAmount);
             // make the token purchase
             // will equal to 0 after these substractions occur
             balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(availableTokens);
@@ -173,7 +176,6 @@ contract PVTSD is Ownable, BaseToken {
             pvtFundsWallet.transfer(ethAmount);
             totalEthRaised = totalEthRaised.add(ethAmount);
             emit Transfer(pvtFundsWallet, msg.sender, totalTokenAmount);
-            emit DebuggingAmounts("current balance", balances[pvtFundsWallet]);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);  
         }
     }
@@ -201,7 +203,7 @@ contract PVTSD is Ownable, BaseToken {
     // This function will be called by the pvtSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
     
-    function distrubuteTokens() onlyOwner public {
+    function distrubuteTokens() onlyOwner public returns (bool) {
         require(currentTime() >= tokensReleaseDate);
         address pvtSaleTokenWallet = dc.pvtSaleTokenWallet();
         address mainContractFundsWallet = dc.fundsWallet();
