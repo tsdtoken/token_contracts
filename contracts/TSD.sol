@@ -9,8 +9,9 @@ contract TSD is BaseToken, Ownable {
     uint256 public decimals = 18;
 
     // Helper value from 1 million and 1 thousand
-    uint256 public million = 1000000 * (uint256(10) ** decimals);
-    uint256 public thousand = 1000 * (uint256(10) ** decimals);
+    uint256 public decimalMultiplier = uint256(10) ** decimals;
+    uint256 public million = 1000000 * decimalMultiplier;
+    uint256 public thousand = 1000 * decimalMultiplier;
 
     // Allocations
     uint256 public totalSupply = 550 * million;
@@ -20,7 +21,8 @@ contract TSD is BaseToken, Ownable {
     uint256 public bountyCommunityIncentivesAllocation = (16 * million).add(500 * thousand);
     uint256 public liquidityProgramAllocation = (16 * million).add(500 * thousand);
     uint256 public minimumPurchase = 0.01 ether;
-    // 1 ETH = exchangeRate TSD
+    // 1 TSD = x ETH
+    // Unit convertsions https://github.com/ethereum/web3.js/blob/0.15.0/lib/utils/utils.js#L40
     uint256 public exchangeRate;
     uint256 public totalEthRaised = 0;
 
@@ -45,10 +47,14 @@ contract TSD is BaseToken, Ownable {
     
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
+
+    // ico concluded due to all tokens sold
+    bool public icoOpen = true;
     
     // events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
+    event Debugger(string variable, uint256 value);
     
     constructor(
         uint256 _exchangeRate,
@@ -72,32 +78,35 @@ contract TSD is BaseToken, Ownable {
         emit Transfer(0x0, fundsWallet, totalSupply);
         
         // transfer tokens to account for the private sale
-        balances[fundsWallet].sub(pvtSaleSupply);
-        balances[pvtSaleTokenWallet].add(pvtSaleSupply);
+        balances[fundsWallet] = balances[fundsWallet].sub(pvtSaleSupply);
+        balances[pvtSaleTokenWallet] = balances[pvtSaleTokenWallet].add(pvtSaleSupply);
         emit Transfer(fundsWallet, pvtSaleTokenWallet, pvtSaleSupply);
         
         // transfer tokens to account for the pre sale
-        balances[fundsWallet].sub(preSaleSupply);
-        balances[preSaleTokenWallet].add(preSaleSupply);
+        balances[fundsWallet] = balances[fundsWallet].sub(preSaleSupply);
+        balances[preSaleTokenWallet] = balances[preSaleTokenWallet].add(preSaleSupply);
         emit Transfer(fundsWallet, preSaleTokenWallet, preSaleSupply);
 
         // transfer tokens to founders account
-        balances[fundsWallet].sub(foundersAndAdvisorsAllocation);
-        balances[foundersAndAdvisors].add(foundersAndAdvisorsAllocation);
+        balances[fundsWallet] = balances[fundsWallet].sub(foundersAndAdvisorsAllocation);
+        balances[foundersAndAdvisors] = balances[foundersAndAdvisors].add(foundersAndAdvisorsAllocation);
         emit Transfer(fundsWallet, foundersAndAdvisors, foundersAndAdvisorsAllocation);
 
         // transfer tokens to bounty and community incentives account
-        balances[fundsWallet].sub(bountyCommunityIncentivesAllocation);
-        balances[bountyCommunityIncentives].add(bountyCommunityIncentivesAllocation);
+        balances[fundsWallet] = balances[fundsWallet].sub(bountyCommunityIncentivesAllocation);
+        balances[bountyCommunityIncentives] = balances[bountyCommunityIncentives].add(bountyCommunityIncentivesAllocation);
         emit Transfer(fundsWallet, bountyCommunityIncentives, bountyCommunityIncentivesAllocation);
 
         // transfer tokens to the liquidity program account
-        balances[fundsWallet].sub(liquidityProgramAllocation);
-        balances[liquidityProgram].add(liquidityProgramAllocation);
+        balances[fundsWallet] = balances[fundsWallet].sub(liquidityProgramAllocation);
+        balances[liquidityProgram] = balances[liquidityProgram].add(liquidityProgramAllocation);
         emit Transfer(fundsWallet, liquidityProgram, liquidityProgramAllocation);
         
         // Set up the list of whitelisted addresses
         createWhiteListedMapping(_whitelistAddresses);
+
+        // set up the exchangeRate
+        updateTheExchangeRate(_exchangeRate);
     }
     
     function currentTime() public view returns (uint256) {
@@ -115,17 +124,11 @@ contract TSD is BaseToken, Ownable {
     // Updates the ETH => TSD exchange rate
     function updateTheExchangeRate(uint256 _newRate) public onlyOwner returns (bool) {
         uint256 currentRate = exchangeRate;
-        exchangeRate = _newRate;
+        // 0.000001 ETHER
+        uint256 oneSzabo = 1 szabo;
+        // 0.00001 ETH OTHERWISE 0.000001
+        exchangeRate = (oneSzabo).mul(_newRate);
         emit ExhangeRateUpdated(currentRate, _newRate);
-    }
-
-    function burnRemainingTokensAfterClose() public onlyOwner returns (bool) {
-        require(currentTime() >= endTime);
-        if (balances[fundsWallet] > 0) {
-            // burn unsold tokens
-            balances[fundsWallet] = 0;
-        }
-
         return true;
     }
 
@@ -134,14 +137,6 @@ contract TSD is BaseToken, Ownable {
             return true;
         } else {
             return false;
-        }
-    }
-
-    function removeFromWhiteList(address _address) public onlyOwner returns (bool) {
-        if (whiteListed[_address]) {
-            whiteListed[_address] = false;
-
-            return true;
         }
     }
 
@@ -195,31 +190,37 @@ contract TSD is BaseToken, Ownable {
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
         }
     }
+
+    // After close
+    function burnRemainingTokensAfterClose() public onlyOwner returns (bool) {
+        require(currentTime() >= endTime);
+        if (balances[fundsWallet] > 0) {
+            // burn unsold tokens
+            balances[fundsWallet] = 0;
+        }
+
+        return true;
+    }
     
     // Subsequent supply functions
-
     function increaseTotalSupplyAndAllocateTokens(address _newTokensWallet, uint256 _amount) onlyOwner public {
         totalSupply = totalSupply + _amount;
         balances[_newTokensWallet] = _amount;
     }
     
     function increaseEthRaisedBySubsequentSale(uint256 _amount) public {
-        totalEthRaised = totalEthRaised + _amount;
+        uint256 newEthAmount = totalEthRaised + _amount;
+        emit EthRaisedUpdated(totalEthRaised, newEthAmount);
     }
     
     // ERC20 function wrappers
-    
-    function transfer(address _to, uint256 _tokens) public returns (bool success) {
+    function transfer(address _to, uint256 _tokens) public returns (bool) {
         require(currentTime() >= endTime);
         return super.transfer(_to, _tokens);
     }
     
-    function transferFrom(address _from, address _to, uint256 _tokens) public returns (bool success) {
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         require(currentTime() >= endTime);
-        return super.transferFrom(_from, _to, _tokens);
+        return super.transferFrom(_from, _to, _value);
     }
-
-    // function transferRemainingTokensFromPriorSales(address _from, address _to, uint256 _tokens) public  returns (bool success) {
-    //     return super.transferFrom(_from, _to, _tokens);
-    // }
 }

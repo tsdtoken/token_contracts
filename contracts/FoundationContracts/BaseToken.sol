@@ -67,7 +67,6 @@ contract BaseToken {
         require(_to != address(0));
         require(_value <= balances[_from]);
         require(_value <= allowed[_from][msg.sender]);
-
         balances[_from] = balances[_from].sub(_value);
         balances[_to] = balances[_to].add(_value);
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
@@ -165,4 +164,7 @@ contract BaseToken {
     );
 
     event Transfer(address from, address to, uint256 value);
+    event DebuggingAmts(string variable, uint value);
+    event DebuggingStrings(string variable);
+    event DebuggingAddresses(string variable, address value);
 }

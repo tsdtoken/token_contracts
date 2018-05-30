@@ -7,7 +7,7 @@ import "./TSD.sol";
 contract PVTSD is Ownable {
     using SafeMath for uint256;
     // set up access to main contract for the future distribution
-    TSD dc;
+    TSD public dc;
     // when the connection is set to the main contract, save a reference for event purposes
     address public TSDContractAddress;
     
@@ -57,6 +57,9 @@ contract PVTSD is Ownable {
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
     event Transfer(address from, address to, uint256 value);
+    event DebuggingStrings(string variable);
+    event DebuggingAddresses(string variable, address value);
+    event DebuggingAmts(string variable, uint value);
     
     constructor(
         uint256 _exchangeRate,
@@ -204,12 +207,11 @@ contract PVTSD is Ownable {
     // This function will be called by the pvtSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
     
-    // NEEDS TESTING
     function distributeTokens() public onlyOwner returns (bool) {
         require(currentTime() >= tokensReleaseDate);
         address pvtSaleTokenWallet = dc.pvtSaleTokenWallet();
-        // address mainContractFundsWallet = dc.fundsWallet();
-        for (uint8 i = 0; i < icoParticipants.length; i++) {
+        address mainContractFundsWallet = dc.fundsWallet();
+        for (uint256 i = 0; i < icoParticipants.length; i++) {
             dc.transferFrom(pvtSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
             emit Transfer(pvtSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
         }
