@@ -4,6 +4,9 @@ const { numFromWei, numToWei, buyTokens, assertExpectedError, } = require('./tes
 
 contract('PRETSDMock', (accounts) => {
   let PRETSDMockContract;
+
+  const decimalMultiplier = Math.pow(10, 18);
+
   const currentTime = moment().unix();
   // exchange rate is 1 szabo or 0.000001
   const exchangeRate = new web3.BigNumber(1000);
@@ -16,6 +19,7 @@ contract('PRETSDMock', (accounts) => {
   const buyerFour = accounts[firstBuyerIndex+3];
   const buyerFive = accounts[firstBuyerIndex+4];
   const buyerSix = accounts[firstBuyerIndex+5];
+  // // more buyers are reserved for future tests to test the tranche system fully
   const whitelistAddresses = [
     buyerOne,
     buyerTwo,
@@ -135,8 +139,11 @@ contract('PRETSDMock', (accounts) => {
     const balPriorEthTransfer = web3.eth.getBalance(preFundsWallet);
     await PRETSDMockContract.sendTransaction(buyTokens(50, buyerTwo));
     const balPostEthTransfer = web3.eth.getBalance(preFundsWallet);
-    const ethDiff = (numFromWei(balPostEthTransfer) * 1000000 - numFromWei(balPriorEthTransfer) * 1000000) / 1000000;
-    assert.equal(ethDiff, 50, 'Funds wallet should have received 50 ether from the sale');
+    const weiPostTransfer = numFromWei(balPostEthTransfer);
+    const weiPriorTransfer = numFromWei(balPriorEthTransfer);
+    const epsilon = 0.0000001;
+    const ethDiff = (Math.abs((weiPostTransfer - weiPriorTransfer) - 50) < epsilon);
+    assert.equal(ethDiff, true, 'Funds wallet should have received 50 ether from the sale');
   });
 
   it('rejects ether from an address that isn\'t whitelisted', async () => {
