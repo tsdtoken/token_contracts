@@ -7,18 +7,18 @@ module.exports = {
       port: 7545,
       network_id: "*"
     },
-    development: {
-      host: 'localhost',
-      port: 8545,
-      network_id: '4224',
-      gas: 4700000
-    },
-    // homeskills: {
+    // development: {
     //   host: 'localhost',
     //   port: 8545,
     //   network_id: '4224',
     //   gas: 4700000
     // },
+    homeskills: {
+      host: 'localhost',
+      port: 8545,
+      network_id: '4224',
+      gas: 4700000
+    },
     rinkeby: {
       host: 'localhost',
       port: 8545,

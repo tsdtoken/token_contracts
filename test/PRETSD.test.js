@@ -9,7 +9,7 @@ contract('PRETSDMock', (accounts) => {
   const exchangeRate = new web3.BigNumber(1000);
   const owner = accounts[0];
   const preFundsWallet = owner;
-  const firstBuyerIndex = 14;
+  const firstBuyerIndex = 15;
   const buyerOne = accounts[firstBuyerIndex];
   const buyerTwo = accounts[firstBuyerIndex+1];
   const buyerThree = accounts[firstBuyerIndex+2];
@@ -135,7 +135,7 @@ contract('PRETSDMock', (accounts) => {
     const balPriorEthTransfer = web3.eth.getBalance(preFundsWallet);
     await PRETSDMockContract.sendTransaction(buyTokens(50, buyerTwo));
     const balPostEthTransfer = web3.eth.getBalance(preFundsWallet);
-    const ethDiff = (numFromWei(balPostEthTransfer, 'ether') * 1000000 - numFromWei(balPriorEthTransfer, 'ether') * 1000000) / 1000000;
+    const ethDiff = (numFromWei(balPostEthTransfer) * 1000000 - numFromWei(balPriorEthTransfer) * 1000000) / 1000000;
     assert.equal(ethDiff, 50, 'Funds wallet should have received 50 ether from the sale');
   });
 
