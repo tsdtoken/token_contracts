@@ -10,7 +10,7 @@ contract PVTSD is Ownable, BaseToken {
     TSD dc;
     // when the connection is set to the main contract, save a reference for event purposes
     address public TSDContractAddress;
-    
+
     string public name = "PRIVATE TSD COIN";
     string public symbol = "PVTSD";
     uint256 public decimals = 18;
@@ -42,19 +42,19 @@ contract PVTSD is Ownable, BaseToken {
 
     // Array of participants used when distributing tokens to main contract
     address[] public icoParticipants;
-    
+
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
 
     // ico concluded due to all tokens sold
     bool public icoOpen = true;
-    
+
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
     event DebuggingAmounts(string nameOfValue, uint256 amount);
-    
+
     constructor(
         uint256 _exchangeRate,
         address[] _whitelistAddresses
@@ -72,11 +72,11 @@ contract PVTSD is Ownable, BaseToken {
         updateTheExchangeRate(_exchangeRate);
     }
 
-    // Contract utility functions 
+    // Contract utility functions
     function currentTime() public view returns (uint256) {
         return now * 1000;
     }
-    
+
     function createWhiteListedMapping(address[] _addresses) public onlyOwner {
         for (uint256 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
@@ -90,7 +90,7 @@ contract PVTSD is Ownable, BaseToken {
         uint256 oneSzabo = 1 szabo;
         // 0.00001 ETH OTHERWISE 0.000001
         exchangeRate = (oneSzabo).mul(_newRate);
-        emit ExhangeRateUpdated(currentRate, _newRate);
+        emit ExhangeRateUpdated(currentRate, exchangeRate);
         return true;
     }
 
@@ -107,7 +107,7 @@ contract PVTSD is Ownable, BaseToken {
     function() payable public {
         buyTokens();
     }
-    
+
     function buyTokens() payable public {
         require(icoOpen);
         require(currentTime() >= startTime && currentTime() <= endTime);
@@ -132,7 +132,7 @@ contract PVTSD is Ownable, BaseToken {
         uint256 currentEthRaised = totalEthRaised;
         uint256 ethRefund = 0;
         uint256 unavailableTokens;
-        
+
         if (totalTokenAmount > availableTokens) {
             // additional tokens that aren't avaialble to be sold
             // tokenAmount is the tokens requested by buyer (not including the discount)
@@ -171,12 +171,12 @@ contract PVTSD is Ownable, BaseToken {
             balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(totalTokenAmount);
             balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
             icoParticipants.push(msg.sender);
-            
+
             // transfer ether to the wallet and emit and event regarding eth raised
             pvtFundsWallet.transfer(ethAmount);
             totalEthRaised = totalEthRaised.add(ethAmount);
             emit Transfer(pvtFundsWallet, msg.sender, totalTokenAmount);
-            emit EthRaisedUpdated(currentEthRaised, totalEthRaised);  
+            emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
         }
     }
 
@@ -188,7 +188,7 @@ contract PVTSD is Ownable, BaseToken {
         TSDContractAddress = _t;
     }
 
-   // Burn any remaining tokens 
+   // Burn any remaining tokens
     function burnRemainingTokens() onlyOwner public returns (bool) {
         require(currentTime() >= endTime);
         if (balances[pvtFundsWallet] > 0) {
@@ -202,7 +202,7 @@ contract PVTSD is Ownable, BaseToken {
     // This will be a two step process.
     // This function will be called by the pvtSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
-    
+
     function distrubuteTokens() onlyOwner public returns (bool) {
         require(currentTime() >= tokensReleaseDate);
         address pvtSaleTokenWallet = dc.pvtSaleTokenWallet();
