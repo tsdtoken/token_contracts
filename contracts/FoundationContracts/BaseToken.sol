@@ -165,5 +165,4 @@ contract BaseToken {
     );
 
     event Transfer(address from, address to, uint256 value);
-
 }

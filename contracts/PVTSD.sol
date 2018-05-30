@@ -4,7 +4,7 @@ pragma solidity ^0.4.23;
 import "./FoundationContracts/Ownable.sol";
 import "./TSD.sol";
 
-contract PVTSD is Ownable, BaseToken {
+contract PVTSD is Ownable {
     using SafeMath for uint256;
     // set up access to main contract for the future distribution
     TSD dc;
@@ -46,6 +46,9 @@ contract PVTSD is Ownable, BaseToken {
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
 
+    // balances 
+    mapping(address => uint256) balances;
+
     // ico concluded due to all tokens sold
     bool public icoOpen = true;
     
@@ -53,7 +56,7 @@ contract PVTSD is Ownable, BaseToken {
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
-    event DebuggingAmounts(string nameOfValue, uint256 amount);
+    event Transfer(address from, address to, uint256 value);
     
     constructor(
         uint256 _exchangeRate,
@@ -75,6 +78,10 @@ contract PVTSD is Ownable, BaseToken {
     // Contract utility functions 
     function currentTime() public view returns (uint256) {
         return now * 1000;
+    }
+
+    function balanceOf(address _owner) public view returns (uint256) {
+        return balances[_owner];
     }
     
     function createWhiteListedMapping(address[] _addresses) public onlyOwner {
@@ -116,17 +123,13 @@ contract PVTSD is Ownable, BaseToken {
 
         // ETH received by spender
         uint256 ethAmount = msg.value;
-        emit DebuggingAmounts("ether passed in", ethAmount);
-
         // token amount based on ETH / exchangeRate result
         // exchange rate is 1 TSD => x ETH
         // with a 40% discount attached
         uint256 discountedExchangeRate = exchangeRate.mul(60).div(100);
-        emit DebuggingAmounts("discounted exch", discountedExchangeRate);
         // totalTokenAmount is the total tokens offered including the discount
         // Multiply with the decimalMultiplier to get total tokens (to 18 decimal place)
         uint256 totalTokenAmount = ethAmount.div(discountedExchangeRate).mul(decimalMultiplier);
-        emit DebuggingAmounts("total tokens", totalTokenAmount);
         // tokens avaialble to sell are the remaining tokens in the pvtFundsWallet
         uint256 availableTokens = balances[pvtFundsWallet];
         uint256 currentEthRaised = totalEthRaised;
@@ -143,10 +146,8 @@ contract PVTSD is Ownable, BaseToken {
             // i.e 'availableTokens' and reverse calculating their ETH equivalent
             // divide by decimalMultiplier as unavailableTokens are 10^18
             ethRefund = unavailableTokens.mul(discountedExchangeRate).div(decimalMultiplier);
-            emit DebuggingAmounts("ether refund", ethRefund);
             // subtract the refund amount from the eth amount received by the tx
             ethAmount = ethAmount.sub(ethRefund);
-            emit DebuggingAmounts("eth cost", ethAmount);
             // make the token purchase
             // will equal to 0 after these substractions occur
             balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(availableTokens);
@@ -203,10 +204,11 @@ contract PVTSD is Ownable, BaseToken {
     // This function will be called by the pvtSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
     
-    function distrubuteTokens() onlyOwner public returns (bool) {
+    // NEEDS TESTING
+    function distributeTokens() public onlyOwner returns (bool) {
         require(currentTime() >= tokensReleaseDate);
         address pvtSaleTokenWallet = dc.pvtSaleTokenWallet();
-        address mainContractFundsWallet = dc.fundsWallet();
+        // address mainContractFundsWallet = dc.fundsWallet();
         for (uint8 i = 0; i < icoParticipants.length; i++) {
             dc.transferFrom(pvtSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
             emit Transfer(pvtSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
@@ -217,7 +219,10 @@ contract PVTSD is Ownable, BaseToken {
             dc.transferFrom(pvtSaleTokenWallet, mainContractFundsWallet, remainingBalace);
             emit Transfer(pvtSaleTokenWallet, mainContractFundsWallet, remainingBalace);
         }
+
         // Event to say distribution is complete
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
+
+        return true;
     }
 }
