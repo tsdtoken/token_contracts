@@ -82,8 +82,6 @@ contract('PRETSDMock', (accounts) => {
   it('sets the exchange rate upon initialization', async () => {
     // exchange rate passed in was 1 szabo or 0.000001ETH
     const exchangeRate = await PRETSDMockContract.exchangeRate();
-    console.log(exchangeRate);
-    console.log(numFromWei(exchangeRate, 'szabo'));
     assert.ok(exchangeRate);
     assert.equal(numFromWei(exchangeRate, 'szabo'), 1000, 'Exchange rate should be set to 1 szabo (0.000001 ETH)')
   });
@@ -154,12 +152,16 @@ contract('PRETSDMock', (accounts) => {
   });
 
   it('sells the last remaining ether if less than minimum buy, returns unspent ether to the buyer, closes ICO', async () => {
-    // 1 szabo = 0.000003 ETH
+    // 1 szabo = 0.000001 ETH
+    // set current exchange rate to 1 ETH == 1,000,000 PRETSD
     const inflatedExchangeRate = new web3.BigNumber(1);
+    // Set gas price in wei. Used for comparison calculations
     const defaultGanacheGasPrice = 100000000000;
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
     await PRETSDMockContract.updateTheExchangeRate(inflatedExchangeRate);
+
+    // // check the total cost of all remaining tokens (165,000,000 PRETSD)
     const totalCost = await PRETSDMockContract.calculateTotalRemainingTokenCost();
     await PRETSDMockContract.sendTransaction(buyTokens(90, buyerThree));
     // // remaining tokens are now 58,125,000
