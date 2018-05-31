@@ -20,7 +20,8 @@ contract PRETSD is BaseToken, Ownable {
     uint256 public decimalMultiplier = uint256(10) ** decimals;
     uint256 public million = 1000000 * decimalMultiplier;
     uint256 public totalSupply = 165 * million;
-    uint256 public minPurchase = 5 ether;
+    // 5k USD in szabo
+    uint256 public minPurchase = 8732000 szabo;
     uint256 public exchangeRate;
     uint256 public totalEthRaised = 0;
 
@@ -73,7 +74,7 @@ contract PRETSD is BaseToken, Ownable {
 
         // set up the white listing mapping
         createWhiteListedMapping(_whitelistAddresses);
-
+        // set exchange rate
         updateTheExchangeRate(_exchangeRate);
     }
 
@@ -92,14 +93,14 @@ contract PRETSD is BaseToken, Ownable {
     // Pass in the amount of tokens and the discount rate.
     // If no discount is required pass in 100 as the rate value.
     function tokenToEth(uint256 _tokens, uint8 _rate) internal view returns(uint256) {
-      return (( _tokens * _rate ) / 100 * exchangeRate).div(decimalMultiplier);
+        return (( _tokens * _rate ) / 100 * exchangeRate).div(decimalMultiplier);
     }
 
     // Usage:
     // Pass in the amount of eth and the discount rate.
     // If no discount is required pass in 100 as the rate value.
     function ethToToken(uint256 _eth, uint8 _rate) internal view returns(uint256) {
-      return ((_eth / _rate * 100) * decimalMultiplier).div(exchangeRate);
+        return ((_eth / _rate * 100) * decimalMultiplier).div(exchangeRate);
     }
 
      // Updates the ETH => TSD exchange rate
@@ -114,7 +115,7 @@ contract PRETSD is BaseToken, Ownable {
         return true;
     }
 
-    function isWhiteListed(address _address) public view returns (bool) {
+    function isWhiteListed(address _address) external view returns (bool) {
         if (whiteListed[_address]) {
             return true;
         } else {
@@ -179,92 +180,92 @@ contract PRETSD is BaseToken, Ownable {
     }
 
     function calculateTotalRemainingTokenCost() public view returns(uint256) {
-      uint256 totalCost = 0;
-      uint256 sold = totalSupply.sub(balances[preFundsWallet]);
-      // Calculate the remaining tranche tokens.
-      uint256 currentTrancheRemainder = (totalSupply - sold) % trancheMaxTokenSize;
-      // Calculate the current tranche we are in.
-      uint256 currentTranche = ((sold - currentTrancheRemainder) / trancheMaxTokenSize);
-      // On the first initialisation we need to set the current tranche to a full tranche;
-      currentTrancheRemainder = currentTrancheRemainder == 0 ? trancheMaxTokenSize : currentTrancheRemainder;
-      // Check all tranches to see if they are full.
-      // If they are full. Add the calculated tranche cost to the totalCost.
-      if (currentTranche < 3 ){
-        totalCost += tokenToEth(trancheMaxTokenSize, tranches[3]);
-      }
-      if (currentTranche < 2 ){
-        totalCost += tokenToEth(trancheMaxTokenSize, tranches[2]);
-      }
-      if (currentTranche < 1 ){
-        totalCost += tokenToEth(trancheMaxTokenSize, tranches[1]);
-      }
-      // Add the calculated tranche remainder costs to the totalCost.
-      totalCost += tokenToEth(currentTrancheRemainder, tranches[currentTranche]);
-      return totalCost;
+        uint256 totalCost = 0;
+        uint256 sold = totalSupply.sub(balances[preFundsWallet]);
+        // Calculate the remaining tranche tokens.
+        uint256 currentTrancheRemainder = (totalSupply - sold) % trancheMaxTokenSize;
+        // Calculate the current tranche we are in.
+        uint256 currentTranche = ((sold - currentTrancheRemainder) / trancheMaxTokenSize);
+        // On the first initialisation we need to set the current tranche to a full tranche;
+        currentTrancheRemainder = currentTrancheRemainder == 0 ? trancheMaxTokenSize : currentTrancheRemainder;
+        // Check all tranches to see if they are full.
+        // If they are full. Add the calculated tranche cost to the totalCost.
+        if (currentTranche < 3 ){
+            totalCost += tokenToEth(trancheMaxTokenSize, tranches[3]);
+        }
+        if (currentTranche < 2 ){
+            totalCost += tokenToEth(trancheMaxTokenSize, tranches[2]);
+        }
+        if (currentTranche < 1 ){
+            totalCost += tokenToEth(trancheMaxTokenSize, tranches[1]);
+        }
+        // Add the calculated tranche remainder costs to the totalCost.
+        totalCost += tokenToEth(currentTrancheRemainder, tranches[currentTranche]);
+        return totalCost;
     }
 
-    function calculateTokenAmountWithDiscounts(uint256 _ethAmount) private view returns(uint256) {
-      uint256 returnTokens = 0;
-      uint256 tokensFromTranche = 0;
-      uint256 ethRemaining = _ethAmount;
-      uint256 sold = totalSupply.sub(balances[preFundsWallet]);
+    function calculateTokenAmountWithDiscounts(uint256 _ethAmount) public view returns(uint256) {
+        uint256 returnTokens = 0;
+        uint256 tokensFromTranche = 0;
+        uint256 ethRemaining = _ethAmount;
+        uint256 sold = totalSupply.sub(balances[preFundsWallet]);
 
-      // Calculate the remaining tranche tokens.
-      uint256 currentTrancheRemainder = (totalSupply - sold) % trancheMaxTokenSize;
-      // Calculate the current tranche we are in.
-      uint256 currentTranche = ((sold - currentTrancheRemainder) / trancheMaxTokenSize);
-      // On the first initialisation we need to set the current tranche to a full tranche;
-      currentTrancheRemainder = currentTrancheRemainder == 0 ? trancheMaxTokenSize : currentTrancheRemainder;
+        // Calculate the remaining tranche tokens.
+        uint256 currentTrancheRemainder = (totalSupply - sold) % trancheMaxTokenSize;
+        // Calculate the current tranche we are in.
+        uint256 currentTranche = ((sold - currentTrancheRemainder) / trancheMaxTokenSize);
+        // On the first initialisation we need to set the current tranche to a full tranche;
+        currentTrancheRemainder = currentTrancheRemainder == 0 ? trancheMaxTokenSize : currentTrancheRemainder;
 
-      // Find the first tranche that matches the current tranche.
-      if(0 == currentTranche){
-          // Find the lowest value tokens of the current tranche.
-          // Either return the total tranche tokens or the the tokens we can purchase with our ether.
-          tokensFromTranche = Math.min256(currentTrancheRemainder, ethToToken(ethRemaining, tranches[currentTranche]));
-          // Add the tokens to our return value.
-          returnTokens += tokensFromTranche;
-          // Subtract the ether we've spent on the tokens from the total ether we supplied.
-          ethRemaining -= tokenToEth(tokensFromTranche, tranches[currentTranche]);
-          // Return the tokens if ether has reached 0;
-          if (ethRemaining == 0) return returnTokens;
-          // Otherwise set the next tranche remainder to a full tranche;
-          currentTrancheRemainder = trancheMaxTokenSize;
-          // Move us up one tranche.
-          currentTranche++;
-      }
-      if(1 == currentTranche){
-          tokensFromTranche = Math.min256(currentTrancheRemainder, ethToToken(ethRemaining, tranches[currentTranche]));
-          returnTokens += tokensFromTranche;
-          ethRemaining -= tokenToEth(tokensFromTranche, tranches[currentTranche]);
-          if (ethRemaining == 0) return returnTokens;
-          currentTrancheRemainder = trancheMaxTokenSize;
-          currentTranche++;
-      }
-      if(2 == currentTranche){
-          tokensFromTranche = Math.min256(currentTrancheRemainder, ethToToken(ethRemaining, tranches[currentTranche]));
-          returnTokens += tokensFromTranche;
-          ethRemaining -= tokenToEth(tokensFromTranche, tranches[currentTranche]);
-          if (ethRemaining == 0) return returnTokens;
-          currentTrancheRemainder = trancheMaxTokenSize;
-          currentTranche++;
-      }
-      if(3 == currentTranche){
-          tokensFromTranche = Math.min256(currentTrancheRemainder, ethToToken(ethRemaining, tranches[currentTranche]));
-          returnTokens += tokensFromTranche;
-          ethRemaining -= tokenToEth(tokensFromTranche, tranches[currentTranche]);
-      }
-      return returnTokens;
+        // Find the first tranche that matches the current tranche.
+        if (0 == currentTranche) {
+            // Find the lowest value tokens of the current tranche.
+            // Either return the total tranche tokens or the the tokens we can purchase with our ether.
+            tokensFromTranche = Math.min256(currentTrancheRemainder, ethToToken(ethRemaining, tranches[currentTranche]));
+            // Add the tokens to our return value.
+            returnTokens += tokensFromTranche;
+            // Subtract the ether we've spent on the tokens from the total ether we supplied.
+            ethRemaining -= tokenToEth(tokensFromTranche, tranches[currentTranche]);
+            // Return the tokens if ether has reached 0;
+            if (ethRemaining == 0) return returnTokens;
+            // Otherwise set the next tranche remainder to a full tranche;
+            currentTrancheRemainder = trancheMaxTokenSize;
+            // Move us up one tranche.
+            currentTranche++;
+        }
+        if (1 == currentTranche) {
+            tokensFromTranche = Math.min256(currentTrancheRemainder, ethToToken(ethRemaining, tranches[currentTranche]));
+            returnTokens += tokensFromTranche;
+            ethRemaining -= tokenToEth(tokensFromTranche, tranches[currentTranche]);
+            if (ethRemaining == 0) return returnTokens;
+            currentTrancheRemainder = trancheMaxTokenSize;
+            currentTranche++;
+        }
+        if (2 == currentTranche) {
+            tokensFromTranche = Math.min256(currentTrancheRemainder, ethToToken(ethRemaining, tranches[currentTranche]));
+            returnTokens += tokensFromTranche;
+            ethRemaining -= tokenToEth(tokensFromTranche, tranches[currentTranche]);
+            if (ethRemaining == 0) return returnTokens;
+            currentTrancheRemainder = trancheMaxTokenSize;
+            currentTranche++;
+        }
+        if (3 == currentTranche) {
+            tokensFromTranche = Math.min256(currentTrancheRemainder, ethToToken(ethRemaining, tranches[currentTranche]));
+            returnTokens += tokensFromTranche;
+            ethRemaining -= tokenToEth(tokensFromTranche, tranches[currentTranche]);
+        }
+        return returnTokens;
     }
     // After close functions
 
     // Create an instance of the main contract
-    function setMainContractAddress(address _t) onlyOwner public {
+    function setMainContractAddress(address _t) onlyOwner external {
         dc = TSD(_t);
         TSDContractAddress = _t;
     }
 
     // Burn any remaining tokens
-    function burnRemainingTokens() public onlyOwner returns (bool) {
+    function burnRemainingTokens() external onlyOwner returns (bool) {
         require(currentTime() >= endTime);
         if (balances[preFundsWallet] > 0) {
             balances[preFundsWallet] = 0;
@@ -277,20 +278,16 @@ contract PRETSD is BaseToken, Ownable {
     // This will be a two step process.
     // This function will be called by the preSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
-    function distrubuteTokens() onlyOwner public {
+    function distrubuteTokens() onlyOwner external {
         require(currentTime() >= tokensReleaseDate);
         address preSaleTokenWallet = dc.preSaleTokenWallet();
-        address mainContractFundsWallet = dc.fundsWallet();
         for (uint8 i = 0; i < icoParticipants.length; i++) {
             dc.transferFrom(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
             emit Transfer(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
         }
 
-        if (dc.balanceOf(preSaleTokenWallet) > 0) {
-            uint256 remainingBalace = dc.balanceOf(preSaleTokenWallet);
-            dc.transferFrom(preSaleTokenWallet, mainContractFundsWallet, remainingBalace);
-            emit Transfer(preSaleTokenWallet, mainContractFundsWallet, remainingBalace);
-        }
+        // NOTE: What to do with any unsold tokens in the main contract allocation????
+
         // Event to say distribution is complete
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
     }

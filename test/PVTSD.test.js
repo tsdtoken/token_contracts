@@ -65,11 +65,17 @@ contract('PVTSDMock', (accounts) => {
     const dateString = new Date(endTime.c[0]);
     assert.equal(dateString, 'Sun Jul 15 2018 00:00:00 GMT+1000 (AEST)');
   });
-
-  it('sets the start time to be Mon Apr 15 2019 00:00:00 GMT+1000 (AEST)', async () => {
+  
+  it('sets the release date to be Mon Apr 15 2019 00:00:00 GMT+1000 (AEST)', async () => {
     const tokensReleaseDate = await PVTSDMockContract.tokensReleaseDate();
     const dateString = new Date(tokensReleaseDate.c[0]);
     assert.equal(dateString, 'Mon Apr 15 2019 00:00:00 GMT+1000 (AEST)');
+  });
+  
+  it('transfers total supply of tokens (55 million) to the private funds wallet', async () => {
+    const pvtFundsWallet = owner;
+    const pvtFundsWalletBalance = await PVTSDMockContract.balanceOf(pvtFundsWallet);
+    assert.equal(numFromWei(pvtFundsWalletBalance), 55000000, 'Balance of pvtFundsWallet should be 55 million');
   });
 
   it('can tell you if an address is whitelisted', async () => {
@@ -88,12 +94,6 @@ contract('PVTSDMock', (accounts) => {
     assert.equal(firstWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
     assert.equal(secondWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
     assert.equal(thirdWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
-  });
-
-  it('transfers total supply of tokens (55 million) to the private funds wallet', async () => {
-    const pvtFundsWallet = owner;
-    const pvtFundsWalletBalance = await PVTSDMockContract.balanceOf(pvtFundsWallet);
-    assert.equal(numFromWei(pvtFundsWalletBalance), 55000000, 'Balance of pvtFundsWallet should be 55 million');
   });
 
   // exchange rate functionality
@@ -129,7 +129,7 @@ contract('PVTSDMock', (accounts) => {
 
   it('refuses a sale 1 second before the private sale\'s start time', async () => {
     const startTime = await PVTSDMockContract.startTime();
-    const oneSecondPriorToOpen = new Date(startTime).setSeconds(-1);
+    const oneSecondPriorToOpen = new Date(startTime.c[0]).setSeconds(-1);
     await PVTSDMockContract.changeTime(oneSecondPriorToOpen);
     await assertExpectedError(PVTSDMockContract.sendTransaction(buyTokens(1, buyerOne)))
   });
@@ -141,7 +141,7 @@ contract('PVTSDMock', (accounts) => {
     // echange rate becaome 600 szabo pr 0.0006ETH
     // 50ETH / 0.0006 = 83333 Tokens
     const startTime = await PVTSDMockContract.startTime();
-    await PVTSDMockContract.changeTime(startTime);
+    await PVTSDMockContract.changeTime(startTime.c[0]);
     await PVTSDMockContract.sendTransaction(buyTokens(50, buyerOne));
     const balanceOfBuyer = await PVTSDMockContract.balanceOf(buyerOne);
     const remainingTokens = await PVTSDMockContract.balanceOf(pvtFundsWallet);
@@ -153,7 +153,7 @@ contract('PVTSDMock', (accounts) => {
     // exchange rate 1000 szabo or 0.001ETH
     // discounted rate will end up as 0.0006ETH (40% disc)
     const startTime = await PVTSDMockContract.startTime();
-    await PVTSDMockContract.changeTime(startTime);
+    await PVTSDMockContract.changeTime(startTime.c[0]);
     await PVTSDMockContract.sendTransaction(buyTokens(60, buyerFive));
     const buyerTokenBal = await PVTSDMockContract.balanceOf(buyerFive);
     assert.equal(numFromWei(buyerTokenBal), 100000, 'Buyer should have a balance of 100,000 tokens');
@@ -161,7 +161,7 @@ contract('PVTSDMock', (accounts) => {
 
   it('keeps a reference of all buyers address in the icoParticipants array', async () => {
     const startTime = await PVTSDMockContract.startTime();
-    await PVTSDMockContract.changeTime(startTime);
+    await PVTSDMockContract.changeTime(startTime.c[0]);
     await PVTSDMockContract.sendTransaction(buyTokens(50, buyerSix));
     const addressAtZeroInx = await PVTSDMockContract.icoParticipants(0);
     assert.equal(addressAtZeroInx, buyerSix, `The first address in the array should be buyer three ${buyerThree}`);
@@ -169,7 +169,7 @@ contract('PVTSDMock', (accounts) => {
 
   it('transfers the ether to the funds wallet', async () => {
     const startTime = await PVTSDMockContract.startTime();
-    await PVTSDMockContract.changeTime(startTime);
+    await PVTSDMockContract.changeTime(startTime.c[0]);
     const balPriorEthTransfer = web3.eth.getBalance(pvtFundsWallet);
     await PVTSDMockContract.sendTransaction(buyTokens(50, buyerTwo));
     const balPostEthTransfer = web3.eth.getBalance(pvtFundsWallet);
@@ -182,13 +182,13 @@ contract('PVTSDMock', (accounts) => {
 
   it('rejects ether from an address that isn\'t whitelisted', async () => {
     const startTime = await PVTSDMockContract.startTime();
-    await PVTSDMockContract.changeTime(startTime);
+    await PVTSDMockContract.changeTime(startTime.c[0]);
     await assertExpectedError(PVTSDMockContract.sendTransaction(buyTokens(50, unlistedBuyer)))
   });
 
   it('rejects a transaction that is less than the minimum buy of 50 ether', async () => {
     const startTime = await PVTSDMockContract.startTime();
-    await PVTSDMockContract.changeTime(startTime);
+    await PVTSDMockContract.changeTime(startTime.c[0]);
     await assertExpectedError(PVTSDMockContract.sendTransaction(buyTokens(20, buyerThree)))
   });
 
@@ -197,7 +197,7 @@ contract('PVTSDMock', (accounts) => {
     const inflatedExchangeRate = new web3.BigNumber(3);
     const defaultGanacheGasPrice = 100000000000;
     const startTime = await PVTSDMockContract.startTime();
-    await PVTSDMockContract.changeTime(startTime);
+    await PVTSDMockContract.changeTime(startTime.c[0]);
     await PVTSDMockContract.updateTheExchangeRate(inflatedExchangeRate);
     // first purchase removes 50,000,000 tokens
     await PVTSDMockContract.sendTransaction(buyTokens(90, buyerThree));
@@ -219,12 +219,12 @@ contract('PVTSDMock', (accounts) => {
     const buyerEThBalPost = web3.eth.getBalance(buyerFour);
     const tokensRemaining = await PVTSDMockContract.balanceOf(owner);
     const totalGasSpent = tx.receipt.gasUsed * defaultGanacheGasPrice;
-    // this needs to be checked
+    // expected buyer eth balance after sale
     const expectedEthBal = buyerEThBalPrior - numToWei(costOfRemainingTokens) - totalGasSpent;
     // this is to handle a javascript rounding error
     const finalFundsWalletBal = (numFromWei(fundsWalletEthBalPrior) * 10000000 + costOfRemainingTokens * 10000000) / 10000000;
     assert.equal(numFromWei(buyerTokenBalance), 5000000, 'Buyer should be transfered the remaining 5 million tokens');
-    assert.equal(numFromWei(buyerEThBalPost), numFromWei(new web3.BigNumber(expectedEthBal)), 'The current balance should equal token cost + transaction cost');
+    assert.equal(numFromWei(buyerEThBalPost), numFromWei(new web3.BigNumber(expectedEthBal)), 'The current balance should equal before total - (token cost + transaction cost)');
     assert.equal(tokensRemaining, 0, 'There should be no remaining tokens');
     assert.equal(finalFundsWalletBal, numFromWei(fundsWalletEthBalPost));
     // icoOpen is set to false when no tokens remain
@@ -274,7 +274,7 @@ contract('PVTSDMock', (accounts) => {
     assert.equal(setRefAddress, TSDMockContract.address, `Address set in the contract should be the address of the main contract ${setRefAddress}`)
   })
 
-  it('distributes private token balances into the main contract, transfers any remaining to main funds wallet token balance', async () => {
+  it('distributes private token balances into the main contract, burns any remaining tokens', async () => {
     const pvtSaleTokenWallet = accounts[8];
     const preSaleTokenWallet = accounts[9];
     const foundersAndAdvisors = accounts[10];
@@ -296,12 +296,9 @@ contract('PVTSDMock', (accounts) => {
       liquidityProgram,
     );
 
-    // record the main token sale funds wallet balance prior to distribution
-    const mainSaleAvailableTokens = await TSDMockContract.balanceOf(fundsWallet);
-    const mainPvtTokenAllocation = await TSDMockContract.balanceOf(pvtSaleTokenWallet);
     // make a buy in the private sale
     const startTime = await PVTSDMockContract.startTime();
-    await PVTSDMockContract.changeTime(startTime);
+    await PVTSDMockContract.changeTime(startTime.c[0]);
     await PVTSDMockContract.sendTransaction(buyTokens(50, buyerSeven));
     await PVTSDMockContract.sendTransaction(buyTokens(50, buyerEight));
     // // change time to token release date
@@ -322,20 +319,5 @@ contract('PVTSDMock', (accounts) => {
     const secondBuyerMainBal = await TSDMockContract.balanceOf(buyerEight);
     assert.equal(numFromWei(firstBuyerPvtBal), numFromWei(firstBuyerMainBal));
     assert.equal(numFromWei(secondBuyerPvtBal), numFromWei(secondBuyerMainBal));
-
-    // If there were any unsold tokens from the private sale
-    // The remaining tokens from the private sale allocation
-    // will be transferred to the main token sales balance
-    // this keeps the total supply valid because the unallocated tokens
-    // can be sold in the main sale
-    const totalTokensSoldInPvtSale = numFromWei(firstBuyerPvtBal) + numFromWei(secondBuyerPvtBal);
-    const unsoldPvtTokens = numFromWei(mainPvtTokenAllocation) - totalTokensSoldInPvtSale;
-    // prior balances[fundsWallet] + totalTokensSoldInPvtSale
-    const pvtAllocationWalletBal = await TSDMockContract.balanceOf(pvtSaleTokenWallet);
-    // prior balances[fundsWallet] + totalTokensSoldInPvtSale
-    const totalExpected = numFromWei(mainSaleAvailableTokens) + unsoldPvtTokens;
-    const finalMainSaleTokens = await TSDMockContract.balanceOf(fundsWallet);
-    assert.equal(pvtAllocationWalletBal, 0, 'Private sale token allocation should be 0');
-    assert.equal(totalExpected, numFromWei(finalMainSaleTokens), 'Final balance of available main tokens should include unsold private sale tokens (407833334)');
   });
 });

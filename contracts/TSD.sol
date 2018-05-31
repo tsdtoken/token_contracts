@@ -16,11 +16,13 @@ contract TSD is BaseToken, Ownable {
     // Allocations
     uint256 public totalSupply = 550 * million;
     uint256 public pvtSaleSupply = 55 * million;
-    uint256 public preSaleSupply = 65 * million;
+    uint256 public preSaleSupply = 165 * million;
     uint256 public foundersAndAdvisorsAllocation = 44 * million;
     uint256 public bountyCommunityIncentivesAllocation = (16 * million).add(500 * thousand);
     uint256 public liquidityProgramAllocation = (16 * million).add(500 * thousand);
-    uint256 public minimumPurchase = 0.01 ether;
+    // approx $50 USD
+    // 0.0875 ETH
+    uint256 public minPurchase = 87500000000000000;
     // 1 TSD = x ETH
     // Unit convertsions https://github.com/ethereum/web3.js/blob/0.15.0/lib/utils/utils.js#L40
     uint256 public exchangeRate;
@@ -44,6 +46,9 @@ contract TSD is BaseToken, Ownable {
     address public foundersAndAdvisors;
     address public bountyCommunityIncentives;
     address public liquidityProgram;
+
+    // SubsequentContract Address
+    address public subsequentContract;
     
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
@@ -55,6 +60,7 @@ contract TSD is BaseToken, Ownable {
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event Debugger(string variable, uint256 value);
+    event DebugStrings(string variable);
     
     constructor(
         uint256 _exchangeRate,
@@ -68,7 +74,6 @@ contract TSD is BaseToken, Ownable {
         fundsWallet = owner;
         pvtSaleTokenWallet = _pvtSaleTokenWallet;
         preSaleTokenWallet = _preSaleTokenWallet;
-        exchangeRate = _exchangeRate;
         foundersAndAdvisors = _foundersAndAdvisors;
         bountyCommunityIncentives = _bountyCommunityIncentives;
         liquidityProgram = _liquidityProgram;
@@ -77,30 +82,24 @@ contract TSD is BaseToken, Ownable {
         balances[fundsWallet] = totalSupply;
         emit Transfer(0x0, fundsWallet, totalSupply);
         
+        // Transfer all of the allocations
+        // The inherited transfer method from the StandardToken which inherits 
+        // from BasicToken emits Transfer events and subtracts/adds respective
+        // amounts to respective accounts
         // transfer tokens to account for the private sale
-        balances[fundsWallet] = balances[fundsWallet].sub(pvtSaleSupply);
-        balances[pvtSaleTokenWallet] = balances[pvtSaleTokenWallet].add(pvtSaleSupply);
-        emit Transfer(fundsWallet, pvtSaleTokenWallet, pvtSaleSupply);
+        super.transfer(pvtSaleTokenWallet, pvtSaleSupply);
         
         // transfer tokens to account for the pre sale
-        balances[fundsWallet] = balances[fundsWallet].sub(preSaleSupply);
-        balances[preSaleTokenWallet] = balances[preSaleTokenWallet].add(preSaleSupply);
-        emit Transfer(fundsWallet, preSaleTokenWallet, preSaleSupply);
+        super.transfer(preSaleTokenWallet, preSaleSupply);
 
         // transfer tokens to founders account
-        balances[fundsWallet] = balances[fundsWallet].sub(foundersAndAdvisorsAllocation);
-        balances[foundersAndAdvisors] = balances[foundersAndAdvisors].add(foundersAndAdvisorsAllocation);
-        emit Transfer(fundsWallet, foundersAndAdvisors, foundersAndAdvisorsAllocation);
+        super.transfer(foundersAndAdvisors, foundersAndAdvisorsAllocation);
 
         // transfer tokens to bounty and community incentives account
-        balances[fundsWallet] = balances[fundsWallet].sub(bountyCommunityIncentivesAllocation);
-        balances[bountyCommunityIncentives] = balances[bountyCommunityIncentives].add(bountyCommunityIncentivesAllocation);
-        emit Transfer(fundsWallet, bountyCommunityIncentives, bountyCommunityIncentivesAllocation);
+        super.transfer(bountyCommunityIncentives, bountyCommunityIncentivesAllocation);
 
         // transfer tokens to the liquidity program account
-        balances[fundsWallet] = balances[fundsWallet].sub(liquidityProgramAllocation);
-        balances[liquidityProgram] = balances[liquidityProgram].add(liquidityProgramAllocation);
-        emit Transfer(fundsWallet, liquidityProgram, liquidityProgramAllocation);
+        super.transfer(liquidityProgram, liquidityProgramAllocation);
         
         // Set up the list of whitelisted addresses
         createWhiteListedMapping(_whitelistAddresses);
@@ -132,7 +131,7 @@ contract TSD is BaseToken, Ownable {
         return true;
     }
 
-    function isWhiteListed(address _address) public view returns (bool) {
+    function isWhiteListed(address _address) external view returns (bool) {
         if (whiteListed[_address]) {
             return true;
         } else {
@@ -147,52 +146,67 @@ contract TSD is BaseToken, Ownable {
     }
     
     function buyTokens() payable public {
+        require(icoOpen);
         require(currentTime() >= startTime && currentTime() <= endTime);
-        require(msg.value >= minimumPurchase);
+        require(msg.value >= minPurchase);
         require(whiteListed[msg.sender]);
+
+        // ETH received by spender
         uint256 ethAmount = msg.value;
-        uint256 tokenAmount = msg.value.mul(exchangeRate);
-        uint256 availableTokens;
+        // token amount based on ETH / exchangeRate result
+        // Multiply with the decimalMultiplier to get total tokens (to 18 decimal place)
+        uint256 totalTokenAmount = ethAmount.div(exchangeRate).mul(decimalMultiplier);
+        // tokens avaialble to sell are the remaining tokens in the pvtFundsWallet
+        uint256 availableTokens = balances[fundsWallet];
         uint256 currentEthRaised = totalEthRaised;
         uint256 ethRefund = 0;
-        
-        
-        if (tokenAmount > balances[fundsWallet]) {
-            // subtract the remaining bal from the original token amount
-            availableTokens = tokenAmount.sub(balances[fundsWallet]);
-            // determine the unused ether amount by seeing how many tokens where
-            // unavailable and dividing by the exchange rate
-            ethRefund = tokenAmount.sub(availableTokens).div(exchangeRate);
+        uint256 unavailableTokens;
+
+        if (totalTokenAmount > availableTokens) {
+            // additional tokens that aren't avaialble to be sold
+            // tokenAmount is the tokens requested by buyer (not including the discount)
+            // availableTokens are all the tokens left in the supplying wallet i.e pvtFundsWallet
+            unavailableTokens = totalTokenAmount.sub(availableTokens);
+
+            // determine the unused ether amount by seeing how many tokens were surplus
+            // i.e 'availableTokens' and reverse calculating their ETH equivalent
+            // divide by decimalMultiplier as unavailableTokens are 10^18
+            ethRefund = unavailableTokens.mul(exchangeRate).div(decimalMultiplier);
             // subtract the refund amount from the eth amount received by the tx
             ethAmount = ethAmount.sub(ethRefund);
             // make the token purchase
+            // will equal to 0 after these substractions occur
             balances[fundsWallet] = balances[fundsWallet].sub(availableTokens);
-            balances[msg.sender] = balances[msg.sender].add(availableTokens);
-            emit Transfer(fundsWallet, msg.sender, tokenAmount);
 
+            // add total tokens to the senders balances and Emit transfer event
+            balances[msg.sender] = balances[msg.sender].add(availableTokens);
+            emit Transfer(fundsWallet, msg.sender, availableTokens);
             // refund
             if (ethRefund > 0) {
                 msg.sender.transfer(ethRefund);
             }
-
             // transfer ether to funds wallet
             fundsWallet.transfer(ethAmount);
-            totalEthRaised.add(ethAmount);
+            totalEthRaised = totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
+            // close token sale as tokens are sold out
+            icoOpen = false;
         } else {
-            require(balances[fundsWallet] >= tokenAmount);
-            balances[fundsWallet] = balances[fundsWallet].sub(tokenAmount);
-            balances[msg.sender] = balances[msg.sender].add(tokenAmount);
-            emit Transfer(fundsWallet, msg.sender, tokenAmount);
-            
-            fundsWallet.transfer(msg.value);
-            totalEthRaised.add(msg.value);
+            require(availableTokens >= totalTokenAmount);
+            // complete transfer and emit an event
+            balances[fundsWallet] = balances[fundsWallet].sub(totalTokenAmount);
+            balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
+
+            // transfer ether to the wallet and emit and event regarding eth raised
+            fundsWallet.transfer(ethAmount);
+            totalEthRaised = totalEthRaised.add(ethAmount);
+            emit Transfer(fundsWallet, msg.sender, totalTokenAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
         }
     }
 
     // After close
-    function burnRemainingTokensAfterClose() public onlyOwner returns (bool) {
+    function burnRemainingTokensAfterClose() external onlyOwner returns (bool) {
         require(currentTime() >= endTime);
         if (balances[fundsWallet] > 0) {
             // burn unsold tokens
@@ -200,17 +214,6 @@ contract TSD is BaseToken, Ownable {
         }
 
         return true;
-    }
-    
-    // Subsequent supply functions
-    function increaseTotalSupplyAndAllocateTokens(address _newTokensWallet, uint256 _amount) onlyOwner public {
-        totalSupply = totalSupply + _amount;
-        balances[_newTokensWallet] = _amount;
-    }
-    
-    function increaseEthRaisedBySubsequentSale(uint256 _amount) public {
-        uint256 newEthAmount = totalEthRaised + _amount;
-        emit EthRaisedUpdated(totalEthRaised, newEthAmount);
     }
     
     // ERC20 function wrappers
@@ -222,5 +225,29 @@ contract TSD is BaseToken, Ownable {
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         require(currentTime() >= endTime);
         return super.transferFrom(_from, _to, _value);
+    }
+
+    // Subsequent supply functions
+    function setSubsequentContract(address _contractAddress) private onlyOwner returns (bool) {
+        subsequentContract = _contractAddress;
+        return true;
+    }
+
+    function increaseTotalSupplyAndAllocateTokens(address _newTokensWallet, uint256 _amount) isSubsequentContract public returns (bool) {
+        uint256 totalAmount = _amount.mul(decimalMultiplier);
+        totalSupply = totalSupply.add(totalAmount);
+        balances[_newTokensWallet] = totalAmount;
+        return true;
+    }
+    
+    function increaseEthRaisedBySubsequentSale(uint256 _amount) public isSubsequentContract {
+        uint256 newEthAmount = totalEthRaised.add(_amount);
+        emit EthRaisedUpdated(totalEthRaised, newEthAmount);
+    }
+
+    // modifier
+    modifier isSubsequentContract() {
+        require(msg.sender == subsequentContract);
+        _;
     }
 }

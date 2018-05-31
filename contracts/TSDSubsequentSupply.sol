@@ -24,19 +24,31 @@ contract TSDSubsequentSupply is Ownable {
     event NewTotalSupplyOfTSD(uint256 _totalSupply);
     event Transfer(address _from, address _to, uint256 _amount);
     event EthRaisedUpdated(uint256 _previousTotal, uint256 _newTotal);
+    event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event SubsequentContractOpened(address _contract, bool _isOpen);
+
+    // Updates the ETH => TSD exchange rate
+    function updateTheExchangeRate(uint256 _newRate) public onlyOwner returns (bool) {
+        uint256 currentRate = exchangeRate;
+        // 0.000001 ETHER
+        uint256 oneSzabo = 1 szabo;
+        // 0.00001 ETH OTHERWISE 0.000001
+        exchangeRate = (oneSzabo).mul(_newRate);
+        emit ExhangeRateUpdated(currentRate, _newRate);
+        return true;
+    }
 
     // NOTE: when this contract is opened, the owner of the newTokensWallet
     // needs to approve this wallet as the spender
     // This will be done through the approve function in the main contract 
     
-    function setTokenWalletAddressAndExchangeRate(address _newTokensWallet, address _newFundsWallet, uint256 _rate) onlyOwner public {
-        exchangeRate = _rate;
+    function setTokenWalletAddressAndExchangeRate(address _newTokensWallet, address _newFundsWallet, uint256 _rate) onlyOwner external {
+        updateTheExchangeRate(_rate);
         newFundsWallet = _newFundsWallet;
         newTokensWallet = _newTokensWallet;
     }
     
-    function increaseTotalSupplyAndAllocateTokens(uint256 _amount) onlyOwner public {
+    function increaseTotalSupplyAndAllocateTokens(uint256 _amount) onlyOwner external {
         require(newTokensWallet != 0x0);
         uint256 currentTotalSupply = dc.totalSupply();
         uint256 newTotalSupply = currentTotalSupply.add(_amount);
@@ -45,7 +57,7 @@ contract TSDSubsequentSupply is Ownable {
         emit NewTotalSupplyOfTSD(newTotalSupply);
     }
     
-    function openSubsequentSale() onlyOwner public returns (bool) {
+    function openSubsequentSale() onlyOwner external returns (bool) {
         require(newTokensWallet != 0x0);
         require(exchangeRate != 0);
         isOpen = true;
@@ -54,7 +66,7 @@ contract TSDSubsequentSupply is Ownable {
         return true;
     }
     
-    function closeSubsequentSale() onlyOwner public returns (bool) {
+    function closeSubsequentSale() onlyOwner external returns (bool) {
         isOpen = false;
 
         emit SubsequentContractOpened(address(this), false);
