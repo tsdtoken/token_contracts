@@ -228,7 +228,7 @@ contract TSD is BaseToken, Ownable {
     }
 
     // Subsequent supply functions
-    function setSubsequentContract(address _contractAddress) private onlyOwner returns (bool) {
+    function setSubsequentContract(address _contractAddress) public onlyOwner returns (bool) {
         subsequentContract = _contractAddress;
         return true;
     }
