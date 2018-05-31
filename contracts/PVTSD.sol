@@ -210,17 +210,12 @@ contract PVTSD is Ownable {
     function distributeTokens() public onlyOwner returns (bool) {
         require(currentTime() >= tokensReleaseDate);
         address pvtSaleTokenWallet = dc.pvtSaleTokenWallet();
-        address mainContractFundsWallet = dc.fundsWallet();
         for (uint256 i = 0; i < icoParticipants.length; i++) {
             dc.transferFrom(pvtSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
             emit Transfer(pvtSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
         }
 
-        if (dc.balanceOf(pvtSaleTokenWallet) > 0) {
-            uint256 remainingBalace = dc.balanceOf(pvtSaleTokenWallet);
-            dc.transferFrom(pvtSaleTokenWallet, mainContractFundsWallet, remainingBalace);
-            emit Transfer(pvtSaleTokenWallet, mainContractFundsWallet, remainingBalace);
-        }
+        // NOTE: What to do with any unsold tokens in the main contracts allocation???
 
         // Event to say distribution is complete
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
