@@ -92,14 +92,14 @@ contract PRETSD is BaseToken, Ownable {
     // Usage:
     // Pass in the amount of tokens and the discount rate.
     // If no discount is required pass in 100 as the rate value.
-    function tokenToEth(uint256 _tokens, uint8 _rate) private view returns(uint256) {
+    function tokenToEth(uint256 _tokens, uint8 _rate) internal view returns(uint256) {
         return (( _tokens * _rate ) / 100 * exchangeRate).div(decimalMultiplier);
     }
 
     // Usage:
     // Pass in the amount of eth and the discount rate.
     // If no discount is required pass in 100 as the rate value.
-    function ethToToken(uint256 _eth, uint8 _rate) private view returns(uint256) {
+    function ethToToken(uint256 _eth, uint8 _rate) internal view returns(uint256) {
         return ((_eth / _rate * 100) * decimalMultiplier).div(exchangeRate);
     }
 
@@ -179,7 +179,7 @@ contract PRETSD is BaseToken, Ownable {
         }
     }
 
-    function calculateTotalRemainingTokenCost() private view returns(uint256) {
+    function calculateTotalRemainingTokenCost() public view returns(uint256) {
         uint256 totalCost = 0;
         uint256 sold = totalSupply.sub(balances[preFundsWallet]);
         // Calculate the remaining tranche tokens.
@@ -204,7 +204,7 @@ contract PRETSD is BaseToken, Ownable {
         return totalCost;
     }
 
-    function calculateTokenAmountWithDiscounts(uint256 _ethAmount) private view returns(uint256) {
+    function calculateTokenAmountWithDiscounts(uint256 _ethAmount) public view returns(uint256) {
         uint256 returnTokens = 0;
         uint256 tokensFromTranche = 0;
         uint256 ethRemaining = _ethAmount;
