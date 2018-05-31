@@ -8,6 +8,7 @@ contract('PVTSDMock', (accounts) => {
   const currentTime = moment().unix();
   // exchange rate is 1 szabo or 0.001
   const exchangeRate = new web3.BigNumber(1000);
+  const decimalMultiplier = Math.pow(10, 18);
   const owner = accounts[0];
   const pvtFundsWallet = owner;
   const whitelistAddresses = [
@@ -89,7 +90,7 @@ contract('PVTSDMock', (accounts) => {
     const firstWhitelistAddress = await PVTSDMockContract.whiteListed(accounts[1]);
     const secondWhitelistAddress = await PVTSDMockContract.whiteListed(accounts[2]);
     const thirdWhitelistAddress = await PVTSDMockContract.whiteListed(accounts[3]);
-    
+
     assert.equal(firstWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
     assert.equal(secondWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
     assert.equal(thirdWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
@@ -157,7 +158,7 @@ contract('PVTSDMock', (accounts) => {
     const buyerTokenBal = await PVTSDMockContract.balanceOf(buyerFive);
     assert.equal(numFromWei(buyerTokenBal), 100000, 'Buyer should have a balance of 100,000 tokens');
   });
-  
+
   it('keeps a reference of all buyers address in the icoParticipants array', async () => {
     const startTime = await PVTSDMockContract.startTime();
     await PVTSDMockContract.changeTime(startTime.c[0]);
@@ -172,8 +173,11 @@ contract('PVTSDMock', (accounts) => {
     const balPriorEthTransfer = web3.eth.getBalance(pvtFundsWallet);
     await PVTSDMockContract.sendTransaction(buyTokens(50, buyerTwo));
     const balPostEthTransfer = web3.eth.getBalance(pvtFundsWallet);
-    const ethDiff = numFromWei(balPostEthTransfer) - numFromWei(balPriorEthTransfer)
-    assert.equal(ethDiff, 50, 'Funds wallet should have received 50 ether from the sale');
+    const weiPostTransfer = numFromWei(balPostEthTransfer);
+    const weiPriorTransfer = numFromWei(balPriorEthTransfer);
+    const epsilon = 0.0000001;
+    const ethDiff = (Math.abs((weiPostTransfer - weiPriorTransfer) - 50) < epsilon);
+    assert.equal(ethDiff, true, 'Funds wallet should have received 50 ether from the sale');
   });
 
   it('rejects ether from an address that isn\'t whitelisted', async () => {
@@ -203,7 +207,7 @@ contract('PVTSDMock', (accounts) => {
     // // this should cost the user 9.0000014 ETH
     const costOfRemainingTokens = 9.0000014;
     // // buyer should be transfered the 5 million tokens
-    // // 9.0000014 ether should be transfered to the funds wallet 
+    // // 9.0000014 ether should be transfered to the funds wallet
     // // buyer should be returned 25.9999986 eth - tx costs
     // // buyers balance before tx
     const fundsWalletEthBalPrior = web3.eth.getBalance(pvtFundsWallet);
@@ -262,7 +266,7 @@ contract('PVTSDMock', (accounts) => {
       bountyCommunityIncentive,
       liquidityProgram,
     );
-    
+
     // Check for error when sent from someone other than the owner
     await assertExpectedError(PVTSDMockContract.setMainContractAddress(TSDMockContract.address, { from: buyerFive }))
     await PVTSDMockContract.setMainContractAddress(TSDMockContract.address, { from: owner });
@@ -317,4 +321,3 @@ contract('PVTSDMock', (accounts) => {
     assert.equal(numFromWei(secondBuyerPvtBal), numFromWei(secondBuyerMainBal));
   });
 });
-  
