@@ -74,7 +74,7 @@ contract PRETSD is BaseToken, Ownable {
 
         // set up the white listing mapping
         createWhiteListedMapping(_whitelistAddresses);
-
+        // set exchange rate
         updateTheExchangeRate(_exchangeRate);
     }
 
@@ -92,15 +92,15 @@ contract PRETSD is BaseToken, Ownable {
     // Usage:
     // Pass in the amount of tokens and the discount rate.
     // If no discount is required pass in 100 as the rate value.
-    function tokenToEth(uint256 _tokens, uint8 _rate) internal view returns(uint256) {
-      return (( _tokens * _rate ) / 100 * exchangeRate).div(decimalMultiplier);
+    function tokenToEth(uint256 _tokens, uint8 _rate) private view returns(uint256) {
+        return (( _tokens * _rate ) / 100 * exchangeRate).div(decimalMultiplier);
     }
 
     // Usage:
     // Pass in the amount of eth and the discount rate.
     // If no discount is required pass in 100 as the rate value.
-    function ethToToken(uint256 _eth, uint8 _rate) internal view returns(uint256) {
-      return ((_eth / _rate * 100) * decimalMultiplier).div(exchangeRate);
+    function ethToToken(uint256 _eth, uint8 _rate) private view returns(uint256) {
+        return ((_eth / _rate * 100) * decimalMultiplier).div(exchangeRate);
     }
 
      // Updates the ETH => TSD exchange rate
@@ -115,7 +115,7 @@ contract PRETSD is BaseToken, Ownable {
         return true;
     }
 
-    function isWhiteListed(address _address) public view returns (bool) {
+    function isWhiteListed(address _address) external view returns (bool) {
         if (whiteListed[_address]) {
             return true;
         } else {
@@ -179,7 +179,7 @@ contract PRETSD is BaseToken, Ownable {
         }
     }
 
-    function calculateTotalRemainingTokenCost() public view returns(uint256) {
+    function calculateTotalRemainingTokenCost() private view returns(uint256) {
         uint256 totalCost = 0;
         uint256 sold = totalSupply.sub(balances[preFundsWallet]);
         // Calculate the remaining tranche tokens.
@@ -259,13 +259,13 @@ contract PRETSD is BaseToken, Ownable {
     // After close functions
 
     // Create an instance of the main contract
-    function setMainContractAddress(address _t) onlyOwner public {
+    function setMainContractAddress(address _t) onlyOwner external {
         dc = TSD(_t);
         TSDContractAddress = _t;
     }
 
     // Burn any remaining tokens
-    function burnRemainingTokens() public onlyOwner returns (bool) {
+    function burnRemainingTokens() external onlyOwner returns (bool) {
         require(currentTime() >= endTime);
         if (balances[preFundsWallet] > 0) {
             balances[preFundsWallet] = 0;
@@ -278,7 +278,7 @@ contract PRETSD is BaseToken, Ownable {
     // This will be a two step process.
     // This function will be called by the preSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
-    function distrubuteTokens() onlyOwner public {
+    function distrubuteTokens() onlyOwner external {
         require(currentTime() >= tokensReleaseDate);
         address preSaleTokenWallet = dc.preSaleTokenWallet();
         for (uint8 i = 0; i < icoParticipants.length; i++) {

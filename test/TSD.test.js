@@ -270,6 +270,7 @@ contract('TSDMock', (accounts) => {
     assert.equal(numFromWei(buyerSixEthPost), numFromWei(new web3.BigNumber(expectedEthBal)), 'The current balance should equal before total - (token cost + transaction cost)');
     assert.equal(tokensRemaining, 0, 'There should be no remaining tokens');
     assert.equal(finalFundsWalletBal, numFromWei(fundsWalletPost));
+    assert.equal(await TSDMockContract.icoOpen(), false);
   });
 
   // After sale

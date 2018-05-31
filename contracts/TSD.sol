@@ -131,7 +131,7 @@ contract TSD is BaseToken, Ownable {
         return true;
     }
 
-    function isWhiteListed(address _address) public view returns (bool) {
+    function isWhiteListed(address _address) external view returns (bool) {
         if (whiteListed[_address]) {
             return true;
         } else {
@@ -206,7 +206,7 @@ contract TSD is BaseToken, Ownable {
     }
 
     // After close
-    function burnRemainingTokensAfterClose() public onlyOwner returns (bool) {
+    function burnRemainingTokensAfterClose() external onlyOwner returns (bool) {
         require(currentTime() >= endTime);
         if (balances[fundsWallet] > 0) {
             // burn unsold tokens
@@ -228,7 +228,7 @@ contract TSD is BaseToken, Ownable {
     }
 
     // Subsequent supply functions
-    function setSubsequentContract(address _contractAddress) public onlyOwner returns (bool) {
+    function setSubsequentContract(address _contractAddress) private onlyOwner returns (bool) {
         subsequentContract = _contractAddress;
         return true;
     }

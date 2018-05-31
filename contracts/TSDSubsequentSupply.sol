@@ -30,13 +30,13 @@ contract TSDSubsequentSupply is Ownable {
     // needs to approve this wallet as the spender
     // This will be done through the approve function in the main contract 
     
-    function setTokenWalletAddressAndExchangeRate(address _newTokensWallet, address _newFundsWallet, uint256 _rate) onlyOwner public {
+    function setTokenWalletAddressAndExchangeRate(address _newTokensWallet, address _newFundsWallet, uint256 _rate) onlyOwner external {
         exchangeRate = _rate;
         newFundsWallet = _newFundsWallet;
         newTokensWallet = _newTokensWallet;
     }
     
-    function increaseTotalSupplyAndAllocateTokens(uint256 _amount) onlyOwner public {
+    function increaseTotalSupplyAndAllocateTokens(uint256 _amount) onlyOwner external {
         require(newTokensWallet != 0x0);
         uint256 currentTotalSupply = dc.totalSupply();
         uint256 newTotalSupply = currentTotalSupply.add(_amount);
@@ -45,7 +45,7 @@ contract TSDSubsequentSupply is Ownable {
         emit NewTotalSupplyOfTSD(newTotalSupply);
     }
     
-    function openSubsequentSale() onlyOwner public returns (bool) {
+    function openSubsequentSale() onlyOwner external returns (bool) {
         require(newTokensWallet != 0x0);
         require(exchangeRate != 0);
         isOpen = true;
@@ -54,7 +54,7 @@ contract TSDSubsequentSupply is Ownable {
         return true;
     }
     
-    function closeSubsequentSale() onlyOwner public returns (bool) {
+    function closeSubsequentSale() onlyOwner external returns (bool) {
         isOpen = false;
 
         emit SubsequentContractOpened(address(this), false);
