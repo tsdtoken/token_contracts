@@ -1,7 +1,7 @@
 const PRETSDMock = artifacts.require("./PRETSDMock.sol");
 const TSDMock = artifacts.require("./TSDMock.sol");
 const moment = require('moment');
-const { numFromWei, numToWei, buyTokens, assertExpectedError, } = require('./testHelpers');
+const { numFromWei, numToWei, buyTokens, assertExpectedError, equalsWithNormalizedRounding } = require('./testHelpers');
 
 contract('PRETSDMock', (accounts) => {
   let PRETSDMockContract;
@@ -20,6 +20,8 @@ contract('PRETSDMock', (accounts) => {
   const buyerFour = accounts[firstBuyerIndex+3];
   const buyerFive = accounts[firstBuyerIndex+4];
   const buyerSix = accounts[firstBuyerIndex+5];
+  const buyerSeven = accounts[firstBuyerIndex+16];
+  const buyerEight = accounts[firstBuyerIndex+17];
   const trancheBuyerOne = accounts[firstBuyerIndex+6];
   const trancheBuyerTwo = accounts[firstBuyerIndex+7];
   const trancheBuyerThree = accounts[firstBuyerIndex+8];
@@ -32,6 +34,8 @@ contract('PRETSDMock', (accounts) => {
     buyerFour,
     buyerFive,
     buyerSix,
+    buyerSeven,
+    buyerEight,
     trancheBuyerOne,
     trancheBuyerTwo,
     trancheBuyerThree,
@@ -272,7 +276,7 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(numFromWei(buyerTokenBalance), 58125000, 'Buyer should be transfered the remaining 58.125 million tokens');
     assert.equal(numFromWei(buyerEThBalPost), numFromWei(new web3.BigNumber(expectedEthBal)), 'The current balance should equal token cost + trasaction cost');
     assert.equal(tokensRemaining, 0, 'There should be no remaining tokens');
-    assert.equal(numFromWei(fundsWalletEthBalPrior) + costOfRemainingTokens, numFromWei(fundsWalletEthBalPost));
+    assert.ok(equalsWithNormalizedRounding(numFromWei(fundsWalletEthBalPrior) + costOfRemainingTokens, numFromWei(fundsWalletEthBalPost)));
     // icoOpen is set to false when no tokens remain
     assert.equal(await PRETSDMockContract.icoOpen(), false);
   });
@@ -315,8 +319,6 @@ contract('PRETSDMock', (accounts) => {
     const foundersAndAdvisors = accounts[firstBuyerIndex+13];
     const bountyCommunityIncentive = accounts[firstBuyerIndex+14];
     const liquidityProgram = accounts[firstBuyerIndex+15];
-    const buyerSeven = accounts[firstBuyerIndex+16];
-    const buyerEight = accounts[firstBuyerIndex+17];
     const fundsWallet = owner;
     const preContractAddress = await PRETSDMockContract.address;
     // set up a reference to the main contract
@@ -332,30 +334,24 @@ contract('PRETSDMock', (accounts) => {
     );
 
     // record the main token sale funds wallet balance prior to distribution
-    console.log("first");
     const mainSaleAvailableTokens = await TSDMockContract.balanceOf(fundsWallet);
     const mainPreTokenAllocation = await TSDMockContract.balanceOf(preSaleTokenWallet);
     // make a buy in the pre sale
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
-    console.log("random2");
     await PRETSDMockContract.sendTransaction(buyTokens(50, buyerSeven));
-    console.log("Changed time");
     await PRETSDMockContract.sendTransaction(buyTokens(50, buyerEight));
     // // change time to token release date
     // // change time in the main contract to token release date
     // // distribute the tokens for pre contract to the main contract
-    console.log("random1");
     const tokensReleaseDate = await PRETSDMockContract.tokensReleaseDate();
     await PRETSDMockContract.changeTime(tokensReleaseDate);
     await TSDMockContract.changeTime(tokensReleaseDate);
-    console.log("random2");
     const mainContractPreTokenAllocation = await TSDMockContract.balanceOf(preSaleTokenWallet);
     await TSDMockContract.approve(preContractAddress, mainContractPreTokenAllocation, { from: preSaleTokenWallet });
     // // set up contract reference
     await PRETSDMockContract.setMainContractAddress(TSDMockContract.address, { from: owner });
     await PRETSDMockContract.distributeTokens({ from: owner });
-    console.log("random3");
     // check the balance of the pvt sale buyer in the main contract
     const firstBuyerPreBal = await PRETSDMockContract.balanceOf(buyerSeven);
     const firstBuyerMainBal = await TSDMockContract.balanceOf(buyerSeven);
@@ -363,23 +359,5 @@ contract('PRETSDMock', (accounts) => {
     const secondBuyerMainBal = await TSDMockContract.balanceOf(buyerEight);
     assert.equal(numFromWei(firstBuyerPreBal), numFromWei(firstBuyerMainBal));
     assert.equal(numFromWei(secondBuyerPreBal), numFromWei(secondBuyerMainBal));
-    console.log("random4");
-
-    // If there were any unsold tokens from the private sale
-    // The remaining tokens from the private sale allocation
-    // will be transferred to the main token sales balance
-    // this keeps the total supply valid because the unallocated tokens
-    // can be sold in the main sale
-    const totalTokensSoldInPreSale = numFromWei(firstBuyerPreBal) + numFromWei(secondBuyerPreBal);
-    const unsoldPreTokens = numFromWei(mainPreTokenAllocation) - totalTokensSoldInPreSale;
-    // prior balances[fundsWallet] + totalTokensSoldInPvtSale
-    const preAllocationWalletBal = await TSDMockContract.balanceOf(pvtSaleTokenWallet);
-    // prior balances[fundsWallet] + totalTokensSoldInPvtSale
-    console.log("random5");
-    const totalExpected = numFromWei(mainSaleAvailableTokens) + unsoldPreTokens;
-    const finalMainSaleTokens = await TSDMockContract.balanceOf(fundsWallet);
-    console.log("random6");
-    assert.equal(preAllocationWalletBal, 0, 'Private sale token allocation should be 0');
-    assert.equal(totalExpected, numFromWei(finalMainSaleTokens), 'Final balance of available main tokens should include unsold private sale tokens (407833334)');
   });
 });

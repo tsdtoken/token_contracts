@@ -2,7 +2,7 @@ const PVTSDMock = artifacts.require("./PVTSDMock.sol");
 const TSDMock = artifacts.require("./TSDMock.sol");
 const TSDSubsequentSupply = artifacts.require("./TSDSubsequentSupply.sol");
 const moment = require('moment');
-const { numFromWei, numToWei, buyTokens, assertExpectedError, } = require('./testHelpers');
+const { numFromWei, numToWei, buyTokens, assertExpectedError, equalsWithNormalizedRounding } = require('./testHelpers');
 
 contract('TSDMock', (accounts) => {
   let TSDMockContract;
@@ -51,7 +51,7 @@ contract('TSDMock', (accounts) => {
   it('has an owner', async () => {
     assert.equal(await TSDMockContract.owner(), owner);
   });
-  
+
   it('sets the owner as the fundsWallet', async () => {
     assert.equal(await TSDMockContract.fundsWallet(), owner);
   });
@@ -98,36 +98,36 @@ contract('TSDMock', (accounts) => {
   it('transfers the private sale token allocation to pvtSaleTokenWallet', async () => {
     const allocation = await TSDMockContract.pvtSaleSupply();
     const pvtTokenWalletBal = await TSDMockContract.balanceOf(pvtSaleTokenWallet);
-    assert.equal(numFromWei(pvtTokenWalletBal), numFromWei(allocation), 'Private token wallet should be allocation 55 million tokens'); 
+    assert.equal(numFromWei(pvtTokenWalletBal), numFromWei(allocation), 'Private token wallet should be allocation 55 million tokens');
   });
 
   it('transfers the pre sale token allocation to preSaleTokenWallet', async () => {
     const allocation = await TSDMockContract.preSaleSupply();
     const preTokenWalletBal = await TSDMockContract.balanceOf(preSaleTokenWallet);
-    assert.equal(numFromWei(preTokenWalletBal), numFromWei(allocation), 'Pre token wallet should be allocation 65 million tokens'); 
+    assert.equal(numFromWei(preTokenWalletBal), numFromWei(allocation), 'Pre token wallet should be allocation 65 million tokens');
   });
 
   it('transfers the founders and advisors token allocation to foundersAndAdvisorsAllocation wallet', async () => {
     const allocation = await TSDMockContract.foundersAndAdvisorsAllocation();
     const foundersAndAdvisorsWalletBal = await TSDMockContract.balanceOf(foundersAndAdvisors);
-    assert.equal(numFromWei(foundersAndAdvisorsWalletBal), numFromWei(allocation), 'Founders and advisors wallet should be allocation 44 million tokens'); 
+    assert.equal(numFromWei(foundersAndAdvisorsWalletBal), numFromWei(allocation), 'Founders and advisors wallet should be allocation 44 million tokens');
   });
 
   it('transfers the bounty token allocation to bountyCommunityIncentives wallet', async () => {
     const allocation = await TSDMockContract.bountyCommunityIncentivesAllocation();
     const bountyWalletBal = await TSDMockContract.balanceOf(bountyCommunityIncentives);
-    assert.equal(numFromWei(bountyWalletBal), numFromWei(allocation), 'Bounty and community incentives wallet should be allocation 16.5 million tokens'); 
+    assert.equal(numFromWei(bountyWalletBal), numFromWei(allocation), 'Bounty and community incentives wallet should be allocation 16.5 million tokens');
   });
 
   it('transfers the liquidity program token allocation to pvtSaleTokenWallet', async () => {
     const allocation = await TSDMockContract.liquidityProgramAllocation();
     const liquidityWalletBal = await TSDMockContract.balanceOf(liquidityProgram);
-    assert.equal(numFromWei(liquidityWalletBal), numFromWei(allocation), 'Liquidity program wallet should be allocation 16.5 million tokens'); 
+    assert.equal(numFromWei(liquidityWalletBal), numFromWei(allocation), 'Liquidity program wallet should be allocation 16.5 million tokens');
   });
 
   it('funds wallet has 253 million tokens available for public sale', async () => {
     const fundsWalletBal = await TSDMockContract.balanceOf(fundsWallet);
-    assert.equal(numFromWei(fundsWalletBal), 253000000, 'The funds wallet should have a balance of 253 million tokens');     
+    assert.equal(numFromWei(fundsWalletBal), 253000000, 'The funds wallet should have a balance of 253 million tokens');
   });
 
   it('can tell you if an address is whitelisted', async () => {
@@ -142,7 +142,7 @@ contract('TSDMock', (accounts) => {
     const firstWhitelistAddress = await TSDMockContract.whiteListed(buyerOne);
     const secondWhitelistAddress = await TSDMockContract.whiteListed(buyerTwo);
     const thirdWhitelistAddress = await TSDMockContract.whiteListed(buyerThree);
-    
+
     assert.equal(firstWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
     assert.equal(secondWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
     assert.equal(thirdWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
@@ -248,7 +248,7 @@ contract('TSDMock', (accounts) => {
     // this should cost the user 0.0373 ETH
     const costOfRemainingTokens = 0.0373;
     // buyer should be transfered the 37300 tokens
-    // 0.0373 ether should be transfered to the funds wallet 
+    // 0.0373 ether should be transfered to the funds wallet
     // buyer should be returned 0.0505 eth - tx costs
     // buyers balance before tx
     const buyerSixEthPrior = web3.eth.getBalance(buyerSix);
@@ -264,12 +264,12 @@ contract('TSDMock', (accounts) => {
     // expected buyer eth balance after sale
     const expectedEthBal = buyerSixEthPrior - numToWei(costOfRemainingTokens) - totalGasSpent;
     // this is to handle a javascript rounding error
-    const finalFundsWalletBal = (numFromWei(fundsWalletPrior) * 10000000 + costOfRemainingTokens * 10000000) / 10000000;
+    const finalFundsWalletBal = (numFromWei(fundsWalletPrior) + costOfRemainingTokens);
     assert.equal(numFromWei(lastRemainingTokens), 37300, 'The tokens remaining should be 37300');
     assert.equal(numFromWei(buyerSixTokens), 37300, 'Buyers balance should be the remaining 37300 tokens');
     assert.equal(numFromWei(buyerSixEthPost), numFromWei(new web3.BigNumber(expectedEthBal)), 'The current balance should equal before total - (token cost + transaction cost)');
     assert.equal(tokensRemaining, 0, 'There should be no remaining tokens');
-    assert.equal(finalFundsWalletBal, numFromWei(fundsWalletPost));
+    assert.ok(equalsWithNormalizedRounding(finalFundsWalletBal, numFromWei(fundsWalletPost)));
     assert.equal(await TSDMockContract.icoOpen(), false);
   });
 

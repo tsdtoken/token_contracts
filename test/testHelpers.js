@@ -9,6 +9,13 @@ module.exports.buyTokens = (eth, addr) => (
   }
 )
 
+module.exports.equalsWithNormalizedRounding = (value1, value2) => {
+  {
+    const epsilon = 0.0000001;
+    return (Math.abs(value1 - value2) < epsilon);
+  }
+}
+
 module.exports.assertExpectedError = async (promise) => {
   try {
     await promise;

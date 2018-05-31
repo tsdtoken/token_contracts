@@ -1,7 +1,7 @@
 const PVTSDMock = artifacts.require("./PVTSDMock.sol");
 const TSDMock = artifacts.require("./TSDMock.sol");
 const moment = require('moment');
-const { numFromWei, numToWei, buyTokens, assertExpectedError, } = require('./testHelpers');
+const { numFromWei, numToWei, buyTokens, assertExpectedError, equalsWithNormalizedRounding } = require('./testHelpers');
 
 contract('PVTSDMock', (accounts) => {
   let PVTSDMockContract;
@@ -65,13 +65,13 @@ contract('PVTSDMock', (accounts) => {
     const dateString = new Date(endTime.c[0]);
     assert.equal(dateString, 'Sun Jul 15 2018 00:00:00 GMT+1000 (AEST)');
   });
-  
+
   it('sets the release date to be Mon Apr 15 2019 00:00:00 GMT+1000 (AEST)', async () => {
     const tokensReleaseDate = await PVTSDMockContract.tokensReleaseDate();
     const dateString = new Date(tokensReleaseDate.c[0]);
     assert.equal(dateString, 'Mon Apr 15 2019 00:00:00 GMT+1000 (AEST)');
   });
-  
+
   it('transfers total supply of tokens (55 million) to the private funds wallet', async () => {
     const pvtFundsWallet = owner;
     const pvtFundsWalletBalance = await PVTSDMockContract.balanceOf(pvtFundsWallet);
@@ -175,9 +175,7 @@ contract('PVTSDMock', (accounts) => {
     const balPostEthTransfer = web3.eth.getBalance(pvtFundsWallet);
     const weiPostTransfer = numFromWei(balPostEthTransfer);
     const weiPriorTransfer = numFromWei(balPriorEthTransfer);
-    const epsilon = 0.0000001;
-    const ethDiff = (Math.abs((weiPostTransfer - weiPriorTransfer) - 50) < epsilon);
-    assert.equal(ethDiff, true, 'Funds wallet should have received 50 ether from the sale');
+    assert.ok(equalsWithNormalizedRounding((weiPostTransfer - weiPriorTransfer), 50), 'Funds wallet should have received 50 ether from the sale');
   });
 
   it('rejects ether from an address that isn\'t whitelisted', async () => {

@@ -61,6 +61,7 @@ contract PRETSD is BaseToken, Ownable {
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
     event DebuggingAmounts(string nameOfValue, uint256 amount);
+    event DebuggingStrings(string message);
 
     constructor(
         uint256 _exchangeRate,
@@ -278,7 +279,7 @@ contract PRETSD is BaseToken, Ownable {
     // This will be a two step process.
     // This function will be called by the preSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
-    function distrubuteTokens() onlyOwner external {
+    function distributeTokens() onlyOwner public {
         require(currentTime() >= tokensReleaseDate);
         address preSaleTokenWallet = dc.preSaleTokenWallet();
         for (uint8 i = 0; i < icoParticipants.length; i++) {
