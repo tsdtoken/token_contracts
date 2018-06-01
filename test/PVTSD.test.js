@@ -272,7 +272,7 @@ contract('PVTSDMock', (accounts) => {
     assert.equal(setRefAddress, TSDMockContract.address, `Address set in the contract should be the address of the main contract ${setRefAddress}`)
   })
 
-  it('distributes private token balances into the main contract, burns any remaining tokens', async () => {
+  it('distributes private token balances into the main contract', async () => {
     const pvtSaleTokenWallet = accounts[8];
     const preSaleTokenWallet = accounts[9];
     const foundersAndAdvisors = accounts[10];

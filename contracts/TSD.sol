@@ -61,6 +61,7 @@ contract TSD is BaseToken, Ownable {
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event Debugger(string variable, uint256 value);
     event DebugStrings(string variable);
+    event DebugAddress(string name, address _address);
     
     constructor(
         uint256 _exchangeRate,
@@ -120,6 +121,14 @@ contract TSD is BaseToken, Ownable {
         }
     }
 
+    function isWhiteListed(address _address) external view returns (bool) {
+        if (whiteListed[_address]) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     // Updates the ETH => TSD exchange rate
     function updateTheExchangeRate(uint256 _newRate) public onlyOwner returns (bool) {
         uint256 currentRate = exchangeRate;
@@ -129,14 +138,6 @@ contract TSD is BaseToken, Ownable {
         exchangeRate = (oneSzabo).mul(_newRate);
         emit ExhangeRateUpdated(currentRate, _newRate);
         return true;
-    }
-
-    function isWhiteListed(address _address) external view returns (bool) {
-        if (whiteListed[_address]) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     // Buy functions
@@ -233,10 +234,9 @@ contract TSD is BaseToken, Ownable {
         return true;
     }
 
-    function increaseTotalSupplyAndAllocateTokens(address _newTokensWallet, uint256 _amount) isSubsequentContract public returns (bool) {
-        uint256 totalAmount = _amount.mul(decimalMultiplier);
-        totalSupply = totalSupply.add(totalAmount);
-        balances[_newTokensWallet] = totalAmount;
+    function increaseTotalSupplyAndAllocateTokens(address _newTokensWallet, uint256 _amount) public isSubsequentContract returns (bool) {
+        totalSupply = totalSupply.add(_amount);
+        balances[_newTokensWallet] = _amount;
         return true;
     }
     
