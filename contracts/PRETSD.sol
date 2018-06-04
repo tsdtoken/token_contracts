@@ -12,6 +12,7 @@ contract PRETSD is BaseToken, Ownable {
     TSD dc;
     // when the connection is set to the main contract, save a reference for event purposes
     address public TSDContractAddress;
+    address private oracleAddress;
 
     string public name = "PRE TSD COIN";
     string public symbol = "PRETSD";
@@ -90,6 +91,10 @@ contract PRETSD is BaseToken, Ownable {
         }
     }
 
+    function changeOracleAddress(address _newAddress) external onlyOwner {
+      oracleAddress = _newAddress;
+    }
+
     // Usage:
     // Pass in the amount of tokens and the discount rate.
     // If no discount is required pass in 100 as the rate value.
@@ -108,7 +113,7 @@ contract PRETSD is BaseToken, Ownable {
 
      // Updates the ETH => TSD exchange rate
      // The exchange rate is in gwei to
-    function updateTheExchangeRate(uint256 _newRate) public onlyOwner returns (bool) {
+    function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
         uint256 currentRate = exchangeRate;
         // 0.000001 ETHER
         uint256 oneSzabo = 1 szabo;
@@ -293,6 +298,11 @@ contract PRETSD is BaseToken, Ownable {
 
         // Event to say distribution is complete
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
+    }
+
+    modifier onlyRestricted () {
+      require(msg.sender == owner || msg.sender == oracleAddress);
+      _;
     }
 
 }

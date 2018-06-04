@@ -10,6 +10,7 @@ contract PVTSD is Ownable {
     TSD public dc;
     // when the connection is set to the main contract, save a reference for event purposes
     address public TSDContractAddress;
+    address private oracleAddress;
 
     string public name = "PRIVATE TSD COIN";
     string public symbol = "PVTSD";
@@ -93,8 +94,12 @@ contract PVTSD is Ownable {
         }
     }
 
+    function changeOracleAddress(address _newAddress) external onlyOwner {
+      oracleAddress = _newAddress;
+    }
+
     // Updates the ETH => TSD exchange rate
-    function updateTheExchangeRate(uint256 _newRate) public onlyOwner returns (bool) {
+    function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
         uint256 currentRate = exchangeRate;
         // 0.000001 ETHER
         uint256 oneSzabo = 1 szabo;
@@ -221,5 +226,10 @@ contract PVTSD is Ownable {
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
 
         return true;
+    }
+
+    modifier onlyRestricted () {
+      require(msg.sender == owner || msg.sender == oracleAddress);
+      _;
     }
 }

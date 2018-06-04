@@ -47,22 +47,25 @@ contract TSD is BaseToken, Ownable {
     address public bountyCommunityIncentives;
     address public liquidityProgram;
 
+    // Addresses for external helpers
+    address private oracleAddress;
+
     // SubsequentContract Address
     address public subsequentContract;
-    
+
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
 
     // ico concluded due to all tokens sold
     bool public icoOpen = true;
-    
+
     // events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event Debugger(string variable, uint256 value);
     event DebugStrings(string variable);
     event DebugAddress(string name, address _address);
-    
+
     constructor(
         uint256 _exchangeRate,
         address[] _whitelistAddresses,
@@ -78,18 +81,18 @@ contract TSD is BaseToken, Ownable {
         foundersAndAdvisors = _foundersAndAdvisors;
         bountyCommunityIncentives = _bountyCommunityIncentives;
         liquidityProgram = _liquidityProgram;
-        
+
         // transfer suppy to the funds wallet
         balances[fundsWallet] = totalSupply;
         emit Transfer(0x0, fundsWallet, totalSupply);
-        
+
         // Transfer all of the allocations
-        // The inherited transfer method from the StandardToken which inherits 
+        // The inherited transfer method from the StandardToken which inherits
         // from BasicToken emits Transfer events and subtracts/adds respective
         // amounts to respective accounts
         // transfer tokens to account for the private sale
         super.transfer(pvtSaleTokenWallet, pvtSaleSupply);
-        
+
         // transfer tokens to account for the pre sale
         super.transfer(preSaleTokenWallet, preSaleSupply);
 
@@ -101,20 +104,20 @@ contract TSD is BaseToken, Ownable {
 
         // transfer tokens to the liquidity program account
         super.transfer(liquidityProgram, liquidityProgramAllocation);
-        
+
         // Set up the list of whitelisted addresses
         createWhiteListedMapping(_whitelistAddresses);
 
         // set up the exchangeRate
         updateTheExchangeRate(_exchangeRate);
     }
-    
+
     function currentTime() public view returns (uint256) {
         return now * 1000;
     }
 
-    // Utility functions 
-    
+    // Utility functions
+
     function createWhiteListedMapping(address[] _addresses) public onlyOwner {
         for (uint256 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
@@ -129,8 +132,12 @@ contract TSD is BaseToken, Ownable {
         }
     }
 
+    function changeOracleAddress(address _newAddress) external onlyOwner {
+      oracleAddress = _newAddress;
+    }
+
     // Updates the ETH => TSD exchange rate
-    function updateTheExchangeRate(uint256 _newRate) public onlyOwner returns (bool) {
+    function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
         uint256 currentRate = exchangeRate;
         // 0.000001 ETHER
         uint256 oneSzabo = 1 szabo;
@@ -141,11 +148,11 @@ contract TSD is BaseToken, Ownable {
     }
 
     // Buy functions
-    
+
     function() payable public {
         buyTokens();
     }
-    
+
     function buyTokens() payable public {
         require(icoOpen);
         require(currentTime() >= startTime && currentTime() <= endTime);
@@ -216,13 +223,13 @@ contract TSD is BaseToken, Ownable {
 
         return true;
     }
-    
+
     // ERC20 function wrappers
     function transfer(address _to, uint256 _tokens) public returns (bool) {
         require(currentTime() >= endTime);
         return super.transfer(_to, _tokens);
     }
-    
+
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         require(currentTime() >= endTime);
         return super.transferFrom(_from, _to, _value);
@@ -239,7 +246,7 @@ contract TSD is BaseToken, Ownable {
         balances[_newTokensWallet] = _amount;
         return true;
     }
-    
+
     function increaseEthRaisedBySubsequentSale(uint256 _amount) public isSubsequentContract {
         uint256 newEthAmount = totalEthRaised.add(_amount);
         emit EthRaisedUpdated(totalEthRaised, newEthAmount);
@@ -249,5 +256,10 @@ contract TSD is BaseToken, Ownable {
     modifier isSubsequentContract() {
         require(msg.sender == subsequentContract);
         _;
+    }
+
+    modifier onlyRestricted () {
+      require(msg.sender == owner || msg.sender == oracleAddress);
+      _;
     }
 }
