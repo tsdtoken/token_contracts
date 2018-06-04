@@ -48,96 +48,96 @@ contract('TSDMock', (accounts) => {
     );
   });
 
-  xit('has an owner', async () => {
+  it('has an owner', async () => {
     assert.equal(await TSDMockContract.owner(), owner);
   });
 
-  xit('sets the owner as the fundsWallet', async () => {
+  it('sets the owner as the fundsWallet', async () => {
     assert.equal(await TSDMockContract.fundsWallet(), owner);
   });
 
-  xit('sets the correct pvtSaleTokenWallet address', async () => {
+  it('sets the correct pvtSaleTokenWallet address', async () => {
     assert.equal(await TSDMockContract.pvtSaleTokenWallet(), pvtSaleTokenWallet);
   });
 
-  xit('sets the correct preSaleTokenWallet address', async () => {
+  it('sets the correct preSaleTokenWallet address', async () => {
     assert.equal(await TSDMockContract.preSaleTokenWallet(), preSaleTokenWallet);
   });
 
-  xit('sets the correct foundersAndAdvisors address', async () => {
+  it('sets the correct foundersAndAdvisors address', async () => {
     assert.equal(await TSDMockContract.owner(), owner);
   });
 
-  xit('sets the correct bountyCommunityIncentives address', async () => {
+  it('sets the correct bountyCommunityIncentives address', async () => {
     assert.equal(await TSDMockContract.foundersAndAdvisors(), foundersAndAdvisors);
   });
 
-  xit('sets the correct liquidityProgram address', async () => {
+  it('sets the correct liquidityProgram address', async () => {
     assert.equal(await TSDMockContract.liquidityProgram(), liquidityProgram);
   });
 
-  xit('has a valid start time, end time', async () => {
+  it('has a valid start time, end time', async () => {
     const startTime = await TSDMockContract.startTime();
     const endTime = await TSDMockContract.endTime();
     assert.equal(moment.unix(startTime.c[0]).isValid(), true);
     assert.equal(moment.unix(endTime.c[0]).isValid(), true);
   });
 
-  xit('sets the start time to be Sat Sep 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
+  it('sets the start time to be Sat Sep 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const startTime = await TSDMockContract.startTime();
     const dateString = new Date(startTime.c[0]);
     assert.equal(dateString, 'Sat Sep 01 2018 00:00:00 GMT+1000 (AEST)');
   });
 
-  xit('sets the end time to be Mon Oct 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
+  it('sets the end time to be Mon Oct 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const endTime = await TSDMockContract.endTime();
     const dateString = new Date(endTime.c[0]);
     assert.equal(dateString, 'Mon Oct 01 2018 00:00:00 GMT+1000 (AEST)');
   });
 
-  xit('transfers the private sale token allocation to pvtSaleTokenWallet', async () => {
+  it('transfers the private sale token allocation to pvtSaleTokenWallet', async () => {
     const allocation = await TSDMockContract.pvtSaleSupply();
     const pvtTokenWalletBal = await TSDMockContract.balanceOf(pvtSaleTokenWallet);
     assert.equal(numFromWei(pvtTokenWalletBal), numFromWei(allocation), 'Private token wallet should be allocation 55 million tokens');
   });
 
-  xit('transfers the pre sale token allocation to preSaleTokenWallet', async () => {
+  it('transfers the pre sale token allocation to preSaleTokenWallet', async () => {
     const allocation = await TSDMockContract.preSaleSupply();
     const preTokenWalletBal = await TSDMockContract.balanceOf(preSaleTokenWallet);
     assert.equal(numFromWei(preTokenWalletBal), numFromWei(allocation), 'Pre token wallet should be allocation 65 million tokens');
   });
 
-  xit('transfers the founders and advisors token allocation to foundersAndAdvisorsAllocation wallet', async () => {
+  it('transfers the founders and advisors token allocation to foundersAndAdvisorsAllocation wallet', async () => {
     const allocation = await TSDMockContract.foundersAndAdvisorsAllocation();
     const foundersAndAdvisorsWalletBal = await TSDMockContract.balanceOf(foundersAndAdvisors);
     assert.equal(numFromWei(foundersAndAdvisorsWalletBal), numFromWei(allocation), 'Founders and advisors wallet should be allocation 44 million tokens');
   });
 
-  xit('transfers the bounty token allocation to bountyCommunityIncentives wallet', async () => {
+  it('transfers the bounty token allocation to bountyCommunityIncentives wallet', async () => {
     const allocation = await TSDMockContract.bountyCommunityIncentivesAllocation();
     const bountyWalletBal = await TSDMockContract.balanceOf(bountyCommunityIncentives);
     assert.equal(numFromWei(bountyWalletBal), numFromWei(allocation), 'Bounty and community incentives wallet should be allocation 16.5 million tokens');
   });
 
-  xit('transfers the liquidity program token allocation to pvtSaleTokenWallet', async () => {
+  it('transfers the liquidity program token allocation to pvtSaleTokenWallet', async () => {
     const allocation = await TSDMockContract.liquidityProgramAllocation();
     const liquidityWalletBal = await TSDMockContract.balanceOf(liquidityProgram);
     assert.equal(numFromWei(liquidityWalletBal), numFromWei(allocation), 'Liquidity program wallet should be allocation 16.5 million tokens');
   });
 
-  xit('funds wallet has 253 million tokens available for public sale', async () => {
+  it('funds wallet has 253 million tokens available for public sale', async () => {
     const fundsWalletBal = await TSDMockContract.balanceOf(fundsWallet);
     assert.equal(numFromWei(fundsWalletBal), 253000000, 'The funds wallet should have a balance of 253 million tokens');
   });
 
-  xit('can tell you if an address is whitelisted', async () => {
+  it('can tell you if an address is whitelisted', async () => {
     const whitelisted = await TSDMockContract.isWhiteListed(buyerOne);
     const unlisted = await TSDMockContract.isWhiteListed(unlistedBuyer);
     assert.equal(whitelisted, true, 'Address should be part of the white list');
     assert.equal(unlisted, false, 'Address should not be part of the white list');
   });
 
-  xit('creates a mapping of all whitelisted addresses', async () => {
+  it('creates a mapping of all whitelisted addresses', async () => {
     // Upon initialization of the contract, whitelisted addresses are placed into a mapping with the value of true
     const firstWhitelistAddress = await TSDMockContract.whiteListed(buyerOne);
     const secondWhitelistAddress = await TSDMockContract.whiteListed(buyerTwo);
@@ -149,14 +149,14 @@ contract('TSDMock', (accounts) => {
   });
 
   // exchange rate functionality
-  xit('sets the exchange rate upon initialization', async () => {
+  it('sets the exchange rate upon initialization', async () => {
     // exchange rate passed in was 1 szabo or 0.000001ETH
     const exchangeRate = await TSDMockContract.exchangeRate();
     assert.ok(exchangeRate);
     assert.equal(numFromWei(exchangeRate, 'szabo'), 1000, 'Exchange rate should be set to 1 szabo (0.000001 ETH)')
   });
 
-  xit('can change the exchange rate if called by the owner only', async () => {
+  it('can change the exchange rate if called by the owner only', async () => {
     // the exhange rate being passed in is 1 TSD => 0.002 ETH
     const newRate = new web3.BigNumber(2000);
     const beforeExchangeRate = await TSDMockContract.exchangeRate();
@@ -168,25 +168,25 @@ contract('TSDMock', (accounts) => {
     assert.ok(updatedFromOwner);
   });
 
-  xit('cannot change exchange rate from an address that isn\'t the owner', async () => {
+  it('cannot change exchange rate from an address that isn\'t the owner', async () => {
     const newRate = new web3.BigNumber(2000);
     await assertExpectedError(TSDMockContract.updateTheExchangeRate(newRate, { from: buyerTwo }));
   });
 
   // Buy functionality
 
-  xit('refuses a sale before the public sale\'s start time', async () => {
+  it('refuses a sale before the public sale\'s start time', async () => {
     await assertExpectedError(TSDMockContract.sendTransaction(buyTokens(1, buyerOne)))
   });
 
-  xit('refuses a sale 1 second before the private sale\'s start time', async () => {
+  it('refuses a sale 1 second before the private sale\'s start time', async () => {
     const startTime = await TSDMockContract.startTime();
     const oneSecondPriorToOpen = new Date(startTime.c[0]).setSeconds(-1);
     await TSDMockContract.changeTime(oneSecondPriorToOpen);
     await assertExpectedError(TSDMockContract.sendTransaction(buyTokens(10, buyerOne)))
   });
 
-  xit('accepts ether at the exact moment the sale opens', async () => {
+  it('accepts ether at the exact moment the sale opens', async () => {
     // exchange rate 1000 szabo or 0.001ETH
     // buyer sends in 10 ether
     // 10ETH / 0.001 = 10000 Tokens
@@ -199,7 +199,7 @@ contract('TSDMock', (accounts) => {
     assert.equal(numFromWei(remainingTokens), 252990000, 'The remaining tokens should be 252,990,000')
   });
 
-  xit('accepts ether one second before close', async () => {
+  it('accepts ether one second before close', async () => {
     // exchange rate 1000 szabo or 0.001ETH
     // buyer sends in 10 ether
     // 10ETH / 0.001 = 10000 Tokens
@@ -213,13 +213,13 @@ contract('TSDMock', (accounts) => {
     assert.equal(numFromWei(remainingTokens), 252990000, 'The remaining tokens should be 252,990,000')
   });
 
-  xit('rejects a transaction that is less than the minimum buy of 0.0875 ether', async () => {
+  it('rejects a transaction that is less than the minimum buy of 0.0875 ether', async () => {
     const startTime = await TSDMockContract.startTime();
     await TSDMockContract.changeTime(startTime.c[0]);
     await assertExpectedError(TSDMockContract.sendTransaction(buyTokens(0.05, buyerThree)))
   });
 
-  xit('transfers the ether to the funds wallet', async () => {
+  it('transfers the ether to the funds wallet', async () => {
     const startTime = await TSDMockContract.startTime();
     await TSDMockContract.changeTime(startTime.c[0]);
     const balPriorEthTransfer = web3.eth.getBalance(fundsWallet);
@@ -229,7 +229,7 @@ contract('TSDMock', (accounts) => {
     assert.equal(ethDiff, 10, 'Funds wallet should have received 10 ether from the sale');
   });
 
-  xit('sells the last remaining ether if less than minimum buy, returns unspent ether to the buyer, closes ICO', async () => {
+  it('sells the last remaining ether if less than minimum buy, returns unspent ether to the buyer, closes ICO', async () => {
     // set exchange rate to 1 szabo of 0.000001 Eth
     // 1ETH === 1 million TSD
     const inflatedExchange = new web3.BigNumber(1);
@@ -274,7 +274,7 @@ contract('TSDMock', (accounts) => {
   });
 
   // After sale
-  xit('can burn any remaining tokens in the funds wallet', async () => {
+  it('can burn any remaining tokens in the funds wallet', async () => {
     const endTime = await TSDMockContract.endTime();
     await TSDMockContract.changeTime(endTime);
     const tokenBal = await TSDMockContract.balanceOf(fundsWallet);
@@ -285,14 +285,14 @@ contract('TSDMock', (accounts) => {
     assert.ok(burnTokens)
   });
 
-  xit('disallows a call to burn tokens from not the owner', async () => {
+  it('disallows a call to burn tokens from not the owner', async () => {
     const endTime = await TSDMockContract.endTime();
     await TSDMockContract.changeTime(endTime);
     await assertExpectedError(TSDMockContract.burnRemainingTokensAfterClose({ from: buyerFive }));
   });
 
   // Test the restrictions re. subsequent supply contract
-  xit('the owner can set the address of the subsequent contract', async () => {
+  it('the owner can set the address of the subsequent contract', async () => {
     const mainContractAddress = await TSDMockContract.address;
     const SubsequentContract = await TSDSubsequentSupply.new(mainContractAddress);
     const subContractAddress = await SubsequentContract.address;
@@ -301,7 +301,7 @@ contract('TSDMock', (accounts) => {
     assert.equal(subAddressInMain, subContractAddress, 'Main contract should have the correct address referencing the subsequent contract');
   });
 
-  xit('a non owner cannot set the address of the subsequent contract', async () => {
+  it('a non owner cannot set the address of the subsequent contract', async () => {
     const mainContractAddress = await TSDMockContract.address;
     const SubsequentContract = await TSDSubsequentSupply.new(mainContractAddress);
     const subContractAddress = await SubsequentContract.address;
@@ -313,7 +313,7 @@ contract('TSDMock', (accounts) => {
   // not even the owner of TSD can call them
   // #increaseTotalSupplyAndAllocateTokens
   // #increaseEthRaisedBySubsequentSale
-  xit('owner cannot call #increaseTotalSupplyAndAllocateTokens', async () => {
+  it('owner cannot call #increaseTotalSupplyAndAllocateTokens', async () => {
     const mainContractAddress = await TSDMockContract.address;
     const SubsequentContract = await TSDSubsequentSupply.new(mainContractAddress);
     const subContractAddress = await SubsequentContract.address;
@@ -321,7 +321,7 @@ contract('TSDMock', (accounts) => {
     await assertExpectedError(TSDMockContract.increaseTotalSupplyAndAllocateTokens(newTokenWallet, 1000000, { from: owner }));
   });
 
-  xit('owner cannot call #increaseEthRaisedBySubsequentSale', async () => {
+  it('owner cannot call #increaseEthRaisedBySubsequentSale', async () => {
     const mainContractAddress = await TSDMockContract.address;
     const SubsequentContract = await TSDSubsequentSupply.new(mainContractAddress);
     const subContractAddress = await SubsequentContract.address;
