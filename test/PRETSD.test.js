@@ -52,15 +52,15 @@ contract('PRETSDMock', (accounts) => {
     );
   });
 
-  it('has an owner', async () => {
+  xit('has an owner', async () => {
     assert.equal(await PRETSDMockContract.owner(), owner);
   });
 
-  it('designates the owner as the preFundsWallet', async () => {
+  xit('designates the owner as the preFundsWallet', async () => {
     assert.equal(await PRETSDMockContract.preFundsWallet(), owner);
   });
 
-  it('has a valid start time, end time and token release time', async () => {
+  xit('has a valid start time, end time and token release time', async () => {
     const startTime = await PRETSDMockContract.startTime();
     const endTime = await PRETSDMockContract.endTime();
     const tokensReleaseDate = await PRETSDMockContract.tokensReleaseDate();
@@ -69,26 +69,26 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(moment.unix(tokensReleaseDate.c[0]).isValid(), true);
   });
 
-  it('sets the start time to be Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
+  xit('sets the start time to be Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const startTime = await PRETSDMockContract.startTime();
     const dateString = new Date(startTime.c[0]);
     assert.equal(dateString, 'Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)');
   });
 
-  it('sets the end time to be Wed Aug 22 2018 00:00:00 GMT+1000 (AEST)', async () => {
+  xit('sets the end time to be Wed Aug 22 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const endTime = await PRETSDMockContract.endTime();
     const dateString = new Date(endTime.c[0]);
     assert.equal(dateString, 'Wed Aug 22 2018 00:00:00 GMT+1000 (AEST)');
   });
 
-  it('sets the token release time to be Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)', async () => {
+  xit('sets the token release time to be Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)', async () => {
     const tokensReleaseDate = await PRETSDMockContract.tokensReleaseDate();
     const dateString = new Date(tokensReleaseDate.c[0]);
     assert.equal(dateString, 'Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)');
   });
 
 
-  it('transfers total supply of tokens (55 million) to the pre funds wallet', async () => {
+  xit('transfers total supply of tokens (55 million) to the pre funds wallet', async () => {
     const preFundsWallet = owner;
     const preFundsWalletBalance = await PRETSDMockContract.balanceOf(preFundsWallet);
     assert.equal(numFromWei(preFundsWalletBalance), 165000000, 'Balance of preFundsWallet should be 165 million');
@@ -96,14 +96,14 @@ contract('PRETSDMock', (accounts) => {
 
   // exchange rate functionality
 
-  it('sets the exchange rate upon initialization', async () => {
+  xit('sets the exchange rate upon initialization', async () => {
     // exchange rate passed in was 1 szabo or 0.000001ETH
     const exchangeRate = await PRETSDMockContract.exchangeRate();
     assert.ok(exchangeRate);
     assert.equal(numFromWei(exchangeRate, 'szabo'), 1000, 'Exchange rate should be set to 1 szabo (0.000001 ETH)')
   });
 
-  it('can change the exchange rate if called by the owner only', async () => {
+  xit('can change the exchange rate if called by the owner only', async () => {
     // the exhange rate being passed in is 1 TSD => 0.002 ETH
     const newRate = new web3.BigNumber(2000);
     const beforeExchangeRate = await PRETSDMockContract.exchangeRate();
@@ -115,25 +115,25 @@ contract('PRETSDMock', (accounts) => {
     assert.ok(updatedFromOwner);
   });
 
-  it('cannot change exchange rate from an address that isn\'t the owner', async () => {
+  xit('cannot change exchange rate from an address that isn\'t the owner', async () => {
     const newRate = new web3.BigNumber(2000);
     await assertExpectedError(PRETSDMockContract.updateTheExchangeRate(newRate, { from: accounts[6] }));
   });
 
   // Buy functionality
 
-  it('refuses a sale before the private sale\'s start time', async () => {
+  xit('refuses a sale before the private sale\'s start time', async () => {
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(1, buyerOne)))
   });
 
-  it('refuses a sale 1 second before the private sale\'s start time', async () => {
+  xit('refuses a sale 1 second before the private sale\'s start time', async () => {
     const startTime = await PRETSDMockContract.startTime();
     const oneSecondPriorToOpen = new Date(startTime).setSeconds(-1);
     await PRETSDMockContract.changeTime(oneSecondPriorToOpen);
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(1, buyerOne)))
   });
 
-  it('accepts ether at the exact moment the sale opens', async () => {
+  xit('accepts ether at the exact moment the sale opens', async () => {
     // exchange rate is 1000 sabo. 0.001 ETH token price. / 100 * 80 == 0.0008 ETH per token.
     // current tranche is 20% discount.
     //
@@ -146,7 +146,7 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(numFromWei(remainingTokens), 164987500, 'The remaining tokens should be 164,987,500')
   });
 
-  it('transfer the ether to the funds wallet', async () => {
+  xit('transfer the ether to the funds wallet', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
     const balPriorEthTransfer = web3.eth.getBalance(preFundsWallet);
@@ -159,19 +159,19 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(ethDiff, true, 'Funds wallet should have received 50 ether from the sale');
   });
 
-  it('rejects ether from an address that isn\'t whitelisted', async () => {
+  xit('rejects ether from an address that isn\'t whitelisted', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(50, unlistedBuyer)))
   });
 
-  it('rejects a transaction that is less than the minimum buy of 5 ether', async () => {
+  xit('rejects a transaction that is less than the minimum buy of 5 ether', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(3, buyerThree)))
   });
 
-  it('sells the required tokens based on the remaining tokens in the tranches', async () => {
+  xit('sells the required tokens based on the remaining tokens in the tranches', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
     // set current exchange rate to 1 ETH == 1,000,000 PRETSD
@@ -242,7 +242,7 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(numFromWei(contractTokensPostPurchaseFour), 4605263.157894737, 'The remaining tokens that the contract should have 4,605,263.157894737894736842 PRETSD');
   });
 
-  it('sells the last remaining ether if less than minimum buy, returns unspent ether to the buyer, closes ICO', async () => {
+  xit('sells the last remaining ether if less than minimum buy, returns unspent ether to the buyer, closes ICO', async () => {
     // 1 szabo = 0.000001 ETH
     // set current exchange rate to 1 ETH == 1,000,000 PRETSD
     const inflatedExchangeRate = new web3.BigNumber(1);
@@ -281,14 +281,14 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(await PRETSDMockContract.icoOpen(), false);
   });
 
-  it('disallows a call to burn tokens from not the owner', async () => {
+  xit('disallows a call to burn tokens from not the owner', async () => {
     const endTime = await PRETSDMockContract.endTime();
     await PRETSDMockContract.changeTime(endTime);
     await assertExpectedError(PRETSDMockContract.burnRemainingTokens({ from: buyerFive }));
   });
 
   // setting a reference to the main token contract
-  it('can set a reference to the main token contract on from owner', async () => {
+  xit('can set a reference to the main token contract on from owner', async () => {
     const pvtSaleTokenWallet = accounts[0];
     const preSaleTokenWallet = accounts[0];
     const foundersAndAdvisors = accounts[firstBuyerIndex+13];
