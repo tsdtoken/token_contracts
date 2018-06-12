@@ -123,12 +123,10 @@ contract PVTSD is Ownable {
     }
 
     function buyTokens() payable public {
-        emit DebuggingAmts("beforeRequire: ", 0);
         require(icoOpen);
         require(currentTime() >= startTime && currentTime() <= endTime);
         require(msg.value >= minPurchase);
         require(whiteListed[msg.sender]);
-        emit DebuggingAmts("First: ", 0);
 
         // ETH received by spender
         uint256 ethAmount = msg.value;
@@ -146,8 +144,6 @@ contract PVTSD is Ownable {
         uint256 unavailableTokens;
 
         if (totalTokenAmount > availableTokens) {
-
-          emit DebuggingAmts("inside last buy: ", 0);
             // additional tokens that aren't avaialble to be sold
             // tokenAmount is the tokens requested by buyer (not including the discount)
             // availableTokens are all the tokens left in the supplying wallet i.e pvtFundsWallet
