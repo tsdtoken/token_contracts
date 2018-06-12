@@ -25,7 +25,9 @@ contract TSD is BaseToken, Ownable {
     uint256 public minPurchase = 87500000000000000;
     // 1 TSD = x ETH
     // Unit convertsions https://github.com/ethereum/web3.js/blob/0.15.0/lib/utils/utils.js#L40
+    uint256 public ethExchangeRate;
     uint256 public exchangeRate;
+    uint256 public tokenPrice = 50; // 50 cents (USD)
     uint256 public totalEthRaised = 0;
 
     // Coordinated Universal Time (abbreviated to UTC) is the primary time standard by which the world regulates clocks and time.
@@ -118,7 +120,7 @@ contract TSD is BaseToken, Ownable {
 
     // Utility functions
 
-    function createWhiteListedMapping(address[] _addresses) public onlyOwner {
+    function createWhiteListedMapping(address[] _addresses) public onlyRestricted {
         for (uint256 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
         }
@@ -138,12 +140,12 @@ contract TSD is BaseToken, Ownable {
 
     // Updates the ETH => TSD exchange rate
     function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
+        ethExchangeRate = _newRate;
         uint256 currentRate = exchangeRate;
-        // 0.000001 ETHER
         uint256 oneSzabo = 1 szabo;
-        // 0.00001 ETH OTHERWISE 0.000001
-        exchangeRate = (oneSzabo).mul(_newRate);
-        emit ExhangeRateUpdated(currentRate, _newRate);
+        uint256 tokenInSzabo = tokenPrice.mul(1000000).div(_newRate);
+        exchangeRate = oneSzabo.mul(tokenInSzabo);
+        emit ExhangeRateUpdated(currentRate, exchangeRate);
         return true;
     }
 

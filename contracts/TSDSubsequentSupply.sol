@@ -5,26 +5,31 @@ import "./TSD.sol";
 
 contract TSDSubsequentSupply is Ownable {
     using SafeMath for uint256;
-    
+
     TSD public dc;
 
     uint256 public subsequentTotalSupply;
+    uint256 public ethExchangeRate;
     uint256 public exchangeRate;
+    uint256 public tokenPrice = 50; // 50 cents (USD)
     uint256 public decimals = 18;
     uint256 public decimalMultiplier = uint256(10) ** decimals;
     // Wallet address that ether will be transferred to
     address public newFundsWallet;
-    // Wallet address that will hold the new token amount in the main contract 
+    // Wallet address that will hold the new token amount in the main contract
     address public newTokensWallet;
+    // Addresses for external helpers
+    address private oracleAddress;
+
     bool public isOpen = false;
 
     // whitelisted addresses
     mapping(address => bool) whiteListed;
-    
+
     constructor(address _contractAddress) public {
         dc = TSD(_contractAddress);
     }
-    
+
     event IncreaseSupplyOfTSD(uint256 _newSupplyAdded);
     event NewTotalSupplyOfTSD(uint256 _totalSupply);
     event Transfer(address _from, address _to, uint256 _amount);
@@ -36,18 +41,23 @@ contract TSDSubsequentSupply is Ownable {
     event DebugAddress(string name, address _address);
 
     // Updates the ETH => TSD exchange rate
-    function updateTheExchangeRate(uint256 _newRate) public onlyOwner returns (bool) {
+    function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
+        ethExchangeRate = _newRate;
         uint256 currentRate = exchangeRate;
-        // 0.000001 ETHER
         uint256 oneSzabo = 1 szabo;
-        // 0.00001 ETH OTHERWISE 0.000001
-        exchangeRate = (oneSzabo).mul(_newRate);
-        emit ExhangeRateUpdated(currentRate, _newRate);
+        uint256 tokenInSzabo = tokenPrice.mul(1000000).div(_newRate);
+        exchangeRate = oneSzabo.mul(tokenInSzabo);
+        emit ExhangeRateUpdated(currentRate, exchangeRate);
         return true;
     }
 
+    // Change the address of the oracle
+    function changeOracleAddress(address _newAddress) external onlyOwner {
+      oracleAddress = _newAddress;
+    }
+
     // creates the whitelist mapping
-    function createWhiteListedMapping(address[] _addresses) public onlyOwner {
+    function createWhiteListedMapping(address[] _addresses) public onlyRestricted {
         for (uint256 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
         }
@@ -63,7 +73,7 @@ contract TSDSubsequentSupply is Ownable {
 
     // NOTE: when this contract is opened, the owner of the newTokensWallet
     // needs to approve this wallet as the spender
-    // This will be done through the approve function in the main contract 
+    // This will be done through the approve function in the main contract
 
     function openSubsequentSale() onlyOwner external returns (bool) {
         require(newTokensWallet != 0x0);
@@ -73,20 +83,20 @@ contract TSDSubsequentSupply is Ownable {
         emit SubsequentContractOpened(address(this), true);
         return true;
     }
-    
+
     function closeSubsequentSale() onlyOwner external returns (bool) {
         isOpen = false;
 
         emit SubsequentContractOpened(address(this), false);
         return true;
     }
-    
+
     function setTokenWalletAddressAndExchangeRate(address _newTokensWallet, address _newFundsWallet, uint256 _rate) onlyOwner external {
         updateTheExchangeRate(_rate);
         newFundsWallet = _newFundsWallet;
         newTokensWallet = _newTokensWallet;
     }
-    
+
     function increaseTotalSupplyAndAllocateTokens(uint256 _amount) onlyOwner public {
         require(newTokensWallet != 0x0);
         uint256 increaseAmount = _amount.mul(decimalMultiplier);
@@ -101,7 +111,7 @@ contract TSDSubsequentSupply is Ownable {
     function () payable public {
         buySubsequentTokens();
     }
-    
+
     function buySubsequentTokens() payable public {
         require(isOpen);
         require(whiteListed[msg.sender]);
@@ -118,7 +128,7 @@ contract TSDSubsequentSupply is Ownable {
         uint256 ethRefund = 0;
         uint256 unavailableTokens;
         emit Debugger("totalTokenAmount", totalTokenAmount);
-    
+
         if (totalTokenAmount > availableTokens) {
             emit DebugStrings("its greater");
             // additional tokens that aren't avaialble to be sold
@@ -158,5 +168,10 @@ contract TSDSubsequentSupply is Ownable {
             // event is emitted in main contract
             dc.increaseEthRaisedBySubsequentSale(ethAmount);
         }
+    }
+
+    modifier onlyRestricted () {
+      require(msg.sender == owner || msg.sender == oracleAddress);
+      _;
     }
 }
