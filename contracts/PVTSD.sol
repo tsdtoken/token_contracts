@@ -60,9 +60,6 @@ contract PVTSD is Ownable {
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
     event Transfer(address from, address to, uint256 value);
-    event DebuggingStrings(string variable);
-    event DebuggingAddresses(string variable, address value);
-    event DebuggingAmts(string variable, uint value);
 
     constructor(
         uint256 _exchangeRate,
@@ -97,7 +94,7 @@ contract PVTSD is Ownable {
     }
 
     function changeOracleAddress(address _newAddress) external onlyOwner {
-      oracleAddress = _newAddress;
+        oracleAddress = _newAddress;
     }
 
     // Updates the ETH => TSD exchange rate
@@ -235,7 +232,7 @@ contract PVTSD is Ownable {
     }
 
     modifier onlyRestricted () {
-      require(msg.sender == owner || msg.sender == oracleAddress);
-      _;
+        require(msg.sender == owner || msg.sender == oracleAddress);
+        _;
     }
 }

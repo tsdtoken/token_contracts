@@ -135,7 +135,7 @@ contract TSD is BaseToken, Ownable {
     }
 
     function changeOracleAddress(address _newAddress) external onlyOwner {
-      oracleAddress = _newAddress;
+        oracleAddress = _newAddress;
     }
 
     // Updates the ETH => TSD exchange rate
