@@ -15,15 +15,15 @@ module.exports = function(deployer, network, accounts) {
     accounts[3]
   ];
   deployer.deploy(PVTSD, exchangeRate, whitelistAddresses);
-  deployer.deploy(PRETSD, exchangeRate, whitelistAddresses);
-  deployer.deploy(
-    TSD, 
-    exchangeRate, 
-    whitelistAddresses,
-    pvtSaleTokenWallet,
-    preSaleTokenWallet,
-    foundersAndAdvisors,
-    bountyCommunityIncentives,
-    liquidityProgram
-  );
-};
+  // deployer.deploy(PRETSD, exchangeRate, whitelistAddresses);
+  // deployer.deploy(
+  //   TSD, 
+  //   exchangeRate, 
+  //   whitelistAddresses,
+  //   pvtSaleTokenWallet,
+  //   preSaleTokenWallet,
+  //   foundersAndAdvisors,
+  //   bountyCommunityIncentives,
+  //   liquidityProgram
+  // );
+}; 
