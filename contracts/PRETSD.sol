@@ -5,7 +5,7 @@ import "./FoundationContracts/Ownable.sol";
 import "./FoundationContracts/Math.sol";
 import "./TSD.sol";
 
-contract PRETSD is BaseToken, Ownable {
+contract PRETSD is Ownable {
     using SafeMath for uint256;
     using Math for uint256;
     // set up access to main contract for the future distribution
@@ -24,6 +24,8 @@ contract PRETSD is BaseToken, Ownable {
     // 5k USD in szabo
     uint256 public minPurchase = 8732000 szabo;
     uint256 public exchangeRate;
+    uint256 public ethExchangeRate;
+    uint256 public tokenPrice = 50; // 50 cents (USD)
     uint256 public totalEthRaised = 0;
 
     // Coordinated Universal Time (abbreviated to UTC) is the primary time standard by which the world regulates clocks and time.
@@ -49,8 +51,11 @@ contract PRETSD is BaseToken, Ownable {
     // whitelisted addresses
     mapping (address => bool) public whiteListed;
 
+    // balances
+    mapping(address => uint256) balances;
+
     // tranche discounts
-    uint8[4] tranches = [80, 85, 90, 95];
+    uint16[4] tranches = [800, 840, 880, 925];
     // tranche token size
     uint256 trancheMaxTokenSize = totalSupply / tranches.length;
 
@@ -61,6 +66,7 @@ contract PRETSD is BaseToken, Ownable {
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
+    event Transfer(address from, address to, uint256 value);
     event DebuggingAmounts(string nameOfValue, uint256 amount);
     event DebuggingStrings(string message);
 
@@ -85,7 +91,11 @@ contract PRETSD is BaseToken, Ownable {
         return now * 1000;
     }
 
-    function createWhiteListedMapping(address[] _addresses) public onlyOwner {
+    function balanceOf(address _owner) public view returns (uint256) {
+        return balances[_owner];
+    }
+
+    function createWhiteListedMapping(address[] _addresses) public onlyRestricted {
         for (uint256 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
         }
@@ -98,28 +108,29 @@ contract PRETSD is BaseToken, Ownable {
     // Usage:
     // Pass in the amount of tokens and the discount rate.
     // If no discount is required pass in 100 as the rate value.
-    function tokenToEth(uint256 _tokens, uint8 _rate) internal view returns(uint256) {
-        //return (( _tokens * _rate ) / 100 * exchangeRate).div(decimalMultiplier);
-        return _tokens.mul(_rate).div(100).mul(exchangeRate).div(decimalMultiplier);
+    function tokenToEth(uint256 _tokens, uint16 _rate) internal view returns(uint256) {
+      //Using previous exchangerate
+      return _tokens.mul(_rate).div(1000).mul(exchangeRate).div(decimalMultiplier);
     }
 
     // Usage:
     // Pass in the amount of eth and the discount rate.
     // If no discount is required pass in 100 as the rate value.
-    function ethToToken(uint256 _eth, uint8 _rate) internal view returns(uint256) {
-        //return ((_eth / _rate * 100) * decimalMultiplier).div(exchangeRate);
-        return _eth.div(_rate).mul(100).mul(decimalMultiplier).div(exchangeRate);
+    function ethToToken(uint256 _eth, uint16 _rate) internal view returns(uint256) {
+      //return ((_eth / _rate * 100) * decimalMultiplier).div(exchangeRate);
+      return _eth.mul(1000).div(_rate).mul(decimalMultiplier).div(exchangeRate);
     }
 
      // Updates the ETH => TSD exchange rate
-     // The exchange rate is in gwei to
+     // The exchange rate is in USD cents to ETH.
+     // Example: 1 ETH = 500 USD then enter 50000 as the param.
     function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
+        ethExchangeRate = _newRate;
         uint256 currentRate = exchangeRate;
-        // 0.000001 ETHER
         uint256 oneSzabo = 1 szabo;
-        // 0.00001 ETH OTHERWISE 0.000001
-        exchangeRate = (oneSzabo).mul(_newRate);
-        emit ExhangeRateUpdated(currentRate, _newRate);
+        uint256 tokenInSzabo = tokenPrice.mul(1000000).div(_newRate);
+        exchangeRate = oneSzabo.mul(tokenInSzabo);
+        emit ExhangeRateUpdated(currentRate, exchangeRate);
         return true;
     }
 
@@ -289,7 +300,7 @@ contract PRETSD is BaseToken, Ownable {
     function distributeTokens() onlyOwner public {
         require(currentTime() >= tokensReleaseDate);
         address preSaleTokenWallet = dc.preSaleTokenWallet();
-        for (uint8 i = 0; i < icoParticipants.length; i++) {
+        for (uint64 i = 0; i < icoParticipants.length; i++) {
             dc.transferFrom(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
             emit Transfer(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
         }

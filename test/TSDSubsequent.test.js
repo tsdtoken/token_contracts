@@ -12,7 +12,7 @@ contract('TSDSubsequentSupply', (accounts) => {
   let TSDSubsequentContractAddress;
   const firstAccountIdx = 14;
   // exchange rate is 1 szabo or 0.001
-  const exchangeRate = new web3.BigNumber(1000);
+  const exchangeRate = 50000;
   // wallet that will hold all of the ether transferred
   const newFundsWallet = accounts[firstAccountIdx+1];
   const newTokensWallet = accounts[firstAccountIdx+2];
@@ -82,12 +82,12 @@ contract('TSDSubsequentSupply', (accounts) => {
     const firstWhitelistAddress = await TSDSubsequentSupplyContract.isWhiteListed(buyerOne);
     const secondWhitelistAddress = await TSDSubsequentSupplyContract.isWhiteListed(buyerTwo);
     const thirdWhitelistAddress = await TSDSubsequentSupplyContract.isWhiteListed(buyerThree);
-    
+
     assert.equal(firstWhitelistAddress, true, 'Address should exist in the isWhiteListed mapping with a value of true');
     assert.equal(secondWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
     assert.equal(thirdWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
   });
-  
+
   it('can tell you if an address is whitelisted', async () => {
     await TSDSubsequentSupplyContract.createWhiteListedMapping(whitelistAddresses, { from: owner });
     const whitelisted = await TSDSubsequentSupplyContract.isWhiteListed(buyerOne);
@@ -247,7 +247,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     const isOpen = await TSDSubsequentSupplyContract.isOpen();
     assert.equal(numFromWei(tokenBalanceOfBuyer), 10000, 'The buyers balance should 10,000 tokens')
     assert.equal(numFromWei(remainingTokens), 0, 'The remaining tokens should be 4,990,000')
-    assert.equal(numFromWei(ethBalOfBuyerPost), numFromWei(new web3.BigNumber(expectedEthBalOfBuyer)), 'The current balance should equal before total - (token cost + transaction cost)');
+    assert.ok(equalsWithNormalizedRounding(numFromWei(ethBalOfBuyerPost), numFromWei(new web3.BigNumber(expectedEthBalOfBuyer.toString()))), 'The current balance should equal before total - (token cost + transaction cost)');
     assert.ok(equalsWithNormalizedRounding(numFromWei(ethBalOfNewFundsWalletPrior) + 10, numFromWei(ethBalOfNewFundsWalletPost)));
     assert.equal(isOpen, false, 'Sale should be automatically closed when all tokens are sold');
   });

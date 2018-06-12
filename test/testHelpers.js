@@ -1,4 +1,6 @@
 module.exports.numFromWei = (bignumber, unit = "ether") => web3.fromWei(bignumber, unit).toNumber()
+// We return the wei as a string because the toNumber calculation is inacurate past 15 decimal points.
+module.exports.stringFromWei = (bignumber, unit = "ether") => web3.fromWei(bignumber, unit).toString()
 
 module.exports.numToWei = (bignumber, unit = "ether") => web3.toWei(`${bignumber}`, unit)
 

@@ -7,7 +7,7 @@ contract('PVTSDMock', (accounts) => {
   let PVTSDMockContract;
   const currentTime = moment().unix();
   // exchange rate is 1 szabo or 0.001
-  const exchangeRate = new web3.BigNumber(1000);
+  const exchangeRate = 50000;
   const decimalMultiplier = Math.pow(10, 18);
   const owner = accounts[0];
   const pvtFundsWallet = owner;
@@ -33,8 +33,9 @@ contract('PVTSDMock', (accounts) => {
     PVTSDMockContract = await PVTSDMock.new(
       currentTime,
       exchangeRate,
-      whitelistAddresses
+      [buyerOne]
     );
+    PVTSDMockContract.createWhiteListedMapping(whitelistAddresses);
   });
 
   it('has an owner', async () => {
@@ -101,23 +102,23 @@ contract('PVTSDMock', (accounts) => {
     // exchange rate passed in was 1 szabo or 0.000001ETH
     const exchangeRate = await PVTSDMockContract.exchangeRate();
     assert.ok(exchangeRate);
-    assert.equal(numFromWei(exchangeRate, 'szabo'), 1000, 'Exchange rate should be set to 1 szabo (0.000001 ETH)')
+    assert.equal(numFromWei(exchangeRate, 'szabo'), 1000, 'Exchange rate should be set to 1000 szabo (0.0001 ETH)')
   });
 
   it('can change the exchange rate if called by the owner only', async () => {
     // the exhange rate being passed in is 1 TSD => 0.002 ETH
-    const newRate = new web3.BigNumber(2000);
+    const newRate = 25000;
     const beforeExchangeRate = await PVTSDMockContract.exchangeRate();
     const updatedFromOwner = await PVTSDMockContract.updateTheExchangeRate(newRate, { from: owner });
     const afterExchangeRate = await PVTSDMockContract.exchangeRate();
     // 1000 szabo is the inital amount passed to the constructor
-    assert.equal(numFromWei(beforeExchangeRate, 'szabo'), 1000, 'Exchange rate should be set to the passed in value of 1 szabo');
-    assert.equal(numFromWei(afterExchangeRate, 'szabo'), 2000, 'Exchange rate should be set to the new rate of 200');
+    assert.equal(numFromWei(beforeExchangeRate, 'szabo'), 1000, 'Exchange rate should be set to the passed in value of 1000 szabo');
+    assert.equal(numFromWei(afterExchangeRate, 'szabo'), 2000, 'Exchange rate should be set to the new rate of 2000');
     assert.ok(updatedFromOwner);
   });
 
   it('cannot change exchange rate from an address that isn\'t the owner', async () => {
-    const newRate = new web3.BigNumber(2000);
+    const newRate = 25000;
     await assertExpectedError(PVTSDMockContract.updateTheExchangeRate(newRate, { from: accounts[6] }));
   });
 
@@ -192,7 +193,7 @@ contract('PVTSDMock', (accounts) => {
 
   it('sells the last remaining ether if less than minimum buy, returns unspent ether to the buyer, closes ICO', async () => {
     // 1 szabo = 0.000003 ETH
-    const inflatedExchangeRate = new web3.BigNumber(3);
+    const inflatedExchangeRate = 16666666;
     const defaultGanacheGasPrice = 100000000000;
     const startTime = await PVTSDMockContract.startTime();
     await PVTSDMockContract.changeTime(startTime.c[0]);
@@ -210,6 +211,7 @@ contract('PVTSDMock', (accounts) => {
     // // buyers balance before tx
     const fundsWalletEthBalPrior = web3.eth.getBalance(pvtFundsWallet);
     const buyerEThBalPrior = web3.eth.getBalance(buyerFour).toNumber();
+    // ERROR IS IN THIS CALL.
     const tx = await PVTSDMockContract.sendTransaction(buyTokens(50, buyerFour));
     // balances after sale
     const fundsWalletEthBalPost = web3.eth.getBalance(pvtFundsWallet);
@@ -221,10 +223,11 @@ contract('PVTSDMock', (accounts) => {
     const expectedEthBal = buyerEThBalPrior - numToWei(costOfRemainingTokens) - totalGasSpent;
     // this is to handle a javascript rounding error
     const finalFundsWalletBal = (numFromWei(fundsWalletEthBalPrior) * 10000000 + costOfRemainingTokens * 10000000) / 10000000;
+    const bnExpectedEthBal = new web3.BigNumber(expectedEthBal.toString());
     assert.equal(numFromWei(buyerTokenBalance), 5000000, 'Buyer should be transfered the remaining 5 million tokens');
-    assert.equal(numFromWei(buyerEThBalPost), numFromWei(new web3.BigNumber(expectedEthBal)), 'The current balance should equal before total - (token cost + transaction cost)');
+    assert.ok(equalsWithNormalizedRounding(numFromWei(buyerEThBalPost), numFromWei(bnExpectedEthBal)), 'The current balance should equal before total - (token cost + transaction cost)');
     assert.equal(tokensRemaining, 0, 'There should be no remaining tokens');
-    assert.equal(finalFundsWalletBal, numFromWei(fundsWalletEthBalPost));
+    assert.ok(equalsWithNormalizedRounding(finalFundsWalletBal, numFromWei(fundsWalletEthBalPost)));
     // icoOpen is set to false when no tokens remain
     assert.equal(await PVTSDMockContract.icoOpen(), false);
   })
