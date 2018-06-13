@@ -216,11 +216,25 @@ contract TSD is BaseToken, Ownable {
     }
 
     // After close
-    function burnRemainingTokensAfterClose() external onlyOwner returns (bool) {
+    function burnRemainingTokensAfterClose(address _address) external onlyOwner returns (bool) {
+        require(_address == pvtSaleTokenWallet || _address == preSaleTokenWallet || _address == fundsWallet);
         require(currentTime() >= endTime);
-        if (balances[fundsWallet] > 0) {
+
+        if(_address == pvtSaleTokenWallet){
+          // TODO: end time needs to be decided.
+          // PVT escrow ends 6 months after main tsd ico closes
+          // require(currentTime() >= endTime.add(6))
+        }
+        if(_address == preSaleTokenWallet){
+          // TODO: end time needs to be decided.
+          // PRE escrow ends 12 months after main tsd ico closes
+          // require(currentTime() >= endTime.add(12))
+        }
+
+        if (balances[_address] > 0) {
             // burn unsold tokens
-            balances[fundsWallet] = 0;
+            totalSupply = totalSupply.sub(balances[_address]);
+            balances[_address] = 0;
         }
 
         return true;
