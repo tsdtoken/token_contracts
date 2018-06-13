@@ -28,6 +28,7 @@ contract('PRETSDMock', (accounts) => {
   const trancheBuyerFour = accounts[firstBuyerIndex+9];
   // // more buyers are reserved for future tests to test the tranche system fully
   const whitelistAddresses = [
+    buyerOne,
     buyerTwo,
     buyerThree,
     buyerFour,
@@ -46,8 +47,7 @@ contract('PRETSDMock', (accounts) => {
   beforeEach('setup contract for each test', async () => {
     PRETSDMockContract = await PRETSDMock.new(
       currentTime,
-      exchangeRate,
-      [buyerOne]
+      exchangeRate
     );
     // The contract runs out of gas when being created with the whole whitelist mapping. So we map afterwards.
     await PRETSDMockContract.createWhiteListedMapping(whitelistAddresses, { from: owner });
@@ -120,8 +120,6 @@ contract('PRETSDMock', (accounts) => {
     await assertExpectedError(PRETSDMockContract.updateTheExchangeRate(newRate, { from: accounts[6] }));
   });
 
-  // Buy functionality
-
   it('refuses a sale before the private sale\'s start time', async () => {
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(1, buyerOne)))
   });
@@ -133,13 +131,12 @@ contract('PRETSDMock', (accounts) => {
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(1, buyerOne)))
   });
 
-  // TODO: update tranching values.
   it('accepts ether at the exact moment the sale opens', async () => {
     // exchange rate is 1000 sabo. 0.001 ETH token price. / 100 * 80 == 0.0008 ETH per token.
     // current tranche is 20% discount.
-    //
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
+    // 10 ETH == 5,000.00 USD (min buyin)
     await PRETSDMockContract.sendTransaction(buyTokens(10, buyerOne));
     const balanceOfBuyer = await PRETSDMockContract.balanceOf(buyerOne);
     const remainingTokens = await PRETSDMockContract.balanceOf(preFundsWallet);
@@ -166,13 +163,13 @@ contract('PRETSDMock', (accounts) => {
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(50, unlistedBuyer)))
   });
 
-  it('rejects a transaction that is less than the minimum buy of 5 ether', async () => {
+  it('rejects a transaction that is less than the minimum buy of 5,000.00 USD', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
+    // 3 ETH == 1,500.00 USD
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(3, buyerThree)))
   });
 
-  // TODO: update tranching values.
   it('sells the required tokens based on the remaining tokens in the tranches', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
@@ -279,7 +276,7 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(tokensRemaining, 0, 'There should be no remaining tokens');
     assert.ok(equalsWithNormalizedRounding(numFromWei(fundsWalletEthBalPrior) + costOfRemainingTokens, numFromWei(fundsWalletEthBalPost)));
     // icoOpen is set to false when no tokens remain
-    assert.equal(await PRETSDMockContract.icoOpen(), false);
+    assert.equal(await PRETSDMockContract.tokensAvailable(), false);
   });
 
   it('disallows a call to burn tokens from not the owner', async () => {
@@ -299,13 +296,13 @@ contract('PRETSDMock', (accounts) => {
     const TSDMockContract = await TSDMock.new(
       currentTime,
       exchangeRate,
-      whitelistAddresses,
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
     );
+    await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
 
     // Check for error when sent from someone other than the owner
     await assertExpectedError(PRETSDMockContract.setMainContractAddress(PRETSDMockContract.address, { from: buyerFive }))
@@ -326,13 +323,14 @@ contract('PRETSDMock', (accounts) => {
     const TSDMockContract = await TSDMock.new(
       currentTime,
       exchangeRate,
-      whitelistAddresses,
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
     );
+
+    await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
 
     // record the main token sale funds wallet balance prior to distribution
     const mainSaleAvailableTokens = await TSDMockContract.balanceOf(fundsWallet);
@@ -350,6 +348,7 @@ contract('PRETSDMock', (accounts) => {
     await TSDMockContract.changeTime(tokensReleaseDate);
     const mainContractPreTokenAllocation = await TSDMockContract.balanceOf(preSaleTokenWallet);
     await TSDMockContract.approve(preContractAddress, mainContractPreTokenAllocation, { from: preSaleTokenWallet });
+    await TSDMockContract.toggleTrading();
     // // set up contract reference
     await PRETSDMockContract.setMainContractAddress(TSDMockContract.address, { from: owner });
     await PRETSDMockContract.distributeTokens({ from: owner });

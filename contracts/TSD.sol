@@ -20,11 +20,7 @@ contract TSD is BaseToken, Ownable {
     uint256 public foundersAndAdvisorsAllocation = 44 * million;
     uint256 public bountyCommunityIncentivesAllocation = (16 * million).add(500 * thousand);
     uint256 public liquidityProgramAllocation = (16 * million).add(500 * thousand);
-    // approx $50 USD
-    // 0.0875 ETH
-    uint256 public minPurchase = 87500000000000000;
-    // 1 TSD = x ETH
-    // Unit convertsions https://github.com/ethereum/web3.js/blob/0.15.0/lib/utils/utils.js#L40
+    uint256 public minPurchase = 5000; // 50.00 USD in cents
     uint256 public ethExchangeRate;
     uint256 public exchangeRate;
     uint256 public tokenPrice = 50; // 50 cents (USD)
@@ -59,18 +55,19 @@ contract TSD is BaseToken, Ownable {
     mapping (address => bool) public whiteListed;
 
     // ico concluded due to all tokens sold
-    bool public icoOpen = true;
+    bool public tokensAvailable = true;
+
+    // Token tradability toggle
+    bool public canTrade = false;
 
     // events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
-    event Debugger(string variable, uint256 value);
-    event DebugStrings(string variable);
-    event DebugAddress(string name, address _address);
+    event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
+    event TradingStatus(bool status);
 
     constructor(
         uint256 _exchangeRate,
-        address[] _whitelistAddresses,
         address _pvtSaleTokenWallet,
         address _preSaleTokenWallet,
         address _foundersAndAdvisors,
@@ -107,21 +104,25 @@ contract TSD is BaseToken, Ownable {
         // transfer tokens to the liquidity program account
         super.transfer(liquidityProgram, liquidityProgramAllocation);
 
-        // Set up the list of whitelisted addresses
-        createWhiteListedMapping(_whitelistAddresses);
-
         // set up the exchangeRate
         updateTheExchangeRate(_exchangeRate);
     }
 
+    // Contract utility functions
     function currentTime() public view returns (uint256) {
         return now * 1000;
     }
 
-    // Utility functions
+    // Toggles the trading ability of TSD
+    function toggleTrading() external onlyOwner {
+      canTrade = !canTrade;
+      emit TradingStatus(canTrade);
+    }
 
+    // Called externally to create whitelist for  sale.
+    // Only whitelisted addresses can participate in the ico.
     function createWhiteListedMapping(address[] _addresses) public onlyRestricted {
-        for (uint256 i = 0; i < _addresses.length; i++) {
+        for (uint64 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
         }
     }
@@ -134,6 +135,8 @@ contract TSD is BaseToken, Ownable {
         }
     }
 
+    // Called externally to change the address of the oracle.
+    // The oracle updates the exchange rate based on the current ETH value.
     function changeOracleAddress(address _newAddress) external onlyOwner {
         oracleAddress = _newAddress;
     }
@@ -143,29 +146,32 @@ contract TSD is BaseToken, Ownable {
         ethExchangeRate = _newRate;
         uint256 currentRate = exchangeRate;
         uint256 oneSzabo = 1 szabo;
-        uint256 tokenInSzabo = tokenPrice.mul(1000000).div(_newRate);
-        exchangeRate = oneSzabo.mul(tokenInSzabo);
+        uint256 tokenPriceInSzabo = tokenPrice.mul(1000000).div(_newRate);
+        // The exchangerate is saved in Szabo.
+        exchangeRate = oneSzabo.mul(tokenPriceInSzabo);
         emit ExhangeRateUpdated(currentRate, exchangeRate);
         return true;
     }
 
     // Buy functions
-
+    // This is an un-named fallback function that is set to payable to accept ether.
     function() payable public {
         buyTokens();
     }
 
     function buyTokens() payable public {
-        require(icoOpen);
-        require(currentTime() >= startTime && currentTime() <= endTime);
-        require(msg.value >= minPurchase);
+        uint256 _currentTime = currentTime();
+        uint256 _minPurchaseInWei = minPurchase.mul(decimalMultiplier).div(ethExchangeRate);
+        require(tokensAvailable);
+        require(_currentTime >= startTime && _currentTime <= endTime);
         require(whiteListed[msg.sender]);
+        require(msg.value >= _minPurchaseInWei);
 
         // ETH received by spender
         uint256 ethAmount = msg.value;
         // token amount based on ETH / exchangeRate result
         // Multiply with the decimalMultiplier to get total tokens (to 18 decimal place)
-        uint256 totalTokenAmount = ethAmount.div(exchangeRate).mul(decimalMultiplier);
+        uint256 totalTokenAmount = ethAmount.mul(decimalMultiplier).div(exchangeRate);
         // tokens avaialble to sell are the remaining tokens in the pvtFundsWallet
         uint256 availableTokens = balances[fundsWallet];
         uint256 currentEthRaised = totalEthRaised;
@@ -200,9 +206,9 @@ contract TSD is BaseToken, Ownable {
             totalEthRaised = totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
             // close token sale as tokens are sold out
-            icoOpen = false;
+            tokensAvailable = false;
         } else {
-            require(availableTokens >= totalTokenAmount);
+            require(totalTokenAmount <= availableTokens);
             // complete transfer and emit an event
             balances[fundsWallet] = balances[fundsWallet].sub(totalTokenAmount);
             balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
@@ -220,34 +226,36 @@ contract TSD is BaseToken, Ownable {
         require(_address == pvtSaleTokenWallet || _address == preSaleTokenWallet || _address == fundsWallet);
         require(currentTime() >= endTime);
 
+        uint256 oldSupply = totalSupply;
+
         if(_address == pvtSaleTokenWallet){
           // TODO: end time needs to be decided.
           // PVT escrow ends 6 months after main tsd ico closes
-          // require(currentTime() >= endTime.add(6))
+          uint256 pvtReleaseDate = 1555250400000;
+          require(currentTime() >= pvtReleaseDate);
         }
         if(_address == preSaleTokenWallet){
           // TODO: end time needs to be decided.
           // PRE escrow ends 12 months after main tsd ico closes
-          // require(currentTime() >= endTime.add(12))
+          uint256 preReleaseDate = 1555250400000;
+          require(currentTime() >= preReleaseDate);
         }
-
-        if (balances[_address] > 0) {
-            // burn unsold tokens
-            totalSupply = totalSupply.sub(balances[_address]);
-            balances[_address] = 0;
-        }
+        // burn unsold tokens and reduce total supply for TSD
+        totalSupply = totalSupply.sub(balances[_address]);
+        balances[_address] = 0;
+        emit UpdatedTotalSupply(oldSupply, totalSupply);
 
         return true;
     }
 
     // ERC20 function wrappers
     function transfer(address _to, uint256 _tokens) public returns (bool) {
-        require(currentTime() >= endTime);
+        require(canTrade);
         return super.transfer(_to, _tokens);
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
-        require(currentTime() >= endTime);
+        require(canTrade);
         return super.transferFrom(_from, _to, _value);
     }
 
@@ -268,14 +276,19 @@ contract TSD is BaseToken, Ownable {
         emit EthRaisedUpdated(totalEthRaised, newEthAmount);
     }
 
-    // modifier
+    // Destroys the contract
+    function selfDestruct() external onlyOwner {
+        selfdestruct(owner);
+    }
+
+    // modifiers
     modifier isSubsequentContract() {
         require(msg.sender == subsequentContract);
         _;
     }
 
     modifier onlyRestricted () {
-      require(msg.sender == owner || msg.sender == oracleAddress);
-      _;
+        require(msg.sender == owner || msg.sender == oracleAddress);
+        _;
     }
 }

@@ -7,9 +7,8 @@ contract PVTSDMock is PVTSD {
 
     constructor (
         uint256 _currentTime,
-        uint256 _exchangeRate,
-        address[] _whitelistAddresses
-    ) PVTSD (_exchangeRate, _whitelistAddresses) public {
+        uint256 _exchangeRate
+    ) PVTSD (_exchangeRate) public {
         _now = _currentTime;
     }
 

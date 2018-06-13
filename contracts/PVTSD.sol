@@ -17,8 +17,8 @@ contract PVTSD is Ownable {
     uint256 public decimals = 18;
     uint256 public decimalMultiplier = uint256(10) ** decimals;
     uint256 public million = 1000000 * decimalMultiplier;
-    uint256 public totalSupply = 55 * million;
-    uint256 public minPurchase = 50 ether;
+    uint256 public totalSupply = 82500000 * decimalMultiplier;
+    uint256 public minPurchase = 100000000; // 1,000,000.00 USD in cents
     uint256 public ethExchangeRate;
     uint256 public exchangeRate;
     uint256 public tokenPrice = 50; // 50 cents (USD)
@@ -56,6 +56,7 @@ contract PVTSD is Ownable {
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
     event Transfer(address from, address to, uint256 value);
+    event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
 
     constructor(
         uint256 _exchangeRate
@@ -124,9 +125,10 @@ contract PVTSD is Ownable {
 
     function buyTokens() payable public {
         uint256 _currentTime = currentTime();
+        uint256 _minPurchaseInWei = minPurchase.mul(decimalMultiplier).div(ethExchangeRate);
         require(tokensAvailable);
         require(_currentTime >= startTime && _currentTime <= endTime);
-        require(msg.value >= minPurchase);
+        require(msg.value >= _minPurchaseInWei);
         require(whiteListed[msg.sender]);
 
         // ETH received by spender
@@ -134,10 +136,10 @@ contract PVTSD is Ownable {
         // token amount based on ETH / exchangeRate result
         // exchange rate is 1 TSD => x ETH
         // with a 40% discount attached
-        uint256 discountedExchangeRate = exchangeRate.mul(60).div(100);
+        uint256 discountedExchangeRate = exchangeRate.mul(70).div(100);
         // totalTokenAmount is the total tokens offered including the discount
         // Multiply with the decimalMultiplier to get total tokens (to 18 decimal place)
-        uint256 totalTokenAmount = ethAmount.div(discountedExchangeRate).mul(decimalMultiplier);
+        uint256 totalTokenAmount = ethAmount.mul(decimalMultiplier).div(discountedExchangeRate);
         // tokens avaialble to sell are the remaining tokens in the pvtFundsWallet
         uint256 availableTokens = balances[pvtFundsWallet];
         uint256 currentEthRaised = totalEthRaised;
@@ -202,9 +204,11 @@ contract PVTSD is Ownable {
     function burnRemainingTokens() external onlyOwner returns (bool) {
         require(currentTime() >= endTime);
         if (balances[pvtFundsWallet] > 0) {
-            // Reducing the totalsupply
+            // Subtracting the unsold tokens from the total supply.
+            uint256 oldSupply = totalSupply;
             totalSupply = totalSupply.sub(balances[pvtFundsWallet]);
             balances[pvtFundsWallet] = 0;
+            emit UpdatedTotalSupply(oldSupply, totalSupply);
         }
 
         return true;
@@ -218,17 +222,21 @@ contract PVTSD is Ownable {
     function distributeTokens() external onlyOwner returns (bool) {
         require(currentTime() >= tokensReleaseDate);
         address pvtSaleTokenWallet = dc.pvtSaleTokenWallet();
-        for (uint256 i = 0; i < icoParticipants.length; i++) {
+        for (uint64 i = 0; i < icoParticipants.length; i++) {
             dc.transferFrom(pvtSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
             emit Transfer(pvtSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
         }
 
-        // NOTE: What to do with any unsold tokens in the main contracts allocation???
-
         // Event to say distribution is complete
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
 
+        // Boolean is returned to give us a success state.
         return true;
+    }
+
+    // Destroys the contract
+    function selfDestruct() external onlyOwner {
+        selfdestruct(owner);
     }
 
     modifier onlyRestricted () {
