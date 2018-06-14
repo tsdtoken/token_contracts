@@ -77,6 +77,18 @@ contract('TSDSubsequentSupply', (accounts) => {
     await assertExpectedError(TSDSubsequentSupplyContract.setTokenWalletAddressAndExchangeRate(newTokensWallet, newFundsWallet, exchangeRate, { from: buyerOne }));
   });
 
+  it('can change the token price as the owner', async () => {
+    const tokenPricePrior = await TSDSubsequentSupplyContract.tokenPrice();
+    await TSDSubsequentSupplyContract.updateTokenPrice(10, { from: owner });
+    const tokenPricePost = await TSDSubsequentSupplyContract.tokenPrice();
+    assert.equal(50, tokenPricePrior, 'Old Token price should be 50.');
+    assert.equal(10, tokenPricePost, 'New Token price should match 10.');
+  });
+
+  it('cannot change the token price if not the owner', async () => {
+    await assertExpectedError(TSDSubsequentSupplyContract.updateTokenPrice(10, { from: buyerOne }));
+  });
+
   it('creates a mapping of all whitelisted addresses', async () => {
     // manually set up the whitelist inside the contract
     await TSDSubsequentSupplyContract.createWhiteListedMapping(whitelistAddresses, { from: owner });

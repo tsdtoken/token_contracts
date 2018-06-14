@@ -36,9 +36,7 @@ contract TSDSubsequentSupply is Ownable {
     event EthRaisedUpdated(uint256 _previousTotal, uint256 _newTotal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event SubsequentContractOpened(address _contract, bool _isOpen);
-    event Debugger(string variable, uint256 value);
-    event DebugStrings(string variable);
-    event DebugAddress(string name, address _address);
+    event TokenPriceUpdated(uint256 _oldPrice, uint256 _newPrice);
 
     // Updates the ETH => TSD exchange rate
     function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
@@ -48,6 +46,15 @@ contract TSDSubsequentSupply is Ownable {
         uint256 tokenInSzabo = tokenPrice.mul(1000000).div(_newRate);
         exchangeRate = oneSzabo.mul(tokenInSzabo);
         emit ExhangeRateUpdated(currentRate, exchangeRate);
+        return true;
+    }
+
+    // Updates the tokenPrice.
+    // @param _newprice: the token price in USD cents
+    function updateTokenPrice(uint256 _newPrice) external onlyOwner returns (bool) {
+        uint256 _oldPrice = tokenPrice;
+        tokenPrice = _newPrice;
+        emit TokenPriceUpdated(_oldPrice, _newPrice);
         return true;
     }
 
@@ -75,7 +82,7 @@ contract TSDSubsequentSupply is Ownable {
     // needs to approve this wallet as the spender
     // This will be done through the approve function in the main contract
 
-    function openSubsequentSale() onlyOwner external returns (bool) {
+    function openSubsequentSale() external onlyOwner returns (bool) {
         require(newTokensWallet != 0x0);
         require(exchangeRate != 0);
         isOpen = true;
@@ -84,20 +91,20 @@ contract TSDSubsequentSupply is Ownable {
         return true;
     }
 
-    function closeSubsequentSale() onlyOwner external returns (bool) {
+    function closeSubsequentSale() external onlyOwner returns (bool) {
         isOpen = false;
 
         emit SubsequentContractOpened(address(this), false);
         return true;
     }
 
-    function setTokenWalletAddressAndExchangeRate(address _newTokensWallet, address _newFundsWallet, uint256 _rate) onlyOwner external {
+    function setTokenWalletAddressAndExchangeRate(address _newTokensWallet, address _newFundsWallet, uint256 _rate) external onlyOwner {
         updateTheExchangeRate(_rate);
         newFundsWallet = _newFundsWallet;
         newTokensWallet = _newTokensWallet;
     }
 
-    function increaseTotalSupplyAndAllocateTokens(uint256 _amount) onlyOwner public {
+    function increaseTotalSupplyAndAllocateTokens(uint256 _amount) public onlyOwner {
         require(newTokensWallet != 0x0);
         uint256 increaseAmount = _amount.mul(decimalMultiplier);
         uint256 currentTotalSupply = dc.totalSupply();
@@ -108,42 +115,35 @@ contract TSDSubsequentSupply is Ownable {
         emit NewTotalSupplyOfTSD(newTotalSupply);
     }
 
-    function () payable public {
+    function () public payable {
         buySubsequentTokens();
     }
 
-    function buySubsequentTokens() payable public {
+    function buySubsequentTokens() public payable {
         require(isOpen);
         require(whiteListed[msg.sender]);
         // ETH received by spender
         uint256 ethAmount = msg.value;
-        emit Debugger("ethAmount", ethAmount);
         // token amount based on ETH / exchangeRate result
         // Multiply with the decimalMultiplier to get total tokens (to 18 decimal place)
-        uint256 totalTokenAmount = ethAmount.div(exchangeRate).mul(decimalMultiplier);
+        uint256 totalTokenAmount = ethAmount.mul(decimalMultiplier).div(exchangeRate);
         // tokens avaialble to sell are the remaining tokens in the newTokensWallet
         // get a reference to the total eth raised from the main contract
         uint256 availableTokens = dc.balanceOf(newTokensWallet);
-        emit Debugger("availableTokens", availableTokens);
         uint256 ethRefund = 0;
         uint256 unavailableTokens;
-        emit Debugger("totalTokenAmount", totalTokenAmount);
 
         if (totalTokenAmount > availableTokens) {
-            emit DebugStrings("its greater");
             // additional tokens that aren't avaialble to be sold
             // tokenAmount is the tokens requested by buyer
             // availableTokens are all the tokens left in the supplying wallet i.e newTokensWallet
             unavailableTokens = totalTokenAmount.sub(availableTokens);
-            emit Debugger("unavailableTokens", unavailableTokens);
             // determine the unused ether amount by seeing how many tokens were surplus
             // i.e 'availableTokens' and reverse calculating their ETH equivalent
             // divide by decimalMultiplier as unavailableTokens are 10^18
             ethRefund = unavailableTokens.mul(exchangeRate).div(decimalMultiplier);
-            emit Debugger("ethRefund", ethRefund);
             // subtract the refund amount from the eth amount received by the tx
             ethAmount = ethAmount.sub(ethRefund);
-            emit Debugger("ethAmount", ethAmount);
             // make the transfer
             dc.transferFrom(newTokensWallet, msg.sender, availableTokens);
             // issue refund
@@ -159,7 +159,7 @@ contract TSDSubsequentSupply is Ownable {
             // close sale as all tokens are sold
             isOpen = false;
         } else {
-            require(availableTokens >= totalTokenAmount);
+            require(totalTokenAmount <= availableTokens);
             // inherited transfer function will emit a Transfer event
             dc.transferFrom(newTokensWallet, msg.sender, totalTokenAmount);
             // transfer either to newFundsWallet
