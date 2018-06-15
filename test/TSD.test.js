@@ -39,7 +39,6 @@ contract('TSDMock', (accounts) => {
     TSDMockContract = await TSDMock.new(
       currentTime,
       exchangeRate,
-      [buyerOne],
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
@@ -272,7 +271,7 @@ contract('TSDMock', (accounts) => {
     // assert.equal(numFromWei(buyerSixEthPost), numFromWei(new web3.BigNumber(expectedEthBal)), 'The current balance should equal before total - (token cost + transaction cost)');
     assert.equal(tokensRemaining, 0, 'There should be no remaining tokens');
     assert.ok(equalsWithNormalizedRounding(finalFundsWalletBal, numFromWei(fundsWalletPost)));
-    assert.equal(await TSDMockContract.icoOpen(), false);
+    assert.equal(await TSDMockContract.tokensAvailable(), false);
   });
 
   // After sale
@@ -280,7 +279,7 @@ contract('TSDMock', (accounts) => {
     const endTime = await TSDMockContract.endTime();
     await TSDMockContract.changeTime(endTime);
     const tokenBal = await TSDMockContract.balanceOf(fundsWallet);
-    const burnTokens = await TSDMockContract.burnRemainingTokensAfterClose({ from: owner });
+    const burnTokens = await TSDMockContract.burnRemainingTokensAfterClose(fundsWallet , { from: owner });
     const tokenBalPost = await TSDMockContract.balanceOf(fundsWallet);
     assert.equal(numFromWei(tokenBal), 253000000, 'The first token balance should be all tokens 253 million');
     assert.equal(tokenBalPost, 0, 'There should be 0 tokens after the burn');
@@ -290,7 +289,7 @@ contract('TSDMock', (accounts) => {
   it('disallows a call to burn tokens from not the owner', async () => {
     const endTime = await TSDMockContract.endTime();
     await TSDMockContract.changeTime(endTime);
-    await assertExpectedError(TSDMockContract.burnRemainingTokensAfterClose({ from: buyerFive }));
+    await assertExpectedError(TSDMockContract.burnRemainingTokensAfterClose(buyerFive, { from: buyerFive }));
   });
 
   // Test the restrictions re. subsequent supply contract

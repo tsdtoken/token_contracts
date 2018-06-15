@@ -8,15 +8,13 @@ contract TSDMock is TSD {
     constructor (
         uint256 _currentTime,
         uint256 _exchangeRate,
-        address[] _whitelistAddresses,
         address _pvtSaleTokenWallet,
         address _preSaleTokenWallet,
         address _foundersAndAdvisors,
         address _bountyCommunityIncentives,
         address _liquidityProgram
     ) TSD (
-        _exchangeRate, 
-        _whitelistAddresses,
+        _exchangeRate,
         _pvtSaleTokenWallet,
         _preSaleTokenWallet,
         _foundersAndAdvisors,

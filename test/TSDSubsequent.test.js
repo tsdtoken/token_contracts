@@ -45,7 +45,6 @@ contract('TSDSubsequentSupply', (accounts) => {
     TSDMockContract = await TSDMock.new(
       currentTime,
       exchangeRate,
-      whitelistAddresses,
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
@@ -53,9 +52,12 @@ contract('TSDSubsequentSupply', (accounts) => {
       liquidityProgram
     );
 
+    await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
+
     TSDContractAddress = await TSDMockContract.address;
 
     TSDSubsequentSupplyContract = await TSDSubsequentSupply.new(TSDContractAddress);
+    await TSDSubsequentSupplyContract.createWhiteListedMapping(whitelistAddresses);
     TSDSubsequentContractAddress = await TSDSubsequentSupplyContract.address;
   });
 
@@ -73,6 +75,18 @@ contract('TSDSubsequentSupply', (accounts) => {
 
   it('cannot set the token wallet address and exchange rate by a different address', async () => {
     await assertExpectedError(TSDSubsequentSupplyContract.setTokenWalletAddressAndExchangeRate(newTokensWallet, newFundsWallet, exchangeRate, { from: buyerOne }));
+  });
+
+  it('can change the token price as the owner', async () => {
+    const tokenPricePrior = await TSDSubsequentSupplyContract.tokenPrice();
+    await TSDSubsequentSupplyContract.updateTokenPrice(10, { from: owner });
+    const tokenPricePost = await TSDSubsequentSupplyContract.tokenPrice();
+    assert.equal(50, tokenPricePrior, 'Old Token price should be 50.');
+    assert.equal(10, tokenPricePost, 'New Token price should match 10.');
+  });
+
+  it('cannot change the token price if not the owner', async () => {
+    await assertExpectedError(TSDSubsequentSupplyContract.updateTokenPrice(10, { from: buyerOne }));
   });
 
   it('creates a mapping of all whitelisted addresses', async () => {
@@ -167,6 +181,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     const increasedSupply = await TSDSubsequentSupplyContract.subsequentTotalSupply();
     // approve the subsequent contract to spend increased supply from the new token wallet
     await TSDMockContract.approve(TSDSubsequentContractAddress, increasedSupply, { from: newTokensWallet });
+    await TSDMockContract.toggleTrading();
     // get a ref of what the new funds wallets balance is prior to the transaction
     const ethBalOfNewFundsWalletPrior = web3.eth.getBalance(newFundsWallet);
     // buy tokens
@@ -228,6 +243,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     const increasedSupply = await TSDSubsequentSupplyContract.subsequentTotalSupply();
     // approve the subsequent contract to spend increased supply from the new token wallet
     await TSDMockContract.approve(TSDSubsequentContractAddress, increasedSupply, { from: newTokensWallet });
+    await TSDMockContract.toggleTrading();
     // get a ref of what the new funds wallets balance is prior to the transaction
     const ethBalOfNewFundsWalletPrior = web3.eth.getBalance(newFundsWallet);
     const ethBalOfBuyerPrior = web3.eth.getBalance(buyerOne);

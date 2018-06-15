@@ -7,9 +7,8 @@ contract PRETSDMock is PRETSD {
 
     constructor (
         uint256 _currentTime,
-        uint256 _exchangeRate,
-        address[] _whitelistAddresses
-    ) PRETSD (_exchangeRate, _whitelistAddresses) public {
+        uint256 _exchangeRate
+    ) PRETSD (_exchangeRate) public {
         _now = _currentTime;
     }
 

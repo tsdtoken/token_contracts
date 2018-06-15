@@ -17,16 +17,12 @@ contract PVTSD is Ownable {
     uint256 public decimals = 18;
     uint256 public decimalMultiplier = uint256(10) ** decimals;
     uint256 public million = 1000000 * decimalMultiplier;
-    uint256 public totalSupply = 55 * million;
-    // CHANGE TO 50 ETH
-    uint256 public minPurchase = 50 ether;
-    // 1 TSD = x ETH
-    // Unit convertsions https://github.com/ethereum/web3.js/blob/0.15.0/lib/utils/utils.js#L40
+    uint256 public totalSupply = 82500000 * decimalMultiplier;
+    uint256 public minPurchase = 100000000; // 1,000,000.00 USD in cents
     uint256 public ethExchangeRate;
     uint256 public exchangeRate;
     uint256 public tokenPrice = 50; // 50 cents (USD)
     uint256 public totalEthRaised = 0;
-
     // Coordinated Universal Time (abbreviated to UTC) is the primary time standard by which the world regulates clocks and time.
 
     // Start time "Fri Jun 15 2018 00:00:00 GMT+1000 (AEST)"
@@ -52,27 +48,24 @@ contract PVTSD is Ownable {
     // balances
     mapping(address => uint256) balances;
 
-    // ico concluded due to all tokens sold
-    bool public icoOpen = true;
+    // When all tokens are sold this value will be set to false
+    bool public tokensAvailable = true;
 
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
     event Transfer(address from, address to, uint256 value);
+    event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
 
     constructor(
-        uint256 _exchangeRate,
-        address[] _whitelistAddresses
+        uint256 _exchangeRate
     ) public {
         pvtFundsWallet = owner;
 
         // transfer suppy to the pvtFundsWallet
         balances[pvtFundsWallet] = totalSupply;
         emit Transfer(0x0, pvtFundsWallet, totalSupply);
-
-        // set up the white listing mapping
-        createWhiteListedMapping(_whitelistAddresses);
 
         // set up the exchangeRate
         updateTheExchangeRate(_exchangeRate);
@@ -83,33 +76,40 @@ contract PVTSD is Ownable {
         return now * 1000;
     }
 
-    function balanceOf(address _owner) public view returns (uint256) {
-        return balances[_owner];
+    // Checks the balance of the address. ERC20 standard.
+    function balanceOf(address _address) public view returns (uint256) {
+        return balances[_address];
     }
 
-    function createWhiteListedMapping(address[] _addresses) public onlyRestricted {
-        for (uint256 i = 0; i < _addresses.length; i++) {
+    // Called externally to create whitelist for  sale.
+    // Only whitelisted addresses can participate in the ico.
+    function createWhiteListedMapping(address[] _addresses) external onlyRestricted {
+        for (uint64 i = 0; i < _addresses.length; i++) {
             whiteListed[_addresses[i]] = true;
         }
     }
 
+    // Called externally to change the address of the oracle.
+    // The oracle updates the exchange rate based on the current ETH value.
     function changeOracleAddress(address _newAddress) external onlyOwner {
         oracleAddress = _newAddress;
     }
 
     // Updates the ETH => TSD exchange rate
+    // This is called when the contract is constructed and by the oracle to update the rate periodically
     function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
         ethExchangeRate = _newRate;
         uint256 currentRate = exchangeRate;
         uint256 oneSzabo = 1 szabo;
-        uint256 tokenInSzabo = tokenPrice.mul(1000000).div(_newRate);
-        exchangeRate = oneSzabo.mul(tokenInSzabo);
+        uint256 tokenPriceInSzabo = tokenPrice.mul(1000000).div(_newRate);
+        // The exchangerate is saved in Szabo.
+        exchangeRate = oneSzabo.mul(tokenPriceInSzabo);
         emit ExhangeRateUpdated(currentRate, exchangeRate);
         return true;
     }
 
     // Can check to see if an address is whitelisted
-    function isWhiteListed(address _address) public view returns (bool) {
+    function isWhiteListed(address _address) external view returns (bool) {
         if (whiteListed[_address]) {
             return true;
         } else {
@@ -118,14 +118,17 @@ contract PVTSD is Ownable {
     }
 
     // Buy functions
+    // This is an un-named fallback function that is set to payable to accept ether.
     function() payable public {
         buyTokens();
     }
 
     function buyTokens() payable public {
-        require(icoOpen);
-        require(currentTime() >= startTime && currentTime() <= endTime);
-        require(msg.value >= minPurchase);
+        uint256 _currentTime = currentTime();
+        uint256 _minPurchaseInWei = minPurchase.mul(decimalMultiplier).div(ethExchangeRate);
+        require(tokensAvailable);
+        require(_currentTime >= startTime && _currentTime <= endTime);
+        require(msg.value >= _minPurchaseInWei);
         require(whiteListed[msg.sender]);
 
         // ETH received by spender
@@ -133,10 +136,10 @@ contract PVTSD is Ownable {
         // token amount based on ETH / exchangeRate result
         // exchange rate is 1 TSD => x ETH
         // with a 40% discount attached
-        uint256 discountedExchangeRate = exchangeRate.mul(60).div(100);
+        uint256 discountedExchangeRate = exchangeRate.mul(70).div(100);
         // totalTokenAmount is the total tokens offered including the discount
         // Multiply with the decimalMultiplier to get total tokens (to 18 decimal place)
-        uint256 totalTokenAmount = ethAmount.div(discountedExchangeRate).mul(decimalMultiplier);
+        uint256 totalTokenAmount = ethAmount.mul(decimalMultiplier).div(discountedExchangeRate);
         // tokens avaialble to sell are the remaining tokens in the pvtFundsWallet
         uint256 availableTokens = balances[pvtFundsWallet];
         uint256 currentEthRaised = totalEthRaised;
@@ -162,6 +165,7 @@ contract PVTSD is Ownable {
             // add total tokens to the senders balances and Emit transfer event
             balances[msg.sender] = balances[msg.sender].add(availableTokens);
             emit Transfer(pvtFundsWallet, msg.sender, availableTokens);
+            // adding the buyer to the icoParticipants
             icoParticipants.push(msg.sender);
             // refund
             if (ethRefund > 0) {
@@ -172,9 +176,9 @@ contract PVTSD is Ownable {
             totalEthRaised = totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
             // close token sale as tokens are sold out
-            icoOpen = false;
+            tokensAvailable = false;
         } else {
-            require(availableTokens >= totalTokenAmount);
+            require(totalTokenAmount <= availableTokens);
             // complete transfer and emit an event
             balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(totalTokenAmount);
             balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
@@ -191,16 +195,20 @@ contract PVTSD is Ownable {
     // After close functions
 
     // Create an instance of the main contract
-    function setMainContractAddress(address _t) onlyOwner public {
+    function setMainContractAddress(address _t) external onlyOwner{
         dc = TSD(_t);
         TSDContractAddress = _t;
     }
 
    // Burn any remaining tokens
-    function burnRemainingTokens() onlyOwner public returns (bool) {
+    function burnRemainingTokens() external onlyOwner returns (bool) {
         require(currentTime() >= endTime);
         if (balances[pvtFundsWallet] > 0) {
+            // Subtracting the unsold tokens from the total supply.
+            uint256 oldSupply = totalSupply;
+            totalSupply = totalSupply.sub(balances[pvtFundsWallet]);
             balances[pvtFundsWallet] = 0;
+            emit UpdatedTotalSupply(oldSupply, totalSupply);
         }
 
         return true;
@@ -211,20 +219,24 @@ contract PVTSD is Ownable {
     // This function will be called by the pvtSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
 
-    function distributeTokens() public onlyOwner returns (bool) {
+    function distributeTokens() external onlyOwner returns (bool) {
         require(currentTime() >= tokensReleaseDate);
         address pvtSaleTokenWallet = dc.pvtSaleTokenWallet();
-        for (uint256 i = 0; i < icoParticipants.length; i++) {
+        for (uint64 i = 0; i < icoParticipants.length; i++) {
             dc.transferFrom(pvtSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
             emit Transfer(pvtSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
         }
 
-        // NOTE: What to do with any unsold tokens in the main contracts allocation???
-
         // Event to say distribution is complete
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
 
+        // Boolean is returned to give us a success state.
         return true;
+    }
+
+    // Destroys the contract
+    function selfDestruct() external onlyOwner {
+        selfdestruct(owner);
     }
 
     modifier onlyRestricted () {
