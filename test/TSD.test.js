@@ -47,10 +47,15 @@ contract('TSDMock', (accounts) => {
     );
 
     await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
+    await TSDMockContract.contractInitialAllocation({ from: owner });
   });
 
   it('has an owner', async () => {
     assert.equal(await TSDMockContract.owner(), owner);
+  });
+
+  it('can only call contractInitialAllocation once', async () => {
+    await assertExpectedError(TSDMockContract.contractInitialAllocation({ from: owner }));
   });
 
   it('sets the owner as the fundsWallet', async () => {
@@ -128,7 +133,7 @@ contract('TSDMock', (accounts) => {
 
   it('funds wallet has 253 million tokens available for public sale', async () => {
     const fundsWalletBal = await TSDMockContract.balanceOf(fundsWallet);
-    assert.equal(numFromWei(fundsWalletBal), 253000000, 'The funds wallet should have a balance of 253 million tokens');
+    assert.equal(numFromWei(fundsWalletBal), 225500000, 'The funds wallet should have a balance of 225.5 million tokens');
   });
 
   it('can tell you if an address is whitelisted', async () => {
@@ -197,7 +202,7 @@ contract('TSDMock', (accounts) => {
     const balanceOfBuyer = await TSDMockContract.balanceOf(buyerOne);
     const remainingTokens = await TSDMockContract.balanceOf(fundsWallet);
     assert.equal(numFromWei(balanceOfBuyer), 10000, 'The buyers balance should 10,000 tokens')
-    assert.equal(numFromWei(remainingTokens), 252990000, 'The remaining tokens should be 252,990,000')
+    assert.equal(numFromWei(remainingTokens), 225490000, 'The remaining tokens should be 225,490,000')
   });
 
   it('accepts ether one second before close', async () => {
@@ -211,7 +216,7 @@ contract('TSDMock', (accounts) => {
     const balanceOfBuyer = await TSDMockContract.balanceOf(buyerTwo);
     const remainingTokens = await TSDMockContract.balanceOf(fundsWallet);
     assert.equal(numFromWei(balanceOfBuyer), 10000, 'The buyers balance should 10,000 tokens')
-    assert.equal(numFromWei(remainingTokens), 252990000, 'The remaining tokens should be 252,990,000')
+    assert.equal(numFromWei(remainingTokens), 225490000, 'The remaining tokens should be 225,490,000')
   });
 
   it('rejects a transaction that is less than the minimum buy of 0.0875 ether', async () => {
@@ -241,7 +246,10 @@ contract('TSDMock', (accounts) => {
     // funds wallet contains 253,000,000
     await TSDMockContract.sendTransaction(buyTokens(90, buyerThree));
     await TSDMockContract.sendTransaction(buyTokens(90, buyerFour));
-    await TSDMockContract.sendTransaction(buyTokens(72.962700, buyerFive));
+    await TSDMockContract.sendTransaction(buyTokens(45.4627, buyerFive));
+
+    const buyerThreeBalance = await TSDMockContract.balanceOf(buyerThree);
+    console.log('buyerThreeBalance', buyerThreeBalance);
     // remaining tokens are now 37300
     const lastRemainingTokens = await TSDMockContract.balanceOf(fundsWallet);
     // buyer should be allowed to purchase the remaining tokens
@@ -281,7 +289,7 @@ contract('TSDMock', (accounts) => {
     const tokenBal = await TSDMockContract.balanceOf(fundsWallet);
     const burnTokens = await TSDMockContract.burnRemainingTokensAfterClose(fundsWallet , { from: owner });
     const tokenBalPost = await TSDMockContract.balanceOf(fundsWallet);
-    assert.equal(numFromWei(tokenBal), 253000000, 'The first token balance should be all tokens 253 million');
+    assert.equal(numFromWei(tokenBal), 225500000, 'The first token balance should be all tokens 225.5 million');
     assert.equal(tokenBalPost, 0, 'There should be 0 tokens after the burn');
     assert.ok(burnTokens)
   });

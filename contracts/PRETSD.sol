@@ -67,7 +67,7 @@ contract PRETSD is Ownable {
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
 
     constructor(
-        uint256 _exchangeRate
+        uint256 _ethExchangeRate
     ) public {
         preFundsWallet = owner;
 
@@ -76,7 +76,7 @@ contract PRETSD is Ownable {
         emit Transfer(0x0, preFundsWallet, totalSupply);
 
         // set exchange rate
-        updateTheExchangeRate(_exchangeRate);
+        updateTheExchangeRate(_ethExchangeRate);
     }
 
     // Contract utility functions

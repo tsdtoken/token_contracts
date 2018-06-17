@@ -15,7 +15,7 @@ contract TSD is BaseToken, Ownable {
 
     // Allocations
     uint256 public totalSupply = 550 * million;
-    uint256 public pvtSaleSupply = 55 * million;
+    uint256 public pvtSaleSupply = (82 * million).add(500 * thousand);
     uint256 public preSaleSupply = 165 * million;
     uint256 public foundersAndAdvisorsAllocation = 44 * million;
     uint256 public bountyCommunityIncentivesAllocation = (16 * million).add(500 * thousand);
@@ -60,14 +60,18 @@ contract TSD is BaseToken, Ownable {
     // Token tradability toggle
     bool public canTrade = false;
 
+    // initializationCall
+    bool isInitialAllocationDone = false;
+
     // events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
     event TradingStatus(bool status);
+    event InitalTokenAllocation(bool allocationStatus);
 
     constructor(
-        uint256 _exchangeRate,
+        uint256 _ethExchangeRate,
         address _pvtSaleTokenWallet,
         address _preSaleTokenWallet,
         address _foundersAndAdvisors,
@@ -80,10 +84,16 @@ contract TSD is BaseToken, Ownable {
         foundersAndAdvisors = _foundersAndAdvisors;
         bountyCommunityIncentives = _bountyCommunityIncentives;
         liquidityProgram = _liquidityProgram;
+        ethExchangeRate = _ethExchangeRate;
 
         // transfer suppy to the funds wallet
         balances[fundsWallet] = totalSupply;
         emit Transfer(0x0, fundsWallet, totalSupply);
+    }
+
+    function contractInitialAllocation() external onlyOwner {
+        // require the initialAllocationDone to be false, as it can only be called once 
+        require(!isInitialAllocationDone);
 
         // Transfer all of the allocations
         // The inherited transfer method from the StandardToken which inherits
@@ -104,8 +114,12 @@ contract TSD is BaseToken, Ownable {
         // transfer tokens to the liquidity program account
         super.transfer(liquidityProgram, liquidityProgramAllocation);
 
-        // set up the exchangeRate
-        updateTheExchangeRate(_exchangeRate);
+        // set up the exchangeRate and ethExchangeRate
+        updateTheExchangeRate(ethExchangeRate);
+
+        // set the initialAllocationDone value to true
+        isInitialAllocationDone = true;
+        emit InitalTokenAllocation(isInitialAllocationDone);
     }
 
     // Contract utility functions
@@ -146,6 +160,7 @@ contract TSD is BaseToken, Ownable {
         ethExchangeRate = _newRate;
         uint256 currentRate = exchangeRate;
         uint256 oneSzabo = 1 szabo;
+        // 1 ETH = 1000000 szabo
         uint256 tokenPriceInSzabo = tokenPrice.mul(1000000).div(_newRate);
         // The exchangerate is saved in Szabo.
         exchangeRate = oneSzabo.mul(tokenPriceInSzabo);

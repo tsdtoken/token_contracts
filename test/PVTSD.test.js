@@ -305,6 +305,7 @@ contract('PVTSDMock', (accounts) => {
     );
 
     await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
+    await TSDMockContract.contractInitialAllocation({ from: owner });
     const newRate = 50000000;
     // New rate is set to 1 ETH == 1,000,000 TSD
     await PVTSDMockContract.updateTheExchangeRate(newRate);

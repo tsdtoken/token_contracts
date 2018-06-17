@@ -59,7 +59,7 @@ contract PVTSD is Ownable {
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
 
     constructor(
-        uint256 _exchangeRate
+        uint256 _ethExchangeRate
     ) public {
         pvtFundsWallet = owner;
 
@@ -68,7 +68,7 @@ contract PVTSD is Ownable {
         emit Transfer(0x0, pvtFundsWallet, totalSupply);
 
         // set up the exchangeRate
-        updateTheExchangeRate(_exchangeRate);
+        updateTheExchangeRate(_ethExchangeRate);
     }
 
     // Contract utility functions
