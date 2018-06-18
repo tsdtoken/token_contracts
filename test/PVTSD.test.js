@@ -339,4 +339,16 @@ contract('PVTSDMock', (accounts) => {
     assert.equal(numFromWei(firstBuyerPvtBal), numFromWei(firstBuyerMainBal));
     assert.equal(numFromWei(secondBuyerPvtBal), numFromWei(secondBuyerMainBal));
   });
+
+  it('the owner can change the start date', async () => {
+    await PVTSDMockContract.setStartTime(1528984500000);
+    const startTime = await PVTSDMockContract.startTime({ from: owner });
+    assert.equal(startTime, 1528984500000, 'The start date should change');
+  });
+
+  it('the owner can change the end date', async () => {
+    await PVTSDMockContract.setEndTime(1531576900000);
+    const startTime = await PVTSDMockContract.endTime({ from: owner });
+    assert.equal(startTime, 1531576900000, 'The end date should change');
+  });
 });

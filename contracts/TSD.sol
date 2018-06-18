@@ -296,7 +296,6 @@ contract TSD is BaseToken, Ownable {
         // ensure the start time is before the end time
         require(_startTime < endTime);
         startTime = _startTime;
-        // return true;
     }
 
     function setEndTime(uint256 _endTime) external onlyOwner {
@@ -304,7 +303,6 @@ contract TSD is BaseToken, Ownable {
         // and that is after the current time
         require(_endTime > startTime);
         endTime = _endTime;
-        // return true;
     }
 
     // Destroys the contract
