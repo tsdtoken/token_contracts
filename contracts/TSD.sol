@@ -17,8 +17,8 @@ contract TSD is BaseToken, Ownable {
     uint256 public totalSupply = 550 * million;
     uint256 public pvtSaleSupply = (82 * million).add(500 * thousand);
     uint256 public preSaleSupply = 165 * million;
-    uint256 public foundersAndAdvisorsAllocation = 44 * million;
-    uint256 public bountyCommunityIncentivesAllocation = (16 * million).add(500 * thousand);
+    uint256 public foundersAndAdvisorsAllocation = 33 * million;
+    uint256 public bountyCommunityIncentivesAllocation = (27 * million).add(500 * thousand);
     uint256 public liquidityProgramAllocation = (16 * million).add(500 * thousand);
     uint256 public minPurchase = 5000; // 50.00 USD in cents
     uint256 public ethExchangeRate;
