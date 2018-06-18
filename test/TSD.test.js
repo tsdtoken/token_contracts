@@ -253,7 +253,6 @@ contract('TSDMock', (accounts) => {
     await TSDMockContract.sendTransaction(buyTokens(45.4627, buyerFive));
 
     const buyerThreeBalance = await TSDMockContract.balanceOf(buyerThree);
-    console.log('buyerThreeBalance', buyerThreeBalance);
     // remaining tokens are now 37300
     const lastRemainingTokens = await TSDMockContract.balanceOf(fundsWallet);
     // buyer should be allowed to purchase the remaining tokens
@@ -319,6 +318,18 @@ contract('TSDMock', (accounts) => {
     const SubsequentContract = await TSDSubsequentSupply.new(mainContractAddress);
     const subContractAddress = await SubsequentContract.address;
     await assertExpectedError(TSDMockContract.setSubsequentContract(subContractAddress, { from: buyerSix }));
+  });
+
+  it('the owner can change the start date', async () => {
+    await TSDMockContract.setStartTime(1535324000000);
+    const startTime = await TSDMockContract.startTime({ from: owner });
+    assert.equal(startTime, 1535324000000, 'The start date should change');
+  });
+
+  it('the owner can change the end date', async () => {
+    await TSDMockContract.setEndTime(1838316000000);
+    const startTime = await TSDMockContract.endTime({ from: owner });
+    assert.equal(startTime, 1838316000000, 'The end date should change');
   });
 
   // These two functions can only be called by the subsequent contract
