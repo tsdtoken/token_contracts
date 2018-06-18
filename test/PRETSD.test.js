@@ -53,15 +53,15 @@ contract('PRETSDMock', (accounts) => {
     await PRETSDMockContract.createWhiteListedMapping(whitelistAddresses, { from: owner });
   });
 
-  it('has an owner', async () => {
+ it('has an owner', async () => {
     assert.equal(await PRETSDMockContract.owner(), owner);
   });
 
-  it('designates the owner as the preFundsWallet', async () => {
+ it('designates the owner as the preFundsWallet', async () => {
     assert.equal(await PRETSDMockContract.preFundsWallet(), owner);
   });
 
-  it('has a valid start time, end time and token release time', async () => {
+ it('has a valid start time, end time and token release time', async () => {
     const startTime = await PRETSDMockContract.startTime();
     const endTime = await PRETSDMockContract.endTime();
     const tokensReleaseDate = await PRETSDMockContract.tokensReleaseDate();
@@ -70,25 +70,25 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(moment.unix(tokensReleaseDate.c[0]).isValid(), true);
   });
 
-  it('sets the start time to be Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
+ it('sets the start time to be Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const startTime = await PRETSDMockContract.startTime();
     const dateString = new Date(startTime.c[0]);
     assert.equal(dateString, 'Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)');
   });
 
-  it('sets the end time to be Wed Aug 22 2018 00:00:00 GMT+1000 (AEST)', async () => {
+ it('sets the end time to be Wed Aug 22 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const endTime = await PRETSDMockContract.endTime();
     const dateString = new Date(endTime.c[0]);
     assert.equal(dateString, 'Wed Aug 22 2018 00:00:00 GMT+1000 (AEST)');
   });
 
-  it('sets the token release time to be Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)', async () => {
+ it('sets the token release time to be Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)', async () => {
     const tokensReleaseDate = await PRETSDMockContract.tokensReleaseDate();
     const dateString = new Date(tokensReleaseDate.c[0]);
     assert.equal(dateString, 'Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)');
   });
 
-  it('transfers total supply of tokens (165 million) to the pre funds wallet', async () => {
+ it('transfers total supply of tokens (165 million) to the pre funds wallet', async () => {
     const preFundsWallet = owner;
     const preFundsWalletBalance = await PRETSDMockContract.balanceOf(preFundsWallet);
     assert.equal(numFromWei(preFundsWalletBalance), 165000000, 'Balance of preFundsWallet should be 165 million');
@@ -96,14 +96,14 @@ contract('PRETSDMock', (accounts) => {
 
   // exchange rate functionality
 
-  it('sets the exchange rate upon initialization', async () => {
+ it('sets the exchange rate upon initialization', async () => {
     // exchange rate passed in was 1 szabo or 0.000001ETH
     const exchangeRate = await PRETSDMockContract.exchangeRate();
     assert.ok(exchangeRate);
     assert.equal(numFromWei(exchangeRate), 0.001, 'Exchange rate should be set to 1 szabo (0.000001 ETH)')
   });
 
-  it('can change the exchange rate if called by the owner only', async () => {
+ it('can change the exchange rate if called by the owner only', async () => {
 
     const newRate = 25000
     const beforeExchangeRate = await PRETSDMockContract.exchangeRate();
@@ -115,23 +115,23 @@ contract('PRETSDMock', (accounts) => {
     assert.ok(updatedFromOwner);
   });
 
-  it('cannot change exchange rate from an address that isn\'t the owner', async () => {
+ it('cannot change exchange rate from an address that isn\'t the owner', async () => {
     const newRate = 25000;
     await assertExpectedError(PRETSDMockContract.updateTheExchangeRate(newRate, { from: accounts[6] }));
   });
 
-  it('refuses a sale before the private sale\'s start time', async () => {
+ it('refuses a sale before the private sale\'s start time', async () => {
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(1, buyerOne)))
   });
 
-  it('refuses a sale 1 second before the private sale\'s start time', async () => {
+ it('refuses a sale 1 second before the private sale\'s start time', async () => {
     const startTime = await PRETSDMockContract.startTime();
     const oneSecondPriorToOpen = new Date(startTime).setSeconds(-1);
     await PRETSDMockContract.changeTime(oneSecondPriorToOpen);
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(1, buyerOne)))
   });
 
-  it('accepts ether at the exact moment the sale opens', async () => {
+ it('accepts ether at the exact moment the sale opens', async () => {
     // exchange rate is 1000 sabo. 0.001 ETH token price. / 100 * 80 == 0.0008 ETH per token.
     // current tranche is 20% discount.
     const startTime = await PRETSDMockContract.startTime();
@@ -144,7 +144,7 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(numFromWei(remainingTokens), 164987500, 'The remaining tokens should be 164,987,500')
   });
 
-  it('transfer the ether to the funds wallet', async () => {
+ it('transfer the ether to the funds wallet', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
     const balPriorEthTransfer = web3.eth.getBalance(preFundsWallet);
@@ -157,20 +157,21 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(ethDiff, true, 'Funds wallet should have received 50 ether from the sale');
   });
 
-  it('rejects ether from an address that isn\'t whitelisted', async () => {
+ it('rejects ether from an address that isn\'t whitelisted', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(50, unlistedBuyer)))
   });
 
-  it('rejects a transaction that is less than the minimum buy of 5,000.00 USD', async () => {
+ it('rejects a transaction that is less than the minimum buy of 5,000.00 USD', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
     // 3 ETH == 1,500.00 USD
+    // Only works if ETH >= 10
     await assertExpectedError(PRETSDMockContract.sendTransaction(buyTokens(3, buyerThree)))
   });
 
-  it('sells the required tokens based on the remaining tokens in the tranches', async () => {
+ it('sells the required tokens based on the remaining tokens in the tranches', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
     // set current exchange rate to 1 ETH == 1,000,000 PRETSD
@@ -240,7 +241,7 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(stringFromWei(contractTokensPostPurchaseFour), 2277027.027027027, 'The remaining tokens that the contract should have 4,605,263.157894737894736842 PRETSD');
   });
 
-  it('sells the last remaining ether if less than minimum buy, returns unspent ether to the buyer, closes ICO', async () => {
+ it('sells the last remaining ether if less than minimum buy, returns unspent ether to the buyer, closes ICO', async () => {
     // 1 szabo = 0.000001 ETH
     // set current exchange rate to 1 ETH == 1,000,000 PRETSD
     const inflatedExchangeRate = 50000000;
@@ -279,14 +280,14 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(await PRETSDMockContract.tokensAvailable(), false);
   });
 
-  it('disallows a call to burn tokens from not the owner', async () => {
+ it('disallows a call to burn tokens from not the owner', async () => {
     const endTime = await PRETSDMockContract.endTime();
     await PRETSDMockContract.changeTime(endTime);
     await assertExpectedError(PRETSDMockContract.burnRemainingTokens({ from: buyerFive }));
   });
 
   // setting a reference to the main token contract
-  it('can set a reference to the main token contract on from owner', async () => {
+ it('can set a reference to the main token contract on from owner', async () => {
     const pvtSaleTokenWallet = accounts[0];
     const preSaleTokenWallet = accounts[0];
     const foundersAndAdvisors = accounts[firstBuyerIndex+13];
@@ -311,7 +312,7 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(setRefAddress, TSDMockContract.address, `Address set in the contract should be the address of the main contract ${setRefAddress}`)
   })
 
-  it('distributes private token balances into the main contract, transfers any remaining to main funds wallet token balance', async () => {
+ it('distributes private token balances into the main contract, transfers any remaining to main funds wallet token balance', async () => {
     const pvtSaleTokenWallet = accounts[0];
     const preSaleTokenWallet = accounts[0];
     const foundersAndAdvisors = accounts[firstBuyerIndex+13];

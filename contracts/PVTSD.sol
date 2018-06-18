@@ -18,7 +18,7 @@ contract PVTSD is Ownable {
     uint256 public decimalMultiplier = uint256(10) ** decimals;
     uint256 public million = 1000000 * decimalMultiplier;
     uint256 public totalSupply = 82500000 * decimalMultiplier;
-    uint256 public minPurchase = 100000000; // 1,000,000.00 USD in cents
+    uint256 public minPurchase = 5000000; // 50,000.00 USD in cents
     uint256 public ethExchangeRate;
     uint256 public exchangeRate;
     uint256 public tokenPrice = 50; // 50 cents (USD)
@@ -231,6 +231,22 @@ contract PVTSD is Ownable {
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
 
         // Boolean is returned to give us a success state.
+        return true;
+    }
+
+    // sets start and end times
+    function setStartTime(uint256 _startTime) external onlyOwner returns (bool) {
+        // ensure the start time is before the end time
+        require(_startTime < endTime);
+        startTime = _startTime;
+        return true;
+    }
+
+    function setEndTime(uint256 _endTime) external onlyOwner returns (bool) {
+        // ensure the end time is after the start time
+        // and that is after the current time
+        require(_endTime > startTime && _endTime > currentTime());
+        endTime = _endTime;
         return true;
     }
 

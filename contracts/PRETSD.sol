@@ -323,6 +323,22 @@ contract PRETSD is Ownable {
         return true;
     }
 
+    // sets start and end times
+    function setStartTime(uint256 _startTime) external onlyOwner returns (bool) {
+        // ensure the start time is before the end time
+        require(_startTime < endTime);
+        startTime = _startTime;
+        return true;
+    }
+
+    function setEndTime(uint256 _endTime) external onlyOwner returns (bool) {
+        // ensure the end time is after the start time
+        // and that is after the current time
+        require(_endTime > startTime && _endTime > currentTime());
+        endTime = _endTime;
+        return true;
+    }
+
     // Destroys the contract
     function selfDestruct() external onlyOwner {
         selfdestruct(owner);
