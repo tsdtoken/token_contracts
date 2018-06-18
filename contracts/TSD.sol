@@ -20,7 +20,7 @@ contract TSD is BaseToken, Ownable {
     uint256 public foundersAndAdvisorsAllocation = 33 * million;
     uint256 public bountyCommunityIncentivesAllocation = (27 * million).add(500 * thousand);
     uint256 public liquidityProgramAllocation = (16 * million).add(500 * thousand);
-    uint256 public minPurchase = 5000; // 50.00 USD in cents
+    uint256 public minPurchase = 50000; // 500.00 USD in cents
     uint256 public ethExchangeRate;
     uint256 public exchangeRate;
     uint256 public tokenPrice = 50; // 50 cents (USD)
@@ -289,6 +289,22 @@ contract TSD is BaseToken, Ownable {
     function increaseEthRaisedBySubsequentSale(uint256 _amount) public isSubsequentContract {
         uint256 newEthAmount = totalEthRaised.add(_amount);
         emit EthRaisedUpdated(totalEthRaised, newEthAmount);
+    }
+
+    //  sets start and end times
+    function setStartTime(uint256 _startTime) external onlyOwner {
+        // ensure the start time is before the end time
+        require(_startTime < endTime);
+        startTime = _startTime;
+        // return true;
+    }
+
+    function setEndTime(uint256 _endTime) external onlyOwner {
+        // ensure the end time is after the start time
+        // and that is after the current time
+        require(_endTime > startTime);
+        endTime = _endTime;
+        // return true;
     }
 
     // Destroys the contract
