@@ -49,7 +49,9 @@ The first of three token sales organised by Transcendence. This round offers the
 
 > Only people who have whitelisted themselves with their ETH wallet addresses can participate in the token sale
 
-> Token value is intrinsically 50 cents but offered at 30% discount
+> Token value is intrinsically 50 cents but offered at 30% discount (0.35 USD)
+
+>  If someone sends more ETH than tokens available, the rest of the ETH is refunded, and the remaining tokens are allocated
 
 Address  | Bool
 ------------- | -------------
@@ -109,6 +111,12 @@ The second of three token sales organised by Transcendence. This round offers th
 > The token is not ERC20 compliant as it doesn't contain a fair few of the methods needed to reach compliance.
 
 > Only people who have whitelisted themselves with their ETH wallet addresses can participate in the token sale
+
+> Tokens are sold in tranches. 4 tranches of 41.25M each.
+- First tranche at 20% discount ($0.5 * 0.8 = $0.40)
+- Second tranche at 16% discount ($0.5 * 0.84 = $0.42)
+- Third tranche at 12% discount ($0.5 * 0.88 = $0.44)
+- Fourth tranche at 7.5% discount ($0.5 * 0.925 = $0.46)
 
 Address  | Bool
 ------------- | -------------
@@ -173,8 +181,19 @@ Functions available:
 ## Main token sale Contract
 This is the contract that will, in conclusion, hold **all** wallet addresses that own TSD coin. This is the contract where no bonus will be offered during sale. The length of the ICO will be subjective to which of the following milestones are achieved first:
 
-- End of sale date
-- Token depletion (all tokens sold out)
+> End of sale date
+
+> Total supply of TSD is 550M tokens
+- 82.5M is reserved for the private sale
+- 165M is reserved for the pre sale
+- 225.5M is reserved for the main sale
+- 33M is reserved for the founders and advisors
+- 27.5M is reserved for the bounty and allocation incentives
+- 16.5M is reserved for the liquidity program
+
+>Token depletion (all tokens sold out)
+
+> Tokens are sold at $0.50c
 
 Upon contract initialisation:
 - The total supply is allocated to the funds wallet which is the owner wallet i.e the wallet used to deploy the contract
@@ -259,6 +278,7 @@ At present the logic is assumed such that tokens from private and pre sale will 
 Testing is a critical part of the project, we need to have the contract be as deterministic as possible, which leads to predictable results and behaviours.
 
 **Contract: TSD**
+
     ✓ has an owner
     ✓ can only call contractInitialAllocation once
     ✓ sets the owner as the fundsWallet
@@ -298,6 +318,7 @@ Testing is a critical part of the project, we need to have the contract be as de
     ✓ owner cannot call #increaseEthRaisedBySubsequentSale (70ms)
 
   **Contract: TSDSubsequentSupply**
+  
     ✓ can set the token wallet address and exchange rate by owner (68ms)
     ✓ cannot set the token wallet address and exchange rate by a different address
     ✓ can change the token price as the owner (48ms)
@@ -313,7 +334,8 @@ Testing is a critical part of the project, we need to have the contract be as de
     ✓ does not accept ether when sale is closed (245ms)
     ✓ sells the last remaining tokens and issues a refund for ether unspent, closes sale (788ms)
 
- ** Contract: PRETSD**
+ **Contract: PRETSD**
+ 
     ✓ has an owner
     ✓ designates the owner as the preFundsWallet
     ✓ has a valid start time, end time and token release time
@@ -339,6 +361,7 @@ Testing is a critical part of the project, we need to have the contract be as de
     ✓ the owner can change the end date
 
   **Contract: PVTSD**
+  
     ✓ has an owner
     ✓ designates the owner as the pvtFundsWallet
     ✓ has a valid start time, end time and token release time
