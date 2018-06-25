@@ -92,6 +92,11 @@ contract PVTSD is Ownable {
         }
     }
 
+    // Called to remove addresses from whitelist
+    function removeFromWhitelist(address _address) external onlyRestricted {
+        delete whiteListed[_address];
+    }
+
     // Called externally to change the address of the oracle.
     // The oracle updates the exchange rate based on the current ETH value.
     function changeOracleAddress(address _newAddress) external onlyOwner {
