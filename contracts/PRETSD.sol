@@ -60,7 +60,7 @@ contract PRETSD is Ownable {
     bool public tokensAvailable = true;
 
     // current distribution Index
-    uint32 public currentDistributionIndex = 0;
+    uint256 public currentDistributionIndex = 0;
 
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
@@ -178,13 +178,16 @@ contract PRETSD is Ownable {
             // sub general token amount
             uint256 remainingTokens = balances[preFundsWallet];
             balances[preFundsWallet] = balances[preFundsWallet].sub(remainingTokens);
-            // sub bonus token amoutn
-            balances[msg.sender] = balances[msg.sender].add(remainingTokens);
-            emit Transfer(preFundsWallet, msg.sender, remainingTokens);
+
             // adding the buyer to the icoParticipants ONLY if they haven't already bought before
             if (balances[msg.sender] == 0) {
                 icoParticipants.push(msg.sender);
             }
+            
+            // sub bonus token amount
+            balances[msg.sender] = balances[msg.sender].add(remainingTokens);
+            emit Transfer(preFundsWallet, msg.sender, remainingTokens);
+            
             // refund
             if (ethRefund > 0) {
                 msg.sender.transfer(ethRefund);
@@ -196,13 +199,14 @@ contract PRETSD is Ownable {
             // close token sale as tokens are sold out
             tokensAvailable = false;
         } else {
+            if (balances[msg.sender] == 0) {
+                icoParticipants.push(msg.sender);
+            }
             // make the token purchase
             // sub general token amount
             balances[preFundsWallet] = balances[preFundsWallet].sub(tokenAmount);
             balances[msg.sender] = balances[msg.sender].add(tokenAmount);
-            if (balances[msg.sender] == 0) {
-                icoParticipants.push(msg.sender);
-            }
+
             emit Transfer(preFundsWallet, msg.sender, tokenAmount);
 
             // transfer ether to the wallet and emit and event regarding eth raised
@@ -316,12 +320,12 @@ contract PRETSD is Ownable {
     // This will be a two step process.
     // This function will be called by the preSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
-    function distributeTokens(uint32 _numberOfTransfers) external onlyOwner returns (bool) {
+    function distributeTokens(uint256 _numberOfTransfers) external onlyOwner returns (bool) {
         require(currentTime() >= tokensReleaseDate);
         address preSaleTokenWallet = dc.preSaleTokenWallet();
-        uint32 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);
+        uint256 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);
 
-        for (uint32 i = currentDistributionIndex; i < finalDistributionIndex; i++) {
+        for (uint256 i = currentDistributionIndex; i < finalDistributionIndex; i++) {
             // end for loop when currentDistributionIndex reaches the length of the icoParticipants array
             if (i == icoParticipants.length) {
                 return;

@@ -52,7 +52,7 @@ contract PVTSD is Ownable {
     bool public tokensAvailable = true;
 
     // current distribution Index
-    uint32 public currentDistributionIndex = 0;
+    uint256 public currentDistributionIndex = 0;
 
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
@@ -166,14 +166,15 @@ contract PVTSD is Ownable {
             // will equal to 0 after these substractions occur
             balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(availableTokens);
 
-            // add total tokens to the senders balances and Emit transfer event
-            balances[msg.sender] = balances[msg.sender].add(availableTokens);
-            emit Transfer(pvtFundsWallet, msg.sender, availableTokens);
-
             // adding the buyer to the icoParticipants ONLY if they haven't already bought before
             if (balances[msg.sender] == 0) {
                 icoParticipants.push(msg.sender);
             }
+
+            // add total tokens to the senders balances and Emit transfer event
+            balances[msg.sender] = balances[msg.sender].add(availableTokens);
+            emit Transfer(pvtFundsWallet, msg.sender, availableTokens);
+
             // refund
             if (ethRefund > 0) {
                 msg.sender.transfer(ethRefund);
@@ -186,13 +187,14 @@ contract PVTSD is Ownable {
             tokensAvailable = false;
         } else {
             require(totalTokenAmount <= availableTokens);
-            // complete transfer and emit an event
-            balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(totalTokenAmount);
-            balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
-            
+
             if (balances[msg.sender] == 0) {
                 icoParticipants.push(msg.sender);
             }
+
+            // complete transfer and emit an event
+            balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(totalTokenAmount);
+            balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
 
             // transfer ether to the wallet and emit and event regarding eth raised
             pvtFundsWallet.transfer(ethAmount);
@@ -229,12 +231,12 @@ contract PVTSD is Ownable {
     // This function will be called by the pvtSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
     // _numberOfTransfers states the number of transfers that can happen at one time
-    function distributeTokens(uint32 _numberOfTransfers) external onlyOwner returns (bool) {
+    function distributeTokens(uint256 _numberOfTransfers) external onlyOwner returns (bool) {
         require(currentTime() >= tokensReleaseDate);
         address pvtSaleTokenWallet = dc.pvtSaleTokenWallet();
-        uint32 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);
+        uint256 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);
 
-        for (uint32 i = currentDistributionIndex; i < finalDistributionIndex; i++) {
+        for (uint256 i = currentDistributionIndex; i < finalDistributionIndex; i++) {
             // end for loop when currentDistributionIndex reaches the length of the icoParticipants array
             if (i == icoParticipants.length) {
                 return;

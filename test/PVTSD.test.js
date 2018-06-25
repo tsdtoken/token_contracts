@@ -330,12 +330,17 @@ contract('PVTSDMock', (accounts) => {
     await TSDMockContract.toggleTrading();
     // // set up contract reference
     await PVTSDMockContract.setMainContractAddress(TSDMockContract.address, { from: owner });
-    await PVTSDMockContract.distributeTokens({ from: owner });
-    // check the balance of the pvt sale buyer in the main contract
+
+    // check the balance of the pvt sale buyer in the PRETSD contract
     const firstBuyerPvtBal = await PVTSDMockContract.balanceOf(buyerSeven);
-    const firstBuyerMainBal = await TSDMockContract.balanceOf(buyerSeven);
     const secondBuyerPvtBal = await PVTSDMockContract.balanceOf(buyerEight);
+
+    await PVTSDMockContract.distributeTokens(20, { from: owner });
+
+    // check the balance of the pvt sale buyer in the main contract
+    const firstBuyerMainBal = await TSDMockContract.balanceOf(buyerSeven);
     const secondBuyerMainBal = await TSDMockContract.balanceOf(buyerEight);
+
     assert.equal(numFromWei(firstBuyerPvtBal), numFromWei(firstBuyerMainBal));
     assert.equal(numFromWei(secondBuyerPvtBal), numFromWei(secondBuyerMainBal));
   });
