@@ -105,7 +105,7 @@ contract('PVTSDMock', (accounts) => {
   });
 
  it('can change the exchange rate if called by the owner only', async () => {
-    // the exhange rate being passed in is 1 TSD => 0.002 ETH
+    // the exchange rate being passed in is 1 TSD => 0.002 ETH
     const newRate = 25000;
     const beforeExchangeRate = await PVTSDMockContract.exchangeRate();
     const updatedFromOwner = await PVTSDMockContract.updateTheExchangeRate(newRate, { from: owner });

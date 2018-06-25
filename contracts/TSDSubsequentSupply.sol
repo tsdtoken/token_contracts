@@ -34,7 +34,7 @@ contract TSDSubsequentSupply is Ownable {
     event NewTotalSupplyOfTSD(uint256 _totalSupply);
     event Transfer(address _from, address _to, uint256 _amount);
     event EthRaisedUpdated(uint256 _previousTotal, uint256 _newTotal);
-    event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
+    event ExchangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event SubsequentContractOpened(address _contract, bool _isOpen);
     event TokenPriceUpdated(uint256 _oldPrice, uint256 _newPrice);
 
@@ -45,7 +45,7 @@ contract TSDSubsequentSupply is Ownable {
         uint256 oneSzabo = 1 szabo;
         uint256 tokenInSzabo = tokenPrice.mul(1000000).div(_newRate);
         exchangeRate = oneSzabo.mul(tokenInSzabo);
-        emit ExhangeRateUpdated(currentRate, exchangeRate);
+        emit ExchangeRateUpdated(currentRate, exchangeRate);
         return true;
     }
 

@@ -65,7 +65,7 @@ contract TSD is BaseToken, Ownable {
 
     // events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
-    event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
+    event ExchangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
     event TradingStatus(bool status);
     event InitalTokenAllocation(bool allocationStatus);
@@ -142,11 +142,7 @@ contract TSD is BaseToken, Ownable {
     }
 
     function isWhiteListed(address _address) external view returns (bool) {
-        if (whiteListed[_address]) {
-            return true;
-        } else {
-            return false;
-        }
+        return whiteListed[_address];
     }
 
     // Called externally to change the address of the oracle.
@@ -164,7 +160,7 @@ contract TSD is BaseToken, Ownable {
         uint256 tokenPriceInSzabo = tokenPrice.mul(1000000).div(_newRate);
         // The exchangerate is saved in Szabo.
         exchangeRate = oneSzabo.mul(tokenPriceInSzabo);
-        emit ExhangeRateUpdated(currentRate, exchangeRate);
+        emit ExchangeRateUpdated(currentRate, exchangeRate);
         return true;
     }
 
@@ -287,8 +283,8 @@ contract TSD is BaseToken, Ownable {
     }
 
     function increaseEthRaisedBySubsequentSale(uint256 _amount) public isSubsequentContract {
-        uint256 newEthAmount = totalEthRaised.add(_amount);
-        emit EthRaisedUpdated(totalEthRaised, newEthAmount);
+        totalEthRaised = totalEthRaised.add(_amount);
+        emit EthRaisedUpdated(totalEthRaised, _amount);
     }
 
     //  sets start and end times

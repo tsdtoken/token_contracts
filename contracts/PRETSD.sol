@@ -59,9 +59,12 @@ contract PRETSD is Ownable {
     // When all tokens are sold this value will be set to false
     bool public tokensAvailable = true;
 
+    // current distribution Index
+    uint32 public currentDistributionIndex = 0;
+
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
-    event ExhangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
+    event ExchangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
     event Transfer(address from, address to, uint256 value);
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
@@ -129,17 +132,13 @@ contract PRETSD is Ownable {
         uint256 tokenPriceInSzabo = tokenPrice.mul(1000000).div(_newRate);
         // The exchangerate is saved in Szabo.
         exchangeRate = oneSzabo.mul(tokenPriceInSzabo);
-        emit ExhangeRateUpdated(currentRate, exchangeRate);
+        emit ExchangeRateUpdated(currentRate, exchangeRate);
         return true;
     }
 
     // Can check to see if an address is whitelisted
     function isWhiteListed(address _address) external view returns (bool) {
-        if (whiteListed[_address]) {
-            return true;
-        } else {
-            return false;
-        }
+        return whiteListed[_address];
     }
 
     // Buy functions
@@ -177,8 +176,10 @@ contract PRETSD is Ownable {
             // sub bonus token amoutn
             balances[msg.sender] = balances[msg.sender].add(remainingTokens);
             emit Transfer(preFundsWallet, msg.sender, remainingTokens);
-            // adding the buyer to the icoParticipants
-            icoParticipants.push(msg.sender);
+            // adding the buyer to the icoParticipants ONLY if they haven't already bought before
+            if (balances[msg.sender] == 0) {
+                icoParticipants.push(msg.sender);
+            }
             // refund
             if (ethRefund > 0) {
                 msg.sender.transfer(ethRefund);
@@ -194,7 +195,9 @@ contract PRETSD is Ownable {
             // sub general token amount
             balances[preFundsWallet] = balances[preFundsWallet].sub(tokenAmount);
             balances[msg.sender] = balances[msg.sender].add(tokenAmount);
-            icoParticipants.push(msg.sender);
+            if (balances[msg.sender] == 0) {
+                icoParticipants.push(msg.sender);
+            }
             emit Transfer(preFundsWallet, msg.sender, tokenAmount);
 
             // transfer ether to the wallet and emit and event regarding eth raised
@@ -308,13 +311,27 @@ contract PRETSD is Ownable {
     // This will be a two step process.
     // This function will be called by the preSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
-    function distributeTokens() external onlyOwner returns (bool) {
+    function distributeTokens(uint32 _numberOfTransfers) external onlyOwner returns (bool) {
         require(currentTime() >= tokensReleaseDate);
         address preSaleTokenWallet = dc.preSaleTokenWallet();
-        for (uint64 i = 0; i < icoParticipants.length; i++) {
-            dc.transferFrom(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
-            emit Transfer(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
+        uint32 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);
+
+        for (uint32 i = currentDistributionIndex; i < finalDistributionIndex; i++) {
+            // end for loop when currentDistributionIndex reaches the length of the icoParticipants array
+            if (i == icoParticipants.length) {
+                return;
+            }
+            // skip transfer if balances are empty
+            if (balances[icoParticipants[i]] != 0) {
+                dc.transferFrom(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
+                emit Transfer(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
+                
+                // set balances to 0 to prevent re-transfer
+                balances[icoParticipants[i]] = 0;
+            }
         }
+        // after distribution is complete set the currentDistributionIndex to the latest finalDistributionIndex
+        currentDistributionIndex = finalDistributionIndex;
 
         // Event to say distribution is complete
         emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
