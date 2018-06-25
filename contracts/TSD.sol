@@ -69,6 +69,7 @@ contract TSD is BaseToken, Ownable {
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
     event TradingStatus(bool status);
     event InitalTokenAllocation(bool allocationStatus);
+    event IncreaseTotalSupply(uint256 additionalSupply);
 
     constructor(
         uint256 _ethExchangeRate,
@@ -279,6 +280,7 @@ contract TSD is BaseToken, Ownable {
     function increaseTotalSupplyAndAllocateTokens(address _newTokensWallet, uint256 _amount) public isSubsequentContract returns (bool) {
         totalSupply = totalSupply.add(_amount);
         balances[_newTokensWallet] = _amount;
+        emit IncreaseTotalSupply(_amount);
         return true;
     }
 
