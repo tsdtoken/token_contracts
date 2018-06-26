@@ -4,6 +4,8 @@ import "./FoundationContracts/BaseToken.sol";
 import "./FoundationContracts/Ownable.sol";
 
 contract TSD is BaseToken, Ownable {
+    using SafeMath for uint256;
+
     string public name = "TSD COIN";
     string public symbol = "TSD";
     uint256 public decimals = 18;
@@ -20,20 +22,7 @@ contract TSD is BaseToken, Ownable {
     uint256 public foundersAndAdvisorsAllocation = 33 * million;
     uint256 public bountyCommunityIncentivesAllocation = (27 * million).add(500 * thousand);
     uint256 public liquidityProgramAllocation = (16 * million).add(500 * thousand);
-    uint256 public minPurchase = 50000; // 500.00 USD in cents
-    uint256 public ethExchangeRate;
-    uint256 public exchangeRate;
-    uint256 public tokenPrice = 50; // 50 cents (USD)
     uint256 public totalEthRaised = 0;
-
-    // Coordinated Universal Time (abbreviated to UTC) is the primary time standard by which the world regulates clocks and time.
-
-    // Start time "Sat Sep 01 2018 00:00:00 GMT+1000 (AEST)"
-    // new Date(1535724000000).toUTCString() => "Fri, 31 Aug 2018 14:00:00 GMT"
-    uint256 public startTime = 1535724000000;
-    // End time "Mon Oct 01 2018 00:00:00 GMT+1000 (AEST)"
-    // new Date(1538316000000).toUTCString() => "Sun, 30 Sep 2018 14:00:00 GMT"
-    uint256 public endTime = 1538316000000;
 
     // Wallets
     address public fundsWallet;
@@ -45,34 +34,26 @@ contract TSD is BaseToken, Ownable {
     address public bountyCommunityIncentives;
     address public liquidityProgram;
 
-    // Addresses for external helpers
-    address private oracleAddress;
-
     // SubsequentContract Address
     address public subsequentContract;
 
-    // whitelisted addresses
-    mapping (address => bool) public whiteListed;
-
-    // ico concluded due to all tokens sold
-    bool public tokensAvailable = true;
+    // CrowdSaleContract Address
+    address public crowdSaleContract;
 
     // Token tradability toggle
     bool public canTrade = false;
 
     // initializationCall
-    bool isInitialAllocationDone = false;
+    bool private isInitialAllocationDone = false;
 
     // events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
-    event ExchangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
     event TradingStatus(bool status);
     event InitalTokenAllocation(bool allocationStatus);
     event IncreaseTotalSupply(uint256 additionalSupply);
 
     constructor(
-        uint256 _ethExchangeRate,
         address _pvtSaleTokenWallet,
         address _preSaleTokenWallet,
         address _foundersAndAdvisors,
@@ -85,7 +66,6 @@ contract TSD is BaseToken, Ownable {
         foundersAndAdvisors = _foundersAndAdvisors;
         bountyCommunityIncentives = _bountyCommunityIncentives;
         liquidityProgram = _liquidityProgram;
-        ethExchangeRate = _ethExchangeRate;
 
         // transfer suppy to the funds wallet
         balances[fundsWallet] = totalSupply;
@@ -115,9 +95,6 @@ contract TSD is BaseToken, Ownable {
         // transfer tokens to the liquidity program account
         super.transfer(liquidityProgram, liquidityProgramAllocation);
 
-        // set up the exchangeRate and ethExchangeRate
-        updateTheExchangeRate(ethExchangeRate);
-
         // set the initialAllocationDone value to true
         isInitialAllocationDone = true;
         emit InitalTokenAllocation(isInitialAllocationDone);
@@ -134,109 +111,9 @@ contract TSD is BaseToken, Ownable {
       emit TradingStatus(canTrade);
     }
 
-    // Called externally to create whitelist for  sale.
-    // Only whitelisted addresses can participate in the ico.
-    function createWhiteListedMapping(address[] _addresses) public onlyRestricted {
-        for (uint64 i = 0; i < _addresses.length; i++) {
-            whiteListed[_addresses[i]] = true;
-        }
-    }
-
-    function isWhiteListed(address _address) external view returns (bool) {
-        return whiteListed[_address];
-    }
-
-    // Called externally to change the address of the oracle.
-    // The oracle updates the exchange rate based on the current ETH value.
-    function changeOracleAddress(address _newAddress) external onlyOwner {
-        oracleAddress = _newAddress;
-    }
-
-    // Updates the ETH => TSD exchange rate
-    function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
-        ethExchangeRate = _newRate;
-        uint256 currentRate = exchangeRate;
-        uint256 oneSzabo = 1 szabo;
-        // 1 ETH = 1000000 szabo
-        uint256 tokenPriceInSzabo = tokenPrice.mul(1000000).div(_newRate);
-        // The exchangerate is saved in Szabo.
-        exchangeRate = oneSzabo.mul(tokenPriceInSzabo);
-        emit ExchangeRateUpdated(currentRate, exchangeRate);
-        return true;
-    }
-
-    // Buy functions
-    // This is an un-named fallback function that is set to payable to accept ether.
-    function() payable public {
-        buyTokens();
-    }
-
-    function buyTokens() payable public {
-        uint256 _currentTime = currentTime();
-        uint256 _minPurchaseInWei = minPurchase.mul(decimalMultiplier).div(ethExchangeRate);
-        require(tokensAvailable);
-        require(_currentTime >= startTime && _currentTime <= endTime);
-        require(whiteListed[msg.sender]);
-        require(msg.value >= _minPurchaseInWei);
-
-        // ETH received by spender
-        uint256 ethAmount = msg.value;
-        // token amount based on ETH / exchangeRate result
-        // Multiply with the decimalMultiplier to get total tokens (to 18 decimal place)
-        uint256 totalTokenAmount = ethAmount.mul(decimalMultiplier).div(exchangeRate);
-        // tokens avaialble to sell are the remaining tokens in the pvtFundsWallet
-        uint256 availableTokens = balances[fundsWallet];
-        uint256 currentEthRaised = totalEthRaised;
-        uint256 ethRefund = 0;
-        uint256 unavailableTokens;
-
-        if (totalTokenAmount > availableTokens) {
-            // additional tokens that aren't avaialble to be sold
-            // tokenAmount is the tokens requested by buyer (not including the discount)
-            // availableTokens are all the tokens left in the supplying wallet i.e pvtFundsWallet
-            unavailableTokens = totalTokenAmount.sub(availableTokens);
-
-            // determine the unused ether amount by seeing how many tokens were surplus
-            // i.e 'availableTokens' and reverse calculating their ETH equivalent
-            // divide by decimalMultiplier as unavailableTokens are 10^18
-            ethRefund = unavailableTokens.mul(exchangeRate).div(decimalMultiplier);
-            // subtract the refund amount from the eth amount received by the tx
-            ethAmount = ethAmount.sub(ethRefund);
-            // make the token purchase
-            // will equal to 0 after these substractions occur
-            balances[fundsWallet] = balances[fundsWallet].sub(availableTokens);
-
-            // add total tokens to the senders balances and Emit transfer event
-            balances[msg.sender] = balances[msg.sender].add(availableTokens);
-            emit Transfer(fundsWallet, msg.sender, availableTokens);
-            // refund
-            if (ethRefund > 0) {
-                msg.sender.transfer(ethRefund);
-            }
-            // transfer ether to funds wallet
-            fundsWallet.transfer(ethAmount);
-            totalEthRaised = totalEthRaised.add(ethAmount);
-            emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
-            // close token sale as tokens are sold out
-            tokensAvailable = false;
-        } else {
-            require(totalTokenAmount <= availableTokens);
-            // complete transfer and emit an event
-            balances[fundsWallet] = balances[fundsWallet].sub(totalTokenAmount);
-            balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
-
-            // transfer ether to the wallet and emit and event regarding eth raised
-            fundsWallet.transfer(ethAmount);
-            totalEthRaised = totalEthRaised.add(ethAmount);
-            emit Transfer(fundsWallet, msg.sender, totalTokenAmount);
-            emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
-        }
-    }
-
-    // After close
+    // Ability to burn tokens but only from the private pre or main sale contracts
     function burnRemainingTokensAfterClose(address _address) external onlyOwner returns (bool) {
         require(_address == pvtSaleTokenWallet || _address == preSaleTokenWallet || _address == fundsWallet);
-        require(currentTime() >= endTime);
 
         uint256 oldSupply = totalSupply;
 
@@ -263,59 +140,59 @@ contract TSD is BaseToken, Ownable {
     // ERC20 function wrappers
     function transfer(address _to, uint256 _tokens) public returns (bool) {
         require(canTrade);
-        return super.transfer(_to, _tokens);
+        return (super.transfer(_to, _tokens));
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         require(canTrade);
-        return super.transferFrom(_from, _to, _value);
+        return (super.transferFrom(_from, _to, _value));
+    }
+
+    // crowdsale functions
+    function setCrowdSaleContract(address _contractAddress) external onlyOwner returns (bool) {
+        crowdSaleContract = _contractAddress;
+        return true;
+    }
+
+    // ERC20 function only called by crowdsale
+    // this is because transfer & transfer from used in this contract have a `canTrade` restriction
+    function safeTransferFrom(address _from, address _to, uint256 _value) external isCrowdSaleContract returns (bool) {
+        // make transferFrom a safe method - reverting failed transfers
+        require(super.transferFrom(_from, _to, _value));
+        return true;
     }
 
     // Subsequent supply functions
-    function setSubsequentContract(address _contractAddress) public onlyOwner returns (bool) {
+    function setSubsequentContract(address _contractAddress) external onlyOwner returns (bool) {
         subsequentContract = _contractAddress;
         return true;
     }
 
-    function increaseTotalSupplyAndAllocateTokens(address _newTokensWallet, uint256 _amount) public isSubsequentContract returns (bool) {
+    function increaseTotalSupplyAndAllocateTokens(address _newTokensWallet, uint256 _amount) external isSubsequentContract returns (bool) {
         totalSupply = totalSupply.add(_amount);
         balances[_newTokensWallet] = _amount;
         emit IncreaseTotalSupply(_amount);
         return true;
     }
 
-    function increaseEthRaisedBySubsequentSale(uint256 _amount) public isSubsequentContract {
+    function increaseEthRaisedBySubsequentSale(uint256 _amount) external isSubsequentContract {
         totalEthRaised = totalEthRaised.add(_amount);
         emit EthRaisedUpdated(totalEthRaised, _amount);
     }
 
-    //  sets start and end times
-    function setStartTime(uint256 _startTime) external onlyOwner {
-        // ensure the start time is before the end time
-        require(_startTime < endTime);
-        startTime = _startTime;
-    }
-
-    function setEndTime(uint256 _endTime) external onlyOwner {
-        // ensure the end time is after the start time
-        // and that is after the current time
-        require(_endTime > startTime);
-        endTime = _endTime;
-    }
-
-    // Destroys the contract
-    function selfDestruct() external onlyOwner {
-        selfdestruct(owner);
-    }
-
-    // modifiers
+     // modifiers
     modifier isSubsequentContract() {
         require(msg.sender == subsequentContract);
         _;
     }
 
-    modifier onlyRestricted () {
-        require(msg.sender == owner || msg.sender == oracleAddress);
+    modifier isCrowdSaleContract() {
+        require(msg.sender == crowdSaleContract);
         _;
+    }
+
+    // Destroys the contract
+    function selfDestruct() external onlyOwner {
+        selfdestruct(owner);
     }
 }
