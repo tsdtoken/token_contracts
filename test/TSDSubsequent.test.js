@@ -1,10 +1,12 @@
 const TSDSubsequentSupply = artifacts.require("./TSDSubsequentSupply.sol");
 const TSDMock = artifacts.require("./TSDMock.sol");
+const TSDCrowdSaleMock = artifacts.require("./TSDCrowdSaleMock.sol");
 const moment = require('moment');
 const { numFromWei, numToWei, buyTokens, assertExpectedError, equalsWithNormalizedRounding } = require('./testHelpers');
 
 contract('TSDSubsequentSupply', (accounts) => {
   let TSDMockContract;
+  let TSDCrowdSaleMockContract;
   let TSDSubsequentSupplyContract;
   const currentTime = moment().unix();
   // vars for TSDSubsequentSupply
@@ -21,7 +23,7 @@ contract('TSDSubsequentSupply', (accounts) => {
   const pvtSaleTokenWallet = accounts[firstAccountIdx+3];
   const preSaleTokenWallet = accounts[firstAccountIdx+4];
   const foundersAndAdvisors = accounts[firstAccountIdx+5];
-  const bountyCommunityIncentives = accounts[firstAccountIdx+6];
+  const bountyCommunityIncentive = accounts[firstAccountIdx+6];
   const liquidityProgram = accounts[firstAccountIdx+7];
 
   // buyers
@@ -42,17 +44,23 @@ contract('TSDSubsequentSupply', (accounts) => {
   ];
 
   beforeEach('set up contracts for each test', async () => {
+    // set up a reference to the main contract
     TSDMockContract = await TSDMock.new(
       currentTime,
-      exchangeRate,
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
-      bountyCommunityIncentives,
-      liquidityProgram
+      bountyCommunityIncentive,
+      liquidityProgram,
     );
 
-    await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
+    TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
+      currentTime,
+      exchangeRate,
+      owner
+    ) 
+
+    await TSDCrowdSaleMockContract.createWhiteListedMapping(whitelistAddresses);
 
     TSDContractAddress = await TSDMockContract.address;
 
@@ -163,8 +171,8 @@ contract('TSDSubsequentSupply', (accounts) => {
     // 10ETH / 0.001 = 10000 Tokens
 
     // change time in main contract
-    const endTime = await TSDMockContract.endTime();
-    await TSDMockContract.changeTime(endTime.c[0]);
+    const endTime = await TSDCrowdSaleMockContract.endTime();
+    await TSDCrowdSaleMockContract.changeTime(endTime.c[0]);
 
     // set all necessary values in subsequent contract
     // set correct address for the calling contract
@@ -200,8 +208,8 @@ contract('TSDSubsequentSupply', (accounts) => {
     // 10ETH / 0.001 = 10000 Tokens
 
     // change time in main contract
-    const endTime = await TSDMockContract.endTime();
-    await TSDMockContract.changeTime(endTime.c[0]);
+    const endTime = await TSDCrowdSaleMockContract.endTime();
+    await TSDCrowdSaleMockContract.changeTime(endTime.c[0]);
 
     // set all necessary values in subsequent contract
     // set correct address for the calling contract
@@ -225,8 +233,8 @@ contract('TSDSubsequentSupply', (accounts) => {
     // 10ETH / 0.001 = 10000 Tokens
     const defaultGanacheGasPrice = 100000000000;
     // change time in main contract
-    const endTime = await TSDMockContract.endTime();
-    await TSDMockContract.changeTime(endTime.c[0]);
+    const endTime = await TSDCrowdSaleMockContract.endTime();
+    await TSDCrowdSaleMockContract.changeTime(endTime.c[0]);
 
     // set all necessary values in subsequent contract
     // set correct address for the calling contract

@@ -1,5 +1,6 @@
 const PVTSDMock = artifacts.require("./PVTSDMock.sol");
 const TSDMock = artifacts.require("./TSDMock.sol");
+const TSDCrowdSaleMock = artifacts.require("./TSDCrowdSaleMock.sol");
 const moment = require('moment');
 const { stringFromWei, numFromWei, numToWei, buyTokens, assertExpectedError, equalsWithNormalizedRounding } = require('./testHelpers');
 
@@ -271,7 +272,6 @@ contract('PVTSDMock', (accounts) => {
     // set up a reference to the main contract
     const TSDMockContract = await TSDMock.new(
       currentTime,
-      exchangeRate,
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
@@ -279,7 +279,13 @@ contract('PVTSDMock', (accounts) => {
       liquidityProgram,
     );
 
-    await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
+    const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
+      currentTime,
+      exchangeRate,
+      owner
+    ) 
+
+    await TSDCrowdSaleMockContract.createWhiteListedMapping(whitelistAddresses);
 
     // Check for error when sent from someone other than the owner
     await assertExpectedError(PVTSDMockContract.setMainContractAddress(TSDMockContract.address, { from: buyerFive }))
@@ -300,7 +306,6 @@ contract('PVTSDMock', (accounts) => {
     // set up a reference to the main contract
     const TSDMockContract = await TSDMock.new(
       currentTime,
-      exchangeRate,
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
@@ -308,7 +313,13 @@ contract('PVTSDMock', (accounts) => {
       liquidityProgram,
     );
 
-    await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
+    const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
+      currentTime,
+      exchangeRate,
+      owner
+    ) 
+
+    await TSDCrowdSaleMockContract.createWhiteListedMapping(whitelistAddresses);
     await TSDMockContract.contractInitialAllocation({ from: owner });
     const newRate = 50000000;
     // New rate is set to 1 ETH == 1,000,000 TSD

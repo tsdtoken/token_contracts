@@ -139,6 +139,7 @@ contract TSD is BaseToken, Ownable {
 
     // ERC20 function wrappers
     function transfer(address _to, uint256 _tokens) public returns (bool) {
+        // canTrade ensures trading can only occur when approved by TSD owners
         require(canTrade);
         return (super.transfer(_to, _tokens));
     }
@@ -149,13 +150,14 @@ contract TSD is BaseToken, Ownable {
     }
 
     // crowdsale functions
+    // sets the crowndsale contract address
     function setCrowdSaleContract(address _contractAddress) external onlyOwner returns (bool) {
         crowdSaleContract = _contractAddress;
         return true;
     }
 
     // ERC20 function only called by crowdsale
-    // this is because transfer & transfer from used in this contract have a `canTrade` restriction
+    // transfer & transferFrom used in this contract have a `canTrade` restriction
     function safeTransferFrom(address _from, address _to, uint256 _value) external isCrowdSaleContract returns (bool) {
         // make transferFrom a safe method - reverting failed transfers
         require(super.transferFrom(_from, _to, _value));

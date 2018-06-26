@@ -1,11 +1,11 @@
 pragma solidity ^0.4.23;
 
-import "./FoundationContracts/BaseToken.sol";
 import "./FoundationContracts/Ownable.sol";
-
 import "./TSD.sol";
 
 contract TSDCrowdSale is Ownable {
+    using SafeMath for uint256;
+
     uint256 public decimals = 18;
 
     TSD public mainToken;
@@ -15,6 +15,9 @@ contract TSDCrowdSale is Ownable {
     uint256 public exchangeRate;
     uint256 public tokenPrice = 50; // 50 cents (USD)
     uint256 public totalEthRaised = 0;
+
+    // Helper value from 1 million and 1 thousand
+    uint256 public decimalMultiplier = uint256(10) ** decimals;
 
     // Coordinated Universal Time (abbreviated to UTC) is the primary time standard by which the world regulates clocks and time.
 
@@ -50,7 +53,7 @@ contract TSDCrowdSale is Ownable {
 
     constructor(
         uint256 _ethExchangeRate,
-        address _fundsWallet;
+        address _fundsWallet
     ) public {
         // set up the exchangeRate and ethExchangeRate
         updateTheExchangeRate(_ethExchangeRate);
@@ -152,8 +155,8 @@ contract TSDCrowdSale is Ownable {
             tokensAvailable = false;
         } else {
             require(totalTokenAmount <= availableTokens);
-            // complete transfer and emit an event
-            mainToken.transferFrom(fundsWallet, msg.sender, totalTokenAmount);
+            // complete a safeTransfer and emit an event
+            mainToken.safeTransferFrom(fundsWallet, msg.sender, totalTokenAmount);
 
             // transfer ether to the wallet and emit and event regarding eth raised
             fundsWallet.transfer(ethAmount);

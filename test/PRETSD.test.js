@@ -1,5 +1,6 @@
 const PRETSDMock = artifacts.require("./PRETSDMock.sol");
 const TSDMock = artifacts.require("./TSDMock.sol");
+const TSDCrowdSaleMock = artifacts.require("./TSDCrowdSaleMock.sol");
 const moment = require('moment');
 const { numFromWei, stringFromWei, numToWei, buyTokens, assertExpectedError, equalsWithNormalizedRounding } = require('./testHelpers');
 
@@ -296,14 +297,20 @@ contract('PRETSDMock', (accounts) => {
     // set up a reference to the main contract
     const TSDMockContract = await TSDMock.new(
       currentTime,
-      exchangeRate,
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
     );
-    await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
+
+    const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
+      currentTime,
+      exchangeRate,
+      owner
+    )
+    
+    await TSDCrowdSaleMockContract.createWhiteListedMapping(whitelistAddresses);
 
     // Check for error when sent from someone other than the owner
     await assertExpectedError(PRETSDMockContract.setMainContractAddress(PRETSDMockContract.address, { from: buyerFive }))
@@ -323,7 +330,6 @@ contract('PRETSDMock', (accounts) => {
     // set up a reference to the main contract
     const TSDMockContract = await TSDMock.new(
       currentTime,
-      exchangeRate,
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
@@ -331,7 +337,13 @@ contract('PRETSDMock', (accounts) => {
       liquidityProgram,
     );
 
-    await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
+    const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
+      currentTime,
+      exchangeRate,
+      owner
+    ) 
+
+    await TSDCrowdSaleMockContract.createWhiteListedMapping(whitelistAddresses);
 
     // record the main token sale funds wallet balance prior to distribution
     const mainSaleAvailableTokens = await TSDMockContract.balanceOf(fundsWallet);
