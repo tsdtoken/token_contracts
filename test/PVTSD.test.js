@@ -35,6 +35,7 @@ contract('PVTSDMock', (accounts) => {
       currentTime,
       exchangeRate
     );
+   
     await PVTSDMockContract.createWhiteListedMapping(whitelistAddresses);
   });
 
@@ -357,14 +358,14 @@ contract('PVTSDMock', (accounts) => {
   });
 
   it('the owner can change the start date', async () => {
-    await PVTSDMockContract.setStartTime(1528984500000);
-    const startTime = await PVTSDMockContract.startTime({ from: owner });
+    await PVTSDMockContract.setStartTime(1528984500000, { from: owner });
+    const startTime = await PVTSDMockContract.startTime();
     assert.equal(startTime, 1528984500000, 'The start date should change');
   });
 
   it('the owner can change the end date', async () => {
-    await PVTSDMockContract.setEndTime(1531576900000);
-    const startTime = await PVTSDMockContract.endTime({ from: owner });
+    await PVTSDMockContract.setEndTime(1531576900000, { from: owner });
+    const startTime = await PVTSDMockContract.endTime();
     assert.equal(startTime, 1531576900000, 'The end date should change');
   });
 });

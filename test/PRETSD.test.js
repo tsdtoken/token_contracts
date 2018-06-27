@@ -50,6 +50,8 @@ contract('PRETSDMock', (accounts) => {
       currentTime,
       exchangeRate
     );
+    // await PRETSDMockContract.setStartTime(1533045600000, { from: owner });
+    // await PRETSDMockContract.setEndTime(1534860000000, { from: owner });
     // The contract runs out of gas when being created with the whole whitelist mapping. So we map afterwards.
     await PRETSDMockContract.createWhiteListedMapping(whitelistAddresses, { from: owner });
   });
@@ -380,14 +382,14 @@ contract('PRETSDMock', (accounts) => {
   });
 
   it('the owner can change the start date', async () => {
-    await PRETSDMockContract.setStartTime(1533045500000);
-    const startTime = await PRETSDMockContract.startTime({ from: owner });
+    await PRETSDMockContract.setStartTime(1533045500000, { from: owner });
+    const startTime = await PRETSDMockContract.startTime();
     assert.equal(startTime, 1533045500000, 'The start date should change');
   });
 
   it('the owner can change the end date', async () => {
-    await PRETSDMockContract.setEndTime(1534870000000);
-    const startTime = await PRETSDMockContract.endTime({ from: owner });
+    await PRETSDMockContract.setEndTime(1534870000000, { from: owner });
+    const startTime = await PRETSDMockContract.endTime();
     assert.equal(startTime, 1534870000000, 'The end date should change');
   });
 });

@@ -1,73 +1,23 @@
 pragma solidity ^0.4.23;
 
-import "./FoundationContracts/Ownable.sol";
+import "./FoundationContracts/SecondarySaleBaseContract.sol";
 import "./FoundationContracts/Math.sol";
-import "./TSD.sol";
 
-contract PRETSD is Ownable {
-    using SafeMath for uint256;
+contract PRETSD is SecondarySaleBaseContract {
     using Math for uint256;
-    // set up access to main contract for the future distribution
-    TSD dc;
-    // when the connection is set to the main contract, save a reference for event purposes
-    address public TSDContractAddress;
-    address private oracleAddress;
 
     string public name = "PRE TSD COIN";
     string public symbol = "PRETSD";
-    uint256 public decimals = 18;
-     // Helper value from 1 million and 1 thousand
-    uint256 public decimalMultiplier = uint256(10) ** decimals;
-    uint256 public million = 1000000 * decimalMultiplier;
     uint256 public totalSupply = 165 * million;
     uint256 public minPurchase = 500000; // 5,000.00 USD in cents
-    uint256 public exchangeRate;
-    uint256 public ethExchangeRate;
-    uint256 public tokenPrice = 50; // 50 cents (USD)
-    uint256 public totalEthRaised = 0;
-
-    // Coordinated Universal Time (abbreviated to UTC) is the primary time standard by which the world regulates clocks and time.
-
-    // Start time "Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)"
-    // new Date(1533045600000).toUTCString() => "Tue, 31 Jul 2018 14:00:00 GMT"
-    uint256 public startTime = 1533045600000;
-    // Start time "Tue Aug 21 2018 00:00:00 GMT+1000 (AEST)"
-    // new Date(1534860000000).toUTCString() => "Tue, 21 Aug 2018 14:00:00 GMT"
-    uint256 public endTime = 1534860000000;
-    // Token release date 12 month post end date
-    // "Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)"
-    // new Date(1564581600000).toUTCString() => "Wed, 31 Jul 2019 14:00:00 GMT"
-    uint256 public tokensReleaseDate = 1564581600000;
 
     // Wallets
     address public preFundsWallet;
-
-    // Array of participants used when distributing tokens to main contract
-    address[] public icoParticipants;
-
-    // whitelisted addresses
-    mapping (address => bool) public whiteListed;
-
-    // balances
-    mapping(address => uint256) balances;
 
     // tranche discounts
     uint16[4] tranches = [800, 840, 880, 925];
     // tranche token size
     uint256 trancheMaxTokenSize = totalSupply.div(tranches.length);
-
-    // When all tokens are sold this value will be set to false
-    bool public tokensAvailable = true;
-
-    // current distribution Index
-    uint256 public currentDistributionIndex = 0;
-
-    // Events
-    event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
-    event ExchangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
-    event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
-    event Transfer(address from, address to, uint256 value);
-    event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
 
     constructor(
         uint256 _ethExchangeRate
@@ -80,35 +30,17 @@ contract PRETSD is Ownable {
 
         // set exchange rate
         updateTheExchangeRate(_ethExchangeRate);
-    }
 
-    // Contract utility functions
-    function currentTime() public view returns (uint256) {
-        return now * 1000;
-    }
-
-    // Checks the balance of the address. ERC20 standard.
-    function balanceOf(address _address) public view returns (uint256) {
-        return balances[_address];
-    }
-
-    // Called externally to create whitelist for  sale.
-    // Only whitelisted addresses can participate in the ico.
-    function createWhiteListedMapping(address[] _addresses) external onlyRestricted {
-        for (uint64 i = 0; i < _addresses.length; i++) {
-            whiteListed[_addresses[i]] = true;
-        }
-    }
-
-    // Called to remove addresses from whitelist
-    function removeFromWhitelist(address _address) external onlyRestricted {
-        delete whiteListed[_address];
-    }
-
-    // Called externally to change the address of the oracle.
-    // The oracle updates the exchange rate based on the current ETH value.
-    function changeOracleAddress(address _newAddress) external onlyOwner {
-        oracleAddress = _newAddress;
+        // Start time "Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)"
+        // new Date(1533045600000).toUTCString() => "Tue, 31 Jul 2018 14:00:00 GMT"
+        startTime = 1533045600000;
+        // End time "Tue Aug 21 2018 00:00:00 GMT+1000 (AEST)"
+        // new Date(1534860000000).toUTCString() => "Tue, 21 Aug 2018 14:00:00 GMT"
+        endTime = 1534860000000;
+        // Token release date 12 month post end date
+        // "Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)"
+        // new Date(1564581600000).toUTCString() => "Wed, 31 Jul 2019 14:00:00 GMT"
+        tokensReleaseDate = 1564581600000;
     }
 
     // Usage:
@@ -125,25 +57,6 @@ contract PRETSD is Ownable {
     function ethToToken(uint256 _eth, uint16 _discountRate) internal view returns(uint256) {
         //return ((_eth / _rate * 100) * decimalMultiplier).div(exchangeRate);
         return _eth.mul(1000).div(_discountRate).mul(decimalMultiplier).div(exchangeRate);
-    }
-
-     // Updates the ETH => TSD exchange rate
-     // The exchange rate is in USD cents to ETH.
-     // Example: 1 ETH = 500 USD then enter 50000 as the param.
-    function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
-        ethExchangeRate = _newRate;
-        uint256 currentRate = exchangeRate;
-        uint256 oneSzabo = 1 szabo;
-        uint256 tokenPriceInSzabo = tokenPrice.mul(1000000).div(_newRate);
-        // The exchangerate is saved in Szabo.
-        exchangeRate = oneSzabo.mul(tokenPriceInSzabo);
-        emit ExchangeRateUpdated(currentRate, exchangeRate);
-        return true;
-    }
-
-    // Can check to see if an address is whitelisted
-    function isWhiteListed(address _address) external view returns (bool) {
-        return whiteListed[_address];
     }
 
     // Buy functions
@@ -296,12 +209,6 @@ contract PRETSD is Ownable {
 
     // After close functions
 
-    // Create an instance of the main contract
-    function setMainContractAddress(address _t) external onlyOwner {
-        dc = TSD(_t);
-        TSDContractAddress = _t;
-    }
-
     // Burn any remaining tokens
     function burnRemainingTokens() external onlyOwner returns (bool) {
         require(currentTime() >= endTime);
@@ -348,31 +255,4 @@ contract PRETSD is Ownable {
         // Boolean is returned to give us a success state.
         return true;
     }
-
-    // sets start and end times
-    function setStartTime(uint256 _startTime) external onlyOwner returns (bool) {
-        // ensure the start time is before the end time
-        require(_startTime < endTime);
-        startTime = _startTime;
-        return true;
-    }
-
-    function setEndTime(uint256 _endTime) external onlyOwner returns (bool) {
-        // ensure the end time is after the start time
-        // and that is after the current time
-        require(_endTime > startTime && _endTime > currentTime());
-        endTime = _endTime;
-        return true;
-    }
-
-    // Destroys the contract
-    function selfDestruct() external onlyOwner {
-        selfdestruct(owner);
-    }
-
-    modifier onlyRestricted () {
-        require(msg.sender == owner || msg.sender == oracleAddress);
-        _;
-    }
-
 }
