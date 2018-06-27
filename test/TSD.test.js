@@ -64,7 +64,7 @@ contract('TSDMock', (accounts) => {
     await TSDMockContract.approve(crowdSaleContractAddress, fundsWalletBalance, { from: owner });
 
     await TSDCrowdSaleMockContract.setMainContractAddress(mainTokenAddress, { from: owner });
-    await TSDMockContract.setCrowdSaleContract(crowdSaleContractAddress, { from: owner });
+    await TSDMockContract.setAuthorisedContractAddress(crowdSaleContractAddress, { from: owner });
 
   });
 

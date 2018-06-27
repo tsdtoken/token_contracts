@@ -37,8 +37,8 @@ contract TSD is BaseToken, Ownable {
     // SubsequentContract Address
     address public subsequentContract;
 
-    // CrowdSaleContract Address
-    address public crowdSaleContract;
+    // authorisedContract Address
+    address public authorisedContract;
 
     // Token tradability toggle
     bool public canTrade = false;
@@ -150,15 +150,15 @@ contract TSD is BaseToken, Ownable {
     }
 
     // crowdsale functions
-    // sets the crowndsale contract address
-    function setCrowdSaleContract(address _contractAddress) external onlyOwner returns (bool) {
-        crowdSaleContract = _contractAddress;
+    // sets the crowndsale contract address or airdrop / designed to be used by any one external contract
+    function setAuthorisedContractAddress(address _contractAddress) external onlyOwner returns (bool) {
+        authorisedContract = _contractAddress;
         return true;
     }
 
     // ERC20 function only called by crowdsale
     // transfer & transferFrom used in this contract have a `canTrade` restriction
-    function safeTransferFrom(address _from, address _to, uint256 _value) external isCrowdSaleContract returns (bool) {
+    function safeTransferFrom(address _from, address _to, uint256 _value) external isAuthorisedContract returns (bool) {
         // make transferFrom a safe method - reverting failed transfers
         require(super.transferFrom(_from, _to, _value));
         return true;
@@ -188,8 +188,8 @@ contract TSD is BaseToken, Ownable {
         _;
     }
 
-    modifier isCrowdSaleContract() {
-        require(msg.sender == crowdSaleContract);
+    modifier isAuthorisedContract() {
+        require(msg.sender == authorisedContract);
         _;
     }
 
