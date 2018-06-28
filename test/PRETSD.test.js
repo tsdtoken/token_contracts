@@ -50,8 +50,6 @@ contract('PRETSDMock', (accounts) => {
       currentTime,
       exchangeRate
     );
-    // await PRETSDMockContract.setStartTime(1533045600000, { from: owner });
-    // await PRETSDMockContract.setEndTime(1534860000000, { from: owner });
     // The contract runs out of gas when being created with the whole whitelist mapping. So we map afterwards.
     await PRETSDMockContract.createWhiteListedMapping(whitelistAddresses, { from: owner });
   });
