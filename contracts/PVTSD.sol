@@ -47,10 +47,10 @@ contract PVTSD is SecondarySaleBaseContract {
     function buyTokens() payable public {
         uint256 _currentTime = currentTime();
         uint256 _minPurchaseInWei = minPurchase.mul(decimalMultiplier).div(ethExchangeRate);
-        require(tokensAvailable);
-        require(_currentTime >= startTime && _currentTime <= endTime);
-        require(msg.value >= _minPurchaseInWei);
-        require(whiteListed[msg.sender]);
+        require(tokensAvailable, "no more tokens available");
+        require(_currentTime >= startTime && _currentTime <= endTime, "current time is not in the purchase window frame");
+        require(whiteListed[msg.sender], "amount sent is below minimum purchase");
+        require(msg.value >= _minPurchaseInWei, "user is not whitelisted");
 
         // ETH received by spender
         uint256 ethAmount = msg.value;
@@ -103,7 +103,7 @@ contract PVTSD is SecondarySaleBaseContract {
             // close token sale as tokens are sold out
             tokensAvailable = false;
         } else {
-            require(totalTokenAmount <= availableTokens);
+            require(totalTokenAmount <= availableTokens, "totalTokenAmount is greater than availableTokens");
 
             if (balances[msg.sender] == 0) {
                 icoParticipants.push(msg.sender);
@@ -125,7 +125,7 @@ contract PVTSD is SecondarySaleBaseContract {
 
    // Burn any remaining tokens
     function burnRemainingTokens() external onlyOwner returns (bool) {
-        require(currentTime() >= endTime);
+        require(currentTime() >= endTime, "can only burn tokens after token sale has concluded");
         if (balances[pvtFundsWallet] > 0) {
             // Subtracting the unsold tokens from the total supply.
             uint256 oldSupply = totalSupply;
@@ -143,7 +143,7 @@ contract PVTSD is SecondarySaleBaseContract {
     // This wallet will need to be approved in the main contract to make these distributions
     // _numberOfTransfers states the number of transfers that can happen at one time
     function distributeTokens(uint256 _numberOfTransfers) external onlyOwner returns (bool) {
-        require(currentTime() >= tokensReleaseDate);
+        require(currentTime() >= tokensReleaseDate, "can only distribute after tokensReleaseDate");
         address pvtSaleTokenWallet = dc.pvtSaleTokenWallet();
         uint256 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);
 

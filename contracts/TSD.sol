@@ -74,7 +74,7 @@ contract TSD is BaseToken, Ownable {
 
     function contractInitialAllocation() external onlyOwner {
         // require the initialAllocationDone to be false, as it can only be called once 
-        require(!isInitialAllocationDone);
+        require(!isInitialAllocationDone, "Initial allocation has already completed");
 
         // Transfer all of the allocations
         // The inherited transfer method from the StandardToken which inherits
@@ -113,7 +113,7 @@ contract TSD is BaseToken, Ownable {
 
     // Ability to burn tokens but only from the private pre or main sale contracts
     function burnRemainingTokensAfterClose(address _address) external onlyOwner returns (bool) {
-        require(_address == pvtSaleTokenWallet || _address == preSaleTokenWallet || _address == fundsWallet);
+        require(_address == pvtSaleTokenWallet || _address == preSaleTokenWallet || _address == fundsWallet, "only the private, pre or main wallets are allowed");
 
         uint256 oldSupply = totalSupply;
 
@@ -121,13 +121,13 @@ contract TSD is BaseToken, Ownable {
           // TODO: end time needs to be decided.
           // PVT escrow ends 6 months after main tsd ico closes
           uint256 pvtReleaseDate = 1555250400000;
-          require(currentTime() >= pvtReleaseDate);
+          require(currentTime() >= pvtReleaseDate, "current time is before the pvt release date");
         }
         if(_address == preSaleTokenWallet){
           // TODO: end time needs to be decided.
           // PRE escrow ends 12 months after main tsd ico closes
           uint256 preReleaseDate = 1555250400000;
-          require(currentTime() >= preReleaseDate);
+          require(currentTime() >= preReleaseDate, "current time is before the pre release date");
         }
         // burn unsold tokens and reduce total supply for TSD
         totalSupply = totalSupply.sub(balances[_address]);
@@ -140,12 +140,12 @@ contract TSD is BaseToken, Ownable {
     // ERC20 function wrappers
     function transfer(address _to, uint256 _tokens) public returns (bool) {
         // canTrade ensures trading can only occur when approved by TSD owners
-        require(canTrade);
+        require(canTrade, "canTrade is currently false");
         return (super.transfer(_to, _tokens));
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
-        require(canTrade);
+        require(canTrade, "canTrade is currently false");
         return (super.transferFrom(_from, _to, _value));
     }
 
@@ -160,7 +160,7 @@ contract TSD is BaseToken, Ownable {
     // transfer & transferFrom used in this contract have a `canTrade` restriction
     function safeTransferFrom(address _from, address _to, uint256 _value) external isAuthorisedContract returns (bool) {
         // make transferFrom a safe method - reverting failed transfers
-        require(super.transferFrom(_from, _to, _value));
+        require(super.transferFrom(_from, _to, _value), "could not safely transfer from authorised contract");
         return true;
     }
 
@@ -184,12 +184,12 @@ contract TSD is BaseToken, Ownable {
 
      // modifiers
     modifier isSubsequentContract() {
-        require(msg.sender == subsequentContract);
+        require(msg.sender == subsequentContract, "sender is not subsequentContract");
         _;
     }
 
     modifier isAuthorisedContract() {
-        require(msg.sender == authorisedContract);
+        require(msg.sender == authorisedContract, "sender is not authorisedContract");
         _;
     }
 

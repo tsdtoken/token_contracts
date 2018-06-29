@@ -112,10 +112,10 @@ contract TSDCrowdSale is Ownable {
     function buyTokens() payable public {
         uint256 _currentTime = currentTime();
         uint256 _minPurchaseInWei = minPurchase.mul(decimalMultiplier).div(ethExchangeRate);
-        require(tokensAvailable);
-        require(_currentTime >= startTime && _currentTime <= endTime);
-        require(whiteListed[msg.sender]);
-        require(msg.value >= _minPurchaseInWei);
+        require(tokensAvailable, "no more tokens available");
+        require(_currentTime >= startTime && _currentTime <= endTime, "current time is not in the purchase window frame");
+        require(whiteListed[msg.sender], "user is not whitelisted");
+        require(msg.value >= _minPurchaseInWei, "amount sent is below minimum purchase");
 
         // ETH received by spender
         uint256 ethAmount = msg.value;
@@ -154,7 +154,7 @@ contract TSDCrowdSale is Ownable {
             // close token sale as tokens are sold out
             tokensAvailable = false;
         } else {
-            require(totalTokenAmount <= availableTokens);
+            require(totalTokenAmount <= availableTokens, "totalTokenAmount is greater than availableTokens");
             // complete a safeTransfer and emit an event
             mainToken.safeTransferFrom(fundsWallet, msg.sender, totalTokenAmount);
 
@@ -168,14 +168,14 @@ contract TSDCrowdSale is Ownable {
     //  sets start and end times
     function setStartTime(uint256 _startTime) external onlyOwner {
         // ensure the start time is before the end time
-        require(_startTime < endTime);
+        require(_startTime < endTime, "ensure start time is before end time");
         startTime = _startTime;
     }
 
     function setEndTime(uint256 _endTime) external onlyOwner {
         // ensure the end time is after the start time
         // and that is after the current time
-        require(_endTime > startTime);
+        require(_endTime > startTime, "ensure end time is after start time");
         endTime = _endTime;
     }
 
@@ -186,7 +186,7 @@ contract TSDCrowdSale is Ownable {
 
     // modifiers
     modifier onlyRestricted () {
-        require(msg.sender == owner || msg.sender == oracleAddress);
+        require(msg.sender == owner || msg.sender == oracleAddress, "sender is not owner nor oracleAddress");
         _;
     }
 }

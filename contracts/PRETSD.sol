@@ -68,10 +68,10 @@ contract PRETSD is SecondarySaleBaseContract {
     function buyTokens() payable public {
         uint256 _currentTime = currentTime();
         uint256 _minPurchaseInWei = minPurchase.mul(decimalMultiplier).div(ethExchangeRate);
-        require(tokensAvailable);
-        require(_currentTime >= startTime && _currentTime <= endTime);
-        require(whiteListed[msg.sender]);
-        require(msg.value >= _minPurchaseInWei);
+        require(tokensAvailable, "no more tokens available");
+        require(_currentTime >= startTime && _currentTime <= endTime, "current time is not in the purchase window frame");
+        require(whiteListed[msg.sender], "amount sent is below minimum purchase");
+        require(msg.value >= _minPurchaseInWei, "user is not whitelisted");
 
         uint256 ethAmount = msg.value;
         uint256 tokenAmount = calculateTokenAmountWithDiscounts(ethAmount);
@@ -211,7 +211,7 @@ contract PRETSD is SecondarySaleBaseContract {
 
     // Burn any remaining tokens
     function burnRemainingTokens() external onlyOwner returns (bool) {
-        require(currentTime() >= endTime);
+        require(currentTime() >= endTime, "can only burn tokens after token sale has concluded");
         if (balances[preFundsWallet] > 0) {
             // Subtracting the unsold tokens from the total supply.
             uint256 oldSupply = totalSupply;
@@ -228,7 +228,7 @@ contract PRETSD is SecondarySaleBaseContract {
     // This function will be called by the preSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
     function distributeTokens(uint256 _numberOfTransfers) external onlyOwner returns (bool) {
-        require(currentTime() >= tokensReleaseDate);
+        require(currentTime() >= tokensReleaseDate, "can only distribute after tokensReleaseDate");
         address preSaleTokenWallet = dc.preSaleTokenWallet();
         uint256 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);
 
