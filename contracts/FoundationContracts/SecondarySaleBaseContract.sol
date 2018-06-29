@@ -122,6 +122,19 @@ contract SecondarySaleBaseContract is Ownable {
         return true;
     }
 
+    // only ERC20 standard function, intended to be used for FIAT payments
+    function safeTransfer(address _to, uint256 _value) external onlyOwner returns (bool) {
+        // msg.sender will only be the owner of the contract
+        require(_to != address(0));
+        require(_value <= balances[msg.sender]);
+
+        // SafeMath.sub will throw if there is not enough balance.
+        balances[msg.sender] = balances[msg.sender].sub(_value);
+        balances[_to] = balances[_to].add(_value);
+        emit Transfer(msg.sender, _to, _value);
+        return true;
+    }
+
     // Destroys the contract
     function selfDestruct() external onlyOwner {
         selfdestruct(owner);
