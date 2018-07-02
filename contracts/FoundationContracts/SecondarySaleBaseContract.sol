@@ -128,10 +128,16 @@ contract SecondarySaleBaseContract is Ownable {
         require(_to != address(0));
         require(_value <= balances[msg.sender]);
 
+        // only add to icoParticipants if they're not already part of it
+        if (balances[msg.sender] == 0) {
+            icoParticipants.push(msg.sender);
+        }
+
         // SafeMath.sub will throw if there is not enough balance.
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
         emit Transfer(msg.sender, _to, _value);
+
         return true;
     }
 
