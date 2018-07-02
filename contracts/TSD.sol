@@ -17,12 +17,17 @@ contract TSD is BaseToken, Ownable {
 
     // Allocations
     uint256 public totalSupply = 600 * million;
+    uint256 public mainTokenSupply = 96 * million;
     uint256 public pvtSaleSupply = 144 * million;
     uint256 public preSaleSupply = 240 * million;
     uint256 public foundersAndAdvisorsAllocation = 60 * million;
     uint256 public bountyCommunityIncentivesAllocation = 42 * million;
     uint256 public liquidityProgramAllocation = 18 * million;
     uint256 public totalEthRaised = 0;
+
+    // distributions
+    uint256 private distributionAllocation = mainTokenSupply.add(preSaleSupply).add(pvtSaleSupply);
+    uint256 private remainingDistributionAfterInitAllocation = totalSupply.sub(distributionAllocation).sub(liquidityProgramAllocation);
 
     // Wallets
     address public fundsWallet;
@@ -46,6 +51,16 @@ contract TSD is BaseToken, Ownable {
     // initializationCall
     bool private isInitialAllocationDone = false;
 
+    // team wallets escrow structs
+    struct TokenGrant {
+        uint256 amount;
+        uint256 cliffTime;
+    }
+
+    // team wallets escrow mapping
+    mapping (address => TokenGrant) internal escrowBalances;
+    
+
     // events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
@@ -67,8 +82,10 @@ contract TSD is BaseToken, Ownable {
         bountyCommunityIncentives = _bountyCommunityIncentives;
         liquidityProgram = _liquidityProgram;
 
-        // transfer suppy to the funds wallet
-        balances[fundsWallet] = totalSupply;
+        // transfer total tradeable suppy to the funds wallet
+        // Private, Presale and Mainsale token amount
+        // + liquidityProgram
+        balances[fundsWallet] = distributionAllocation.add(liquidityProgramAllocation);
         emit Transfer(0x0, fundsWallet, totalSupply);
     }
 
@@ -87,10 +104,10 @@ contract TSD is BaseToken, Ownable {
         super.transfer(preSaleTokenWallet, preSaleSupply);
 
         // transfer tokens to founders account
-        super.transfer(foundersAndAdvisors, foundersAndAdvisorsAllocation);
+        escrowAccountAllocation(foundersAndAdvisors, foundersAndAdvisorsAllocation, 1530528101291);
 
         // transfer tokens to bounty and community incentives account
-        super.transfer(bountyCommunityIncentives, bountyCommunityIncentivesAllocation);
+        escrowAccountAllocation(bountyCommunityIncentives, bountyCommunityIncentivesAllocation, 1530533101291);
 
         // transfer tokens to the liquidity program account
         super.transfer(liquidityProgram, liquidityProgramAllocation);
@@ -100,6 +117,36 @@ contract TSD is BaseToken, Ownable {
         emit InitalTokenAllocation(isInitialAllocationDone);
     }
 
+    function escrowAccountAllocation(address _targetAddress, uint256 _amount, uint256 _cliffTime) internal onlyOwner {
+        TokenGrant memory newGrant = TokenGrant({
+            amount: _amount,
+            cliffTime: _cliffTime
+        });
+
+        escrowBalances[_targetAddress] = newGrant;
+    }
+
+    function withdrawFromEscrow() external isEscrowedWallet {
+        // ensure that the calling wallet is calling at/after its elasped cliffTime
+        require(currentTime() >= escrowBalances[msg.sender].cliffTime, "The current wallets escrow period has yet to lapse");
+        uint256 amountToWithdraw = escrowBalances[msg.sender].amount;
+        
+        // ensure the sender has not already withdrawn
+        require(escrowBalances[msg.sender].amount > 0, "This wallets escrow balance is not more than 0");
+        // ensure no more than the initial supply is ever allocated
+        // remainingDistribution should at maximum ever be the sum of distributionAllocation + foundersAndAdvisorsAllocation + bountyCommunityIncentivesAllocation
+        require(remainingDistributionAfterInitAllocation >= escrowBalances[msg.sender].amount, "the amount in escrow is more than allowed");
+
+        //set the senders escrow to 0
+        escrowBalances[msg.sender].amount = 0;
+
+        // reduce the remainingDistributionAfterInitAllocation by the amount in escrow for the caller wallet
+        remainingDistributionAfterInitAllocation = remainingDistributionAfterInitAllocation.sub(escrowBalances[msg.sender].amount);
+
+        // allocate the sender with their respective escrowed amount
+        balances[msg.sender] = amountToWithdraw;
+    }
+ 
     // Contract utility functions
     function currentTime() public view returns (uint256) {
         return now * 1000;
@@ -190,6 +237,12 @@ contract TSD is BaseToken, Ownable {
 
     modifier isAuthorisedContract() {
         require(msg.sender == authorisedContract, "sender is not authorisedContract");
+        _;
+    }
+
+    modifier isEscrowedWallet() {
+        // ensure it is only called by the two escrowed wallets
+        require(msg.sender == foundersAndAdvisors || msg.sender == bountyCommunityIncentives, "An unauthorised wallet tried to call this method");
         _;
     }
 
