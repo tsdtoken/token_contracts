@@ -142,7 +142,7 @@ contract PVTSD is SecondarySaleBaseContract {
     // This function will be called by the pvtSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
     // _numberOfTransfers states the number of transfers that can happen at one time
-    function distributeTokens(uint256 _numberOfTransfers) external onlyOwner returns (bool) {
+    function distributeTokens(uint256 _numberOfTransfers) external onlyRestricted returns (bool) {
         require(currentTime() >= tokensReleaseDate, "can only distribute after tokensReleaseDate");
         address pvtSaleTokenWallet = dc.pvtSaleTokenWallet();
         uint256 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);

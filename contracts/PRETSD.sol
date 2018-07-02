@@ -227,7 +227,7 @@ contract PRETSD is SecondarySaleBaseContract {
     // This will be a two step process.
     // This function will be called by the preSaleTokenWallet
     // This wallet will need to be approved in the main contract to make these distributions
-    function distributeTokens(uint256 _numberOfTransfers) external onlyOwner returns (bool) {
+    function distributeTokens(uint256 _numberOfTransfers) external onlyRestricted returns (bool) {
         require(currentTime() >= tokensReleaseDate, "can only distribute after tokensReleaseDate");
         address preSaleTokenWallet = dc.preSaleTokenWallet();
         uint256 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);

@@ -137,7 +137,7 @@ contract TSD is BaseToken, Ownable {
         // remainingDistribution should at maximum ever be the sum of distributionAllocation + foundersAndAdvisorsAllocation + bountyCommunityIncentivesAllocation
         require(remainingDistributionAfterInitAllocation >= escrowBalances[msg.sender].amount, "the amount in escrow is more than allowed");
 
-        //set the senders escrow to 0
+        // set the senders escrow to 0
         escrowBalances[msg.sender].amount = 0;
 
         // reduce the remainingDistributionAfterInitAllocation by the amount in escrow for the caller wallet
