@@ -11,13 +11,15 @@ contract TSDMock is TSD {
         address _preSaleTokenWallet,
         address _foundersAndAdvisors,
         address _bountyCommunityIncentives,
-        address _liquidityProgram
+        address _liquidityProgram,
+        address _kapitalized
     ) TSD (
         _pvtSaleTokenWallet,
         _preSaleTokenWallet,
         _foundersAndAdvisors,
         _bountyCommunityIncentives,
-        _liquidityProgram
+        _liquidityProgram,
+        _kapitalized
     ) public {
         _now = _currentTime;
     }

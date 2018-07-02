@@ -25,15 +25,16 @@ contract('TSDSubsequentSupply', (accounts) => {
   const foundersAndAdvisors = accounts[firstAccountIdx+5];
   const bountyCommunityIncentive = accounts[firstAccountIdx+6];
   const liquidityProgram = accounts[firstAccountIdx+7];
+  const kapitalized = accounts[firstAccountIdx+8];
 
   // buyers
-  const buyerOne = accounts[firstAccountIdx+8];
-  const buyerTwo = accounts[firstAccountIdx+9];
-  const buyerThree = accounts[firstAccountIdx+10];
-  const buyerFour = accounts[firstAccountIdx+11];
-  const buyerFive = accounts[firstAccountIdx+12];
-  const buyerSix = accounts[firstAccountIdx+13];
-  const unlistedBuyer = accounts[firstAccountIdx+14];
+  const buyerOne = accounts[firstAccountIdx+9];
+  const buyerTwo = accounts[firstAccountIdx+10];
+  const buyerThree = accounts[firstAccountIdx+11];
+  const buyerFour = accounts[firstAccountIdx+12];
+  const buyerFive = accounts[firstAccountIdx+13];
+  const buyerSix = accounts[firstAccountIdx+14];
+  const unlistedBuyer = accounts[firstAccountIdx+15];
   const whitelistAddresses = [
     buyerOne,
     buyerTwo,
@@ -52,6 +53,7 @@ contract('TSDSubsequentSupply', (accounts) => {
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
+      kapitalized
     );
 
     TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(

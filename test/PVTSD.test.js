@@ -20,7 +20,8 @@ contract('PVTSDMock', (accounts) => {
     accounts[5],
     accounts[6],
     accounts[13],
-    accounts[14]
+    accounts[14],
+    accounts[15]
   ];
   const buyerOne = accounts[1];
   const buyerTwo = accounts[2];
@@ -271,6 +272,7 @@ contract('PVTSDMock', (accounts) => {
     const foundersAndAdvisors = accounts[9];
     const bountyCommunityIncentive = accounts[10];
     const liquidityProgram = accounts[11];
+    const kapitalized = accounts[12];
     // set up a reference to the main contract
     const TSDMockContract = await TSDMock.new(
       currentTime,
@@ -279,6 +281,7 @@ contract('PVTSDMock', (accounts) => {
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
+      kapitalized
     );
 
     const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
@@ -302,8 +305,9 @@ contract('PVTSDMock', (accounts) => {
     const foundersAndAdvisors = accounts[10];
     const bountyCommunityIncentive = accounts[11];
     const liquidityProgram = accounts[12];
-    const buyerSeven = accounts[13];
-    const buyerEight = accounts[14];
+    const kapitalized = accounts[13];
+    const buyerSeven = accounts[14];
+    const buyerEight = accounts[15];
     const pvtContractAddress = await PVTSDMockContract.address;
     // set up a reference to the main contract
     const TSDMockContract = await TSDMock.new(
@@ -313,6 +317,7 @@ contract('PVTSDMock', (accounts) => {
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
+      kapitalized
     );
 
     const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
@@ -332,9 +337,9 @@ contract('PVTSDMock', (accounts) => {
     await PVTSDMockContract.changeTime(startTime.c[0]);
     await PVTSDMockContract.sendTransaction(buyTokens(10, buyerSeven));
     await PVTSDMockContract.sendTransaction(buyTokens(10, buyerEight));
-    // // change time to token release date
-    // // change time in the main contract to token release date
-    // // distribute the tokens for pvt contract to the main contract
+    // change time to token release date
+    // change time in the main contract to token release date
+    // distribute the tokens for pvt contract to the main contract
     const tokensReleaseDate = await PVTSDMockContract.tokensReleaseDate();
     await PVTSDMockContract.changeTime(tokensReleaseDate);
     await TSDMockContract.changeTime(tokensReleaseDate);

@@ -308,6 +308,7 @@ contract('PRETSDMock', (accounts) => {
     const foundersAndAdvisors = accounts[firstBuyerIndex+13];
     const bountyCommunityIncentive = accounts[firstBuyerIndex+14];
     const liquidityProgram = accounts[firstBuyerIndex+15];
+    const kapitalized = accounts[firstBuyerIndex+16];
     // set up a reference to the main contract
     const TSDMockContract = await TSDMock.new(
       currentTime,
@@ -316,6 +317,7 @@ contract('PRETSDMock', (accounts) => {
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
+      kapitalized
     );
 
     const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
@@ -339,6 +341,7 @@ contract('PRETSDMock', (accounts) => {
     const foundersAndAdvisors = accounts[firstBuyerIndex+13];
     const bountyCommunityIncentive = accounts[firstBuyerIndex+14];
     const liquidityProgram = accounts[firstBuyerIndex+15];
+    const kapitalized = accounts[firstBuyerIndex+16];
     const fundsWallet = owner;
     const preContractAddress = await PRETSDMockContract.address;
     // set up a reference to the main contract
@@ -349,6 +352,7 @@ contract('PRETSDMock', (accounts) => {
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
+      kapitalized
     );
 
     const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(

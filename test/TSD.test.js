@@ -19,15 +19,16 @@ contract('TSDMock', (accounts) => {
   const foundersAndAdvisors = accounts[firstAccountIdx+3]
   const bountyCommunityIncentives = accounts[firstAccountIdx+4]
   const liquidityProgram = accounts[firstAccountIdx+5]
+  const kapitalized = accounts[firstAccountIdx+6]
 
   // buyers
-  const buyerOne = accounts[firstAccountIdx+6];
-  const buyerTwo = accounts[firstAccountIdx+7];
-  const buyerThree = accounts[firstAccountIdx+8];
-  const buyerFour = accounts[firstAccountIdx+9];
-  const buyerFive = accounts[firstAccountIdx+10];
-  const buyerSix = accounts[firstAccountIdx+11];
-  const unlistedBuyer = accounts[firstAccountIdx+12];
+  const buyerOne = accounts[firstAccountIdx+7];
+  const buyerTwo = accounts[firstAccountIdx+8];
+  const buyerThree = accounts[firstAccountIdx+9];
+  const buyerFour = accounts[firstAccountIdx+10];
+  const buyerFive = accounts[firstAccountIdx+11];
+  const buyerSix = accounts[firstAccountIdx+12];
+  const unlistedBuyer = accounts[firstAccountIdx+13];
   const whitelistAddresses = [
     buyerOne,
     buyerTwo,
@@ -45,6 +46,7 @@ contract('TSDMock', (accounts) => {
       foundersAndAdvisors,
       bountyCommunityIncentives,
       liquidityProgram,
+      kapitalized
     );
 
     TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
@@ -100,6 +102,10 @@ contract('TSDMock', (accounts) => {
     assert.equal(await TSDMockContract.liquidityProgram(), liquidityProgram);
   });
 
+  it('sets the correct kapitalized address', async () => {
+    assert.equal(await TSDMockContract.kapitalized(), kapitalized);
+  });
+
  it('TSDCrowdSaleMockContract has a valid start time, end time', async () => {
     const startTime = await TSDCrowdSaleMockContract.startTime();
     const endTime = await TSDCrowdSaleMockContract.endTime();
@@ -131,19 +137,37 @@ contract('TSDMock', (accounts) => {
     assert.equal(numFromWei(preTokenWalletBal), numFromWei(allocation), 'Pre token wallet should be allocation 240 million tokens');
   });
 
- it('transfers the founders and advisors token allocation to foundersAndAdvisorsAllocation wallet', async () => {
+ it('transfers the founders and advisors token allocation to foundersAndAdvisorsAllocation wallet after escrow', async () => {
+    await assertExpectedError(TSDMockContract.withdrawFromEscrow({ from: foundersAndAdvisors }));
+  
+  // microsecond after escow lapses  
+    await TSDMockContract.changeTime(1530528101292);
+    // widthdraw from escrow
+    await TSDMockContract.withdrawFromEscrow({ from: foundersAndAdvisors });
     const allocation = await TSDMockContract.foundersAndAdvisorsAllocation();
     const foundersAndAdvisorsWalletBal = await TSDMockContract.balanceOf(foundersAndAdvisors);
     assert.equal(numFromWei(foundersAndAdvisorsWalletBal), numFromWei(allocation), 'Founders and advisors wallet should be allocation 60 million tokens');
   });
 
  it('transfers the bounty token allocation to bountyCommunityIncentives wallet', async () => {
+    await assertExpectedError(TSDMockContract.withdrawFromEscrow({ from: bountyCommunityIncentives }));
+  
+  // microsecond after escow lapses  
+    await TSDMockContract.changeTime(1530533101292);
+    // widthdraw from escrow
+    await TSDMockContract.withdrawFromEscrow({ from: bountyCommunityIncentives });
     const allocation = await TSDMockContract.bountyCommunityIncentivesAllocation();
     const bountyWalletBal = await TSDMockContract.balanceOf(bountyCommunityIncentives);
     assert.equal(numFromWei(bountyWalletBal), numFromWei(allocation), 'Bounty and community incentives wallet should be allocation 42 million tokens');
   });
 
- it('transfers the liquidity program token allocation to pvtSaleTokenWallet', async () => {
+ it('transfers the liquidity program token allocation to liquidityProgram wallet', async () => {
+    const allocation = await TSDMockContract.liquidityProgramAllocation();
+    const liquidityWalletBal = await TSDMockContract.balanceOf(liquidityProgram);
+    assert.equal(numFromWei(liquidityWalletBal), numFromWei(allocation), 'Liquidity program wallet should be allocation 18 million tokens');
+  });
+
+  it('transfers kapitalized token allocation to kapitalized wallet', async () => {
     const allocation = await TSDMockContract.liquidityProgramAllocation();
     const liquidityWalletBal = await TSDMockContract.balanceOf(liquidityProgram);
     assert.equal(numFromWei(liquidityWalletBal), numFromWei(allocation), 'Liquidity program wallet should be allocation 18 million tokens');
@@ -359,7 +383,7 @@ contract('TSDMock', (accounts) => {
     const mainContractAddress = await TSDMockContract.address;
     const SubsequentContract = await TSDSubsequentSupply.new(mainContractAddress);
     const subContractAddress = await SubsequentContract.address;
-    const newTokenWallet = accounts[firstAccountIdx+13];
+    const newTokenWallet = accounts[firstAccountIdx+14];
     await assertExpectedError(TSDMockContract.increaseTotalSupplyAndAllocateTokens(newTokenWallet, 1000000, { from: owner }));
   });
 
@@ -367,7 +391,7 @@ contract('TSDMock', (accounts) => {
     const mainContractAddress = await TSDMockContract.address;
     const SubsequentContract = await TSDSubsequentSupply.new(mainContractAddress);
     const subContractAddress = await SubsequentContract.address;
-    const newTokenWallet = accounts[firstAccountIdx+13];
+    const newTokenWallet = accounts[firstAccountIdx+14];
     await assertExpectedError(TSDMockContract.increaseEthRaisedBySubsequentSale(1000000, { from: owner }));
   });
 })
