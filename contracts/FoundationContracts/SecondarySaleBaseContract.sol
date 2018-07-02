@@ -128,7 +128,7 @@ contract SecondarySaleBaseContract is Ownable {
         require(_to != address(0));
         require(_value <= balances[msg.sender]);
 
-        // only add to icoParticipants if they're not already part of it
+        // only add to icoParticipants if they're not already part of it, for FIAT payments
         if (balances[msg.sender] == 0) {
             icoParticipants.push(msg.sender);
         }

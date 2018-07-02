@@ -6,7 +6,7 @@ contract PVTSD is SecondarySaleBaseContract {
 
     string public name = "PRIVATE TSD COIN";
     string public symbol = "PVTSD";
-    uint256 public totalSupply = 82500000 * decimalMultiplier;
+    uint256 public totalSupply = 144 * million;
     uint256 public minPurchase = 5000000; // 50,000.00 USD in cents
 
     // Wallets
