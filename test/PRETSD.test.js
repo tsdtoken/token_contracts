@@ -1,5 +1,6 @@
 const PRETSDMock = artifacts.require("./PRETSDMock.sol");
 const TSDMock = artifacts.require("./TSDMock.sol");
+const TSDCrowdSaleMock = artifacts.require("./TSDCrowdSaleMock.sol");
 const moment = require('moment');
 const { numFromWei, stringFromWei, numToWei, buyTokens, assertExpectedError, equalsWithNormalizedRounding } = require('./testHelpers');
 
@@ -88,10 +89,10 @@ contract('PRETSDMock', (accounts) => {
     assert.equal(dateString, 'Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)');
   });
 
- it('transfers total supply of tokens (165 million) to the pre funds wallet', async () => {
+ it('transfers total supply of tokens (240 million) to the pre funds wallet', async () => {
     const preFundsWallet = owner;
     const preFundsWalletBalance = await PRETSDMockContract.balanceOf(preFundsWallet);
-    assert.equal(numFromWei(preFundsWalletBalance), 165000000, 'Balance of preFundsWallet should be 165 million');
+    assert.equal(numFromWei(preFundsWalletBalance), 240000000, 'Balance of preFundsWallet should be 240 million');
   });
 
   // exchange rate functionality
@@ -141,7 +142,7 @@ contract('PRETSDMock', (accounts) => {
     const balanceOfBuyer = await PRETSDMockContract.balanceOf(buyerOne);
     const remainingTokens = await PRETSDMockContract.balanceOf(preFundsWallet);
     assert.equal(numFromWei(balanceOfBuyer), 12500, 'The buyers balance should 12,500 tokens')
-    assert.equal(numFromWei(remainingTokens), 164987500, 'The remaining tokens should be 164,987,500')
+    assert.equal(numFromWei(remainingTokens), 239987500, 'The remaining tokens should be 239,987,500')
   });
 
  it('transfer the ether to the funds wallet', async () => {
@@ -186,59 +187,67 @@ contract('PRETSDMock', (accounts) => {
     // ===== First person calculations ===== //
     // First person buys 20 ETH worth of tokens
     // First purchase is within tranche one.
-    // 20 ETH == 25,000,000 PRETSD based on the first tranche.
-    await PRETSDMockContract.sendTransaction(buyTokens(20, trancheBuyerOne));
+    // 40 ETH == 50,000,000 PRETSD based on the first tranche.
+    await PRETSDMockContract.sendTransaction(buyTokens(40, trancheBuyerOne));
     const buyerOneTokensPostPurchase = await PRETSDMockContract.balanceOf(trancheBuyerOne);
     const contractTokensPostPurchaseOne = await PRETSDMockContract.balanceOf(owner);
-    // Total Tokens Bought by buyer one: 25,000,000 PRETSD
-    // Total Tokens left in Contract: 140,000,000 PRETSD
-    // Total Tokens left in TrancheOne: 16,250,000 PRETSD
+    // Total Tokens Bought by buyer one: 50,000,000 PRETSD
+    // Total Tokens left in Contract: 190,000,000 PRETSD
+    // Total Tokens left in TrancheOne: 10,000,000 PRETSD
 
     // ===== Second person calculations ===== //
     // Second person buys 40 ETH worth of tokens
     // 40 ETH == 50,000,000 PRETSD based on the first tranche.
-    // First Tranche has 16,250,000 PRETSD remaining.
-    // 16,250,000 PRETSD == 13 ETH. Tranche one is depleted.
-    // 27 ETH == 32,142,857.142857142857142857 (to te smalest amount) PRETST based on second tranche.
+    // First Tranche has 10,000,000 PRETSD remaining.
+    // 10,000,000 PRETSD == 8 ETH. Tranche one is depleted.
+    // -> Entering tranche 2, discount is 16% or 0.84
+    // 32 ETH == 38,095,238.095238095238095238 (to the smallest amount) PRETSD based on second tranche.
     await PRETSDMockContract.sendTransaction(buyTokens(40, trancheBuyerTwo));
     const buyerTwoTokensPostPurchase = await PRETSDMockContract.balanceOf(trancheBuyerTwo);
     const contractTokensPostPurchaseTwo = await PRETSDMockContract.balanceOf(owner);
-    // Total Tokens Bought by buyer two: 48,392,857.142857142857142857 PRETSD
-    // Total Tokens left in Contract: 91,607,142.857142857142857143 PRETSD
-    // Total Tokens left in TrancheTwo: 9,107,142.857142857142857143 PRETSD
+    // Total Tokens Bought by buyer two: 48,095,238.095238095238095238 PRETSD
+    // Total Tokens sold: 98,095,238.095238095238095238 PRETSD
+    // Total Tokens left in Contract: 141,904,761.904761904761904762 PRETSD
+    // Total Tokens left in TrancheTwo: 21,904,761.904761904761904762 PRETSD
 
     // ===== Third person calculations ===== //
     // Third person buys 40 ETH worth of tokens
     // 40 ETH == 47,619,047.619047619047619047 PRETSD based on the Second tranche.
-    // Second Tranche has 9,107,142.857142857142857143 PRETSD remaining.
-    // 9,107,142.857142857142857143 PRETSD == 7.650(e18) ETH. Tranche Two is depleted.
-    // 32.350(e18) ETH == 36,761,363.636363636363636363 PRETSD based on Third tranche.
+    // Second Tranche has 21,904,761.904761904761904762 PRETSD remaining.
+    // 21,904,761.904761904761904762 PRETSD == 18.4(e18) ETH. Tranche Two is depleted.
+    // Entering Tranche 3
+    // Remaining ETH for third buyer = 
+    // 21.6(e18) ETH == 24,545,454.545454545454545454 PRETSD based on Third tranche.
     await PRETSDMockContract.sendTransaction(buyTokens(40, trancheBuyerThree));
     const buyerThreeTokensPostPurchase = await PRETSDMockContract.balanceOf(trancheBuyerThree);
     const contractTokensPostPurchaseThree = await PRETSDMockContract.balanceOf(owner);
-    // Total Tokens Bought by buyer three: 45,868,506.493506493506493506 PRETSD
-    // Total Tokens left in Contract: 45,738,636.363636363636363637 PRETSD
-    // Total Tokens left in TrancheThree: 4,488,636.363636363636363637 PRETSD
+    // Total Tokens Bought by buyer three: 46,450,216.450216450216450216 PRETSD
+    // Total Tokens sold: 144,545,454.545454545454545454 PRETSD
+    // Total Tokens left in Contract: 95454545.454545454545454546 PRETSD
+    // Total Tokens left in TrancheThree: 35,454,545.454545454545454546 PRETSD
 
-    // ===== Third person calculations ===== //
+    // ===== Fourth person calculations ===== //
     // Fourth person buys 40 ETH worth of tokens
     // 40 ETH == 45,454,545.454545454545454545 PRETSD based on the Third tranche.
-    // third Tranche has 4,488,636.363636363636363637 PRETSD remaining.
-    // 4,488,636.363636363636363637 PRETSD == 3.95(e+18) ETH. Tranche three is depleted.
-    // 36.05 ETH == 38,972,972.972972972972972972 (might be 7 rounded down) PRETSD based on fourth tranche.
+    // third Tranche has 35,454,545.454545454545454546 PRETSD remaining.
+    // 35,454,545.454545454545454546 PRETSD == 31.20000000000000000000000048(e+18) ETH. Tranche three is depleted.
+    // Entering Tranche 4
+    // Remaining ETH for the fourth buyer
+    // 8.79999999999999999999999952 ETH == 9,513,513.513513513513513513 (might be 7 rounded down) PRETSD based on fourth tranche.
     await PRETSDMockContract.sendTransaction(buyTokens(40, trancheBuyerFour));
     const buyerFourTokensPostPurchase = await PRETSDMockContract.balanceOf(trancheBuyerFour);
     const contractTokensPostPurchaseFour = await PRETSDMockContract.balanceOf(owner);
-    // Total Tokens Bought by buyer four: 43,461,609.336609336609336609 PRETSD
-    // Total Tokens left in Contract: 2,277,027.027027027027027028 PRETSD
-    // Total Tokens left in TrancheFour: 2,277,027.027027027027027028 PRETSD
+    // Total Tokens Bought by buyer four: 44,968,058.968058968058968059 PRETSD
+    // Total Tokens sold: 189513513.513513513513513513 PRETSD
+    // Total Tokens left in Contract: 50,486,486.486486486486486487 PRETSD
+    // Total Tokens left in TrancheFour: 50,486,486.486486486486486487 PRETSD
 
-    assert.equal(stringFromWei(buyerOneTokensPostPurchase),    25000000.00000000 ,'The first buyer should have 25,000,000 PRETSD');
-    assert.equal(stringFromWei(buyerTwoTokensPostPurchase),    48392857.14285714 ,'The second buyer should have 48014705.88235294 PRETSD');
-    assert.equal(stringFromWei(buyerThreeTokensPostPurchase),  45868506.49350649 ,'The Third buyer should have 44971405.22875817 PRETSD');
-    assert.equal(stringFromWei(buyerFourTokensPostPurchase),   43461609.336609336 ,'The Fourth buyer should have 42408625.730994152105263158 PRETSD');
+    assert.equal(stringFromWei(buyerOneTokensPostPurchase),    50000000.00000000 ,'The first buyer should have 25,000,000 PRETSD');
+    assert.equal(stringFromWei(buyerTwoTokensPostPurchase),    48095238.09523809524 ,'The second buyer should have 48095238.09523809524 PRETSD');
+    assert.equal(stringFromWei(buyerThreeTokensPostPurchase),  46450216.450216450217 ,'The Third buyer should have 44971405.22875817 PRETSD');
+    assert.equal(stringFromWei(buyerFourTokensPostPurchase),   44968058.968058968059 ,'The Fourth buyer should have 42408625.730994152105263158 PRETSD');
 
-    assert.equal(stringFromWei(contractTokensPostPurchaseFour), 2277027.027027027, 'The remaining tokens that the contract should have 4,605,263.157894737894736842 PRETSD');
+    assert.equal(stringFromWei(contractTokensPostPurchaseFour), 50486486.48648648648, 'The remaining tokens that the contract should have 4,605,263.157894737894736842 PRETSD');
   });
 
  it('sells the last remaining ether if less than minimum buy, returns unspent ether to the buyer, closes ICO', async () => {
@@ -250,15 +259,21 @@ contract('PRETSDMock', (accounts) => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
     await PRETSDMockContract.updateTheExchangeRate(inflatedExchangeRate);
+    // Cost to but out
+    // T1 => 48 ETH
+    // T2 => 50.4 ETH
+    // T3 => 52.8 ETH
+    // T4 => 55.5 ETH
 
-    // // check the total cost of all remaining tokens (165,000,000 PRETSD)
+    // check the total cost of all remaining tokens (240,000,000 PRETSD)
     const totalCost = await PRETSDMockContract.calculateTotalRemainingTokenCost();
-    await PRETSDMockContract.sendTransaction(buyTokens(90, buyerThree));
-    // // remaining tokens are now 58,125,000
-    // // remaining tokens cost 54.375 eth with the discount and increased exchange rate.
+    // you'd buy out first three tranches
+    await PRETSDMockContract.sendTransaction(buyTokens(151.2, buyerThree));
+    // remaining tokens are now 60,000,000
+    // remaining tokens cost 55.5 eth with the discount and increased exchange rate.
     const newTotalCost = await PRETSDMockContract.calculateTotalRemainingTokenCost();
-    const costOfRemainingTokens = 52.10625;
-    // // buyers balance before tx
+    const costOfRemainingTokens = 55.5;
+    // buyers balance before tx
     const fundsWalletEthBalPrior = web3.eth.getBalance(preFundsWallet);
     const buyerEThBalPrior = web3.eth.getBalance(buyerFour);
     const tx = await PRETSDMockContract.sendTransaction(buyTokens(60, buyerFour));
@@ -272,7 +287,7 @@ contract('PRETSDMock', (accounts) => {
 
     const expectedEthBal = buyerEThBalPrior - numToWei(costOfRemainingTokens) - totalGasSpent;
 
-    assert.equal(stringFromWei(buyerTokenBalance), 57102272.727272727272, 'Buyer should be transfered the remaining 58.125 million tokens');
+    assert.equal(stringFromWei(buyerTokenBalance), 60000000, 'Buyer should be transfered the remaining 60 million tokens');
     assert.ok(equalsWithNormalizedRounding(numFromWei(buyerEThBalPost), numFromWei(new web3.BigNumber(expectedEthBal.toString()))), 'The current balance should equal token cost + trasaction cost');
     assert.equal(tokensRemaining, 0, 'There should be no remaining tokens');
     assert.ok(equalsWithNormalizedRounding(numFromWei(fundsWalletEthBalPrior) + costOfRemainingTokens, numFromWei(fundsWalletEthBalPost)));
@@ -293,17 +308,25 @@ contract('PRETSDMock', (accounts) => {
     const foundersAndAdvisors = accounts[firstBuyerIndex+13];
     const bountyCommunityIncentive = accounts[firstBuyerIndex+14];
     const liquidityProgram = accounts[firstBuyerIndex+15];
+    const kapitalized = accounts[firstBuyerIndex+16];
     // set up a reference to the main contract
     const TSDMockContract = await TSDMock.new(
       currentTime,
-      exchangeRate,
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
+      kapitalized
     );
-    await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
+
+    const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
+      currentTime,
+      exchangeRate,
+      owner
+    )
+    
+    await TSDCrowdSaleMockContract.createWhiteListedMapping(whitelistAddresses);
 
     // Check for error when sent from someone other than the owner
     await assertExpectedError(PRETSDMockContract.setMainContractAddress(PRETSDMockContract.address, { from: buyerFive }))
@@ -318,20 +341,27 @@ contract('PRETSDMock', (accounts) => {
     const foundersAndAdvisors = accounts[firstBuyerIndex+13];
     const bountyCommunityIncentive = accounts[firstBuyerIndex+14];
     const liquidityProgram = accounts[firstBuyerIndex+15];
+    const kapitalized = accounts[firstBuyerIndex+16];
     const fundsWallet = owner;
     const preContractAddress = await PRETSDMockContract.address;
     // set up a reference to the main contract
     const TSDMockContract = await TSDMock.new(
       currentTime,
-      exchangeRate,
       pvtSaleTokenWallet,
       preSaleTokenWallet,
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
+      kapitalized
     );
 
-    await TSDMockContract.createWhiteListedMapping(whitelistAddresses);
+    const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
+      currentTime,
+      exchangeRate,
+      owner
+    ) 
+
+    await TSDCrowdSaleMockContract.createWhiteListedMapping(whitelistAddresses);
 
     // record the main token sale funds wallet balance prior to distribution
     const mainSaleAvailableTokens = await TSDMockContract.balanceOf(fundsWallet);
@@ -368,14 +398,14 @@ contract('PRETSDMock', (accounts) => {
   });
 
   it('the owner can change the start date', async () => {
-    await PRETSDMockContract.setStartTime(1533045500000);
-    const startTime = await PRETSDMockContract.startTime({ from: owner });
+    await PRETSDMockContract.setStartTime(1533045500000, { from: owner });
+    const startTime = await PRETSDMockContract.startTime();
     assert.equal(startTime, 1533045500000, 'The start date should change');
   });
 
   it('the owner can change the end date', async () => {
-    await PRETSDMockContract.setEndTime(1534870000000);
-    const startTime = await PRETSDMockContract.endTime({ from: owner });
+    await PRETSDMockContract.setEndTime(1534870000000, { from: owner });
+    const startTime = await PRETSDMockContract.endTime();
     assert.equal(startTime, 1534870000000, 'The end date should change');
   });
 });
