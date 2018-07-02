@@ -49,8 +49,8 @@ contract PVTSD is SecondarySaleBaseContract {
         uint256 _minPurchaseInWei = minPurchase.mul(decimalMultiplier).div(ethExchangeRate);
         require(tokensAvailable, "no more tokens available");
         require(_currentTime >= startTime && _currentTime <= endTime, "current time is not in the purchase window frame");
-        require(whiteListed[msg.sender], "amount sent is below minimum purchase");
-        require(msg.value >= _minPurchaseInWei, "user is not whitelisted");
+        require(whiteListed[msg.sender], "user is not whitelisted");
+        require(msg.value >= _minPurchaseInWei, "amount sent is below minimum purchase");
 
         // ETH received by spender
         uint256 ethAmount = msg.value;
