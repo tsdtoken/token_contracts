@@ -86,6 +86,7 @@ contract SecondarySaleBaseContract is Ownable {
         ethExchangeRate = _newRate;
         uint256 currentRate = exchangeRate;
         uint256 oneSzabo = 1 szabo;
+        // 1 ETH = 1000000 szabo
         uint256 tokenPriceInSzabo = tokenPrice.mul(1000000).div(_newRate);
         // The exchangerate is saved in Szabo.
         exchangeRate = oneSzabo.mul(tokenPriceInSzabo);

@@ -8,7 +8,7 @@ contract PRETSD is SecondarySaleBaseContract {
 
     string public name = "PRE TSD COIN";
     string public symbol = "PRETSD";
-    uint256 public totalSupply = 165 * million;
+    uint256 public totalSupply = 240 * million;
     uint256 public minPurchase = 500000; // 5,000.00 USD in cents
 
     // Wallets

@@ -31,6 +31,7 @@ contract BaseToken {
     */
     function transfer(address _to, uint256 _value) public returns (bool) {
         require(_to != address(0));
+        require(_to != address(this));
         require(_value <= balances[msg.sender]);
 
       // SafeMath.sub will throw if there is not enough balance.
@@ -65,6 +66,7 @@ contract BaseToken {
       returns (bool)
     {
         require(_to != address(0));
+        require(_to != address(this));
         require(_value <= balances[_from]);
         require(_value <= allowed[_from][msg.sender]);
         balances[_from] = balances[_from].sub(_value);
