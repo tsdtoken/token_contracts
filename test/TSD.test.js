@@ -60,7 +60,7 @@ contract('TSDMock', (accounts) => {
     const mainTokenAddress = await TSDMockContract.address;
 
     const fundsWalletBalance = await TSDMockContract.balanceOf(owner);
-    
+
     await TSDMockContract.approve(crowdSaleContractAddress, fundsWalletBalance, { from: owner });
 
     await TSDCrowdSaleMockContract.setMainContractAddress(mainTokenAddress, { from: owner });
@@ -220,7 +220,7 @@ contract('TSDMock', (accounts) => {
     const balanceOfBuyer = await TSDMockContract.balanceOf(buyerOne);
     const remainingTokens = await TSDMockContract.balanceOf(fundsWallet);
     assert.equal(numFromWei(balanceOfBuyer), 10000, 'The buyers balance should 10,000 tokens')
-    assert.equal(numFromWei(remainingTokens), 95999000, 'The remaining tokens should be 95,999,000')
+    assert.equal(numFromWei(remainingTokens), 95990000, 'The remaining tokens should be 95,999,000')
   });
 
  it('TSDCrowdSaleMockContract accepts ether one second before close', async () => {
@@ -234,7 +234,7 @@ contract('TSDMock', (accounts) => {
     const balanceOfBuyer = await TSDMockContract.balanceOf(buyerTwo);
     const remainingTokens = await TSDMockContract.balanceOf(fundsWallet);
     assert.equal(numFromWei(balanceOfBuyer), 10000, 'The buyers balance should 10,000 tokens')
-    assert.equal(numFromWei(remainingTokens), 95999000, 'The remaining tokens should be 95,999,000')
+    assert.equal(numFromWei(remainingTokens), 95990000, 'The remaining tokens should be 95,999,000')
   });
 
   it('TSDCrowdSaleMockContract rejects a transaction that is less than the minimum buy of 1 ether', async () => {
