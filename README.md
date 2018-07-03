@@ -43,7 +43,7 @@ A further discussion into the inspirations and rules of the contracts used for d
 
 The first of three token sales organised by Transcendence. This round offers the highest level of discount for the token. The discount is not in perspective of reduced price for a unit token but the offering of more tokens for the same price.
 
-> Total supply of 82.5 Million tokens will be offered and reserved in this round
+> Total supply of 144 Million tokens will be offered and reserved in this round
 
 > The Token follows all ERC20 principles stated in the Base Line Contract
 
@@ -106,13 +106,13 @@ Functions available:
 
 The second of three token sales organised by Transcendence. This round offers the second highest level of discount for the token. The discount is not in perspective of reduced price for a unit token but the offering of more tokens for the same price.
 
-> Total supply of 165 Million tokens will be offered and reserved in this round
+> Total supply of 240 Million tokens will be offered and reserved in this round
 
 > The token is not ERC20 compliant as it doesn't contain a fair few of the methods needed to reach compliance.
 
 > Only people who have whitelisted themselves with their ETH wallet addresses can participate in the token sale
 
-> Tokens are sold in tranches. 4 tranches of 41.25M each.
+> Tokens are sold in tranches. 4 tranches of 60M each.
 - First tranche at 20% discount ($0.5 * 0.8 = $0.40)
 - Second tranche at 16% discount ($0.5 * 0.84 = $0.42)
 - Third tranche at 12% discount ($0.5 * 0.88 = $0.44)
@@ -184,12 +184,13 @@ This is the contract that will, in conclusion, hold **all** wallet addresses tha
 > End of sale date
 
 > Total supply of TSD is 550M tokens
-- 82.5M is reserved for the private sale
-- 165M is reserved for the pre sale
-- 225.5M is reserved for the main sale
-- 33M is reserved for the founders and advisors
-- 27.5M is reserved for the bounty and allocation incentives
-- 16.5M is reserved for the liquidity program
+- 144M is reserved for the private sale
+- 240M is reserved for the pre sale
+- 96M is reserved for the main sale
+- 48M is reserved for the founders and advisors
+- 42M is reserved for the bounty and allocation incentives
+- 18M is reserved for the liquidity program
+- 12M is reserved for kapitalized
 
 >Token depletion (all tokens sold out)
 
@@ -245,9 +246,12 @@ Functions available:
 > Keeps track of the ETH raised and emits an event to reflect so
 - `setStartTime & setEndTime`
 > Custom sets the start and end time
- - `selfDestruct`
+ - `escrowAccountAllocation`
+> Called internally within `contractInitialAllocation` to allocate a struct with amount and cliffTime
+ - `withdrawFromEscrow`
+> Can be only called by the escrowed wallets and will only work once the respective wallet's escrow period has lapsed
+- `selfDestruct`
 > Kills the contract instance and its existence from the blockchain merkle tree
-
 ## Subsequent Contract
 
 The uniqueness of the Transcendence project is the close tie between the utility token and assets the tokens back in the eventual platform Transcendence will create.
