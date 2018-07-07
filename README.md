@@ -62,15 +62,15 @@ The address participating in the Private round is cross checked in the balances 
 
 Upon initiation, the `exchange rate`,  `start time`, `end time` and `token release date` are passed in the constructor function. When invoked, the allocated supply is transferred from the contract to the `owner's wallet`. I.e the wallet that deployed the contract.
 
-> Considering whitelisted addresses will be from our DB, and we'll sync it with the Private contract `createWhiteListedMapping` is used to populate the above mapping. An oracle has been scripted for this which will automatically execute the mapping from our database.
+> Considering whitelisted addresses will be from our DB, and we'll sync it with the Private contract `createWhiteListedMapping✓` is used to populate the above mapping. An oracle has been scripted for this which will automatically execute the mapping from our database.
 
 >  `buyTokens` acts as the fallback function and is used to allow ETH deposits. A consistent if **if-else** statement exists to confirm if the total ETH sent does not equate to more than the tokens available, and if so, **refund** the remaining ETH back to the sender.
 
->  All unsold tokens can be burn with `burnRemainingTokensAfterClose` which confirms the close of the Private ICO round before burning them.
+>  All unsold tokens can be burn with `burnRemainingTokensAfterClose✓` which confirms the close of the Private ICO round before burning them.
 
 > We keep track of the total ETH raised, to help with a easy infographic in the website
 
-> `distrubuteTokens` uses instance access to the main contract to transfer tokens from the pvtSaleTokenWallet to the respective ICO participants.
+> `distrubuteTokens✓` uses instance access to the main contract to transfer tokens from the pvtSaleTokenWallet to the respective ICO participants.
 
 > Transfer and TransferFrom are wrapped with modifications to prevent the use of them until token release date has reached.
 
@@ -78,9 +78,9 @@ Functions available:
 
 - `balanceOf`
 > Returns the balance of an address
-- `createWhiteListedMapping`
+- `createWhiteListedMapping✓`
 > Called externally to create whitelist for sale. Only whitelisted addresses can participate in the ico.
-- `changeOracleAddress`
+- `changeOracleAddress✓`
 > Changes the oracle address which is used to update the ethExchangeRate
 - `updateTheExchangeRate`
 > This is called when the contract is constructed and by the oracle to update the rate periodically, this updates the ethToUSD exchange rate, the USD is calculated and maintained in cents
@@ -88,9 +88,9 @@ Functions available:
 > Checks to see if an address is whitelisted
 - `buyTokens`
 > Is called through a fallback function which is payable to accept ether. It calculates the token amount, ensures the validations such as time range, minimum purchase amount, and whitelisted status of the buyer. If a buyer sends more ether than the total token amount, the remainder ETH is refunded to the buyer.
-- `setMainContractAddress`
+- `setMainContractAddress✓`
 > Sets the main contract address reference, this instance is used during distribution of tokens
-- `burnRemainingTokens`
+- `burnRemainingTokens✓`
 > Burns the remaining tokens and updates the supply, a safety check is placed to ensure that its only called after the end time has concluded.
 - `distributeTokens`
 > This can only be called by the owner on or after the token release date.
@@ -116,7 +116,7 @@ The second of three token sales organised by Transcendence. This round offers th
 - First tranche at 20% discount ($0.5 * 0.8 = $0.40)
 - Second tranche at 16% discount ($0.5 * 0.84 = $0.42)
 - Third tranche at 12% discount ($0.5 * 0.88 = $0.44)
-- Fourth tranche at 7.5% discount ($0.5 * 0.925 = $0.46)
+- Fourth tranche at 8% discount ($0.5 * 0.925 = $0.46)
 
 Address  | Bool
 ------------- | -------------
@@ -127,13 +127,13 @@ The address participating in the Presale round is cross checked in the balances 
 
 Considering whitelisted addresses will be from our DB, and we'll sync it with the Private contract `createWhiteListedMapping` is used to populate the above mapping.
 
-`buyTokens` acts as the fallback function and is used to allow ETH deposits. A consistent if **if-else** statement exists to confirm if the total ETH sent does not equate to more than the tokens available, and if so, **refund** the remaining ETH back to the sender. The tokens are sold in tranches, where when remainder tokens traverse between tranches, ETH gains power in reference to TSD. Going with a nominal rate of 50 cents, the tranches go with 20%, 16%, 12% and 7.5%.
+`buyTokens` acts as the fallback function and is used to allow ETH deposits. A consistent if **if-else** statement exists to confirm if the total ETH sent does not equate to more than the tokens available, and if so, **refund** the remaining ETH back to the sender. The tokens are sold in tranches, where when remainder tokens traverse between tranches, ETH gains power in reference to TSD. Going with a nominal rate of 50 cents, the tranches go with 20%, 16%, 12% and 8%.
 
 All unsold tokens can be burn with `burnRemainingTokensAfterClose` which confirms the close of the Presale ICO round before burning them.
 
 We keep track of the total ETH raised, to help with a easy infographic in the website
 
-`distrubuteTokens` uses instance access to the main contract to transfer tokens from the pvtSaleTokenWallet to the respective ICO participants.
+`distrubuteTokens✓` uses instance access to the main contract to transfer tokens from the pvtSaleTokenWallet to the respective ICO participants.
 
 > Transfer and TransferFrom are wrapped with modifications to prevent the use of them until token release date has reached.
 
@@ -143,7 +143,7 @@ Functions available:
 > Returns the balance of an address
 - `createWhiteListedMapping`
 > Called externally to create whitelist for sale. Only whitelisted addresses can participate in the ico.
-- `changeOracleAddress`
+- `changeOracleAddress✓`
 > Changes the oracle address which is used to update the ethExchangeRate
 - `updateTheExchangeRate`
 > This is called when the contract is constructed and by the oracle to update the rate periodically, this updates the ethToUSD exchange rate, the USD is calculated and maintained in cents
@@ -151,16 +151,16 @@ Functions available:
 > Checks to see if an address is whitelisted
 - `buyTokens`
 > Is called through a fallback function which is payable to accept ether. It calculates the token amount, ensures the validations such as time range, minimum purchase amount, and whitelisted status of the buyer. If a buyer sends more ether than the total token amount, the remainder ETH is refunded to the buyer.
-- `setMainContractAddress`
+- `setMainContractAddress✓`
 > Sets the main contract address reference, this instance is used during distribution of tokens
 - `burnRemainingTokens`
 > Burns the remaining tokens and updates the supply, a safety check is placed to ensure that its only called after the end time has concluded.
-- `distributeTokens`
+- `distributeTokens✓`
 > This can only be called by the owner on or after the token release date.
 > This will be a two step process.
 >  This function will be called by the pvtSaleTokenWallet
 >  This wallet will need to be approved in the main contract to make these distributions
-- `setStartTime & setEndTime`
+- `setStartTime✓ & setEndTime✓`
 > Custom sets the start and end time
  - `selfDestruct`
 > Kills the contract instance and its existence from the blockchain merkle tree
@@ -234,23 +234,23 @@ Functions available:
 > Checks to see if an address is whitelisted
 - `buyTokens`
 > Is called through a fallback function which is payable to accept ether. It calculates the token amount, ensures the validations such as time range, minimum purchase amount, and whitelisted status of the buyer. If a buyer sends more ether than the total token amount, the remainder ETH is refunded to the buyer.
-- `setMainContractAddress`
+- `setMainContractAddress✓`
 > Sets the main contract address reference, this instance is used during distribution of tokens
-- `burnRemainingTokens`
+- `burnRemainingTokens✓`
 > Burns the remaining tokens and updates the supply, a safety check is placed to ensure that its only called after the end time has concluded.
-- `setSubsequentContract`
+- `setSubsequentContract✓`
 >  Sets the subsequent contract address
 - `increaseTotalSupplyAndAllocateTokens`
 >  Called by the subsequent contract, and is used to increase the total supply and allocate tokens to the new token wallet
 - `increaseEthRaisedBySubsequentSale`
 > Keeps track of the ETH raised and emits an event to reflect so
-- `setStartTime & setEndTime`
+- `setStartTime✓ & setEndTime✓`
 > Custom sets the start and end time
  - `escrowAccountAllocation`
-> Called internally within `contractInitialAllocation` to allocate a struct with amount and cliffTime
- - `withdrawFromEscrow`
+> Called internally within `contractInitialAllocation✓` to allocate a struct with amount and cliffTime
+ - `withdrawFromEscrow✓`
 > Can be only called by the escrowed wallets and will only work once the respective wallet's escrow period has lapsed
-- `selfDestruct`
+- `selfDestruct✓`
 > Kills the contract instance and its existence from the blockchain merkle tree
 ## Subsequent Contract
 
@@ -268,9 +268,9 @@ Functions available:
 > Sets the exchange rate, which is dynamic per contract round, and sets the wallet that will initially hold the tokens
 - `increaseTotalSupplyAndAllocateTokens`
 > Sets the new token wallet in the main contract and allocates it the designated increased supply
-- `openSubsequentSale`
+- `openSubsequentSale✓`
 > The contract will by default state be shut, this function is accessible only by the owner (the person who deployed this contract in the first place) and sets the contract active
-- `closeSubsequentSale`
+- `closeSubsequentSale✓`
 > Closes the current active subsequent contract token sale
 - `buySubsequentTokens`
 > Considering we want to encourage people to buy through our dApp, we set this function to a payable modifier enabling it to receive real ETH, the tokens are calculated with the exchange rate, and the allocated to the sender in the main token sale
