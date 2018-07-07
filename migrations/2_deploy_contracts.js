@@ -11,7 +11,7 @@ module.exports = function(deployer, network, accounts) {
   const foundersAndAdvisors = accounts[6];
   const bountyCommunityIncentives = accounts[7];
   const liquidityProgram = accounts[8];
-  const kapitalized = accounts[9];
+  const projectImplementationServices = accounts[9];
   deployer.deploy(PVTSD, exchangeRate);
   deployer.deploy(PRETSD, exchangeRate);
   deployer.deploy(
@@ -21,7 +21,7 @@ module.exports = function(deployer, network, accounts) {
     foundersAndAdvisors,
     bountyCommunityIncentives,
     liquidityProgram,
-    kapitalized
+    projectImplementationServices
   );
   deployer.deploy(
     TSDCrowdSale,

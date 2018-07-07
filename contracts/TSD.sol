@@ -21,14 +21,14 @@ contract TSD is BaseToken, Ownable {
     uint256 public pvtSaleSupply = 144 * million;
     uint256 public preSaleSupply = 240 * million;
     uint256 public foundersAndAdvisorsAllocation = 48 * million;
-    uint256 public kapitalizedAllocation = 12 * million;
+    uint256 public projectImplementationServicesAllocation = 12 * million;
     uint256 public bountyCommunityIncentivesAllocation = 42 * million;
     uint256 public liquidityProgramAllocation = 18 * million;
     uint256 public totalEthRaised = 0;
 
     // distributions
     uint256 private distributionAllocation = mainTokenSupply.add(preSaleSupply).add(pvtSaleSupply);
-    uint256 private remainingDistributionAfterInitAllocation = totalSupply.sub(distributionAllocation).sub(liquidityProgramAllocation).sub(kapitalizedAllocation.div(2));
+    uint256 private remainingDistributionAfterInitAllocation = totalSupply.sub(distributionAllocation).sub(liquidityProgramAllocation).sub(projectImplementationServicesAllocation.div(2));
 
     // Wallets
     address public fundsWallet;
@@ -39,7 +39,7 @@ contract TSD is BaseToken, Ownable {
     address public foundersAndAdvisors;
     address public bountyCommunityIncentives;
     address public liquidityProgram;
-    address public kapitalized;
+    address public projectImplementationServices;
 
     // SubsequentContract Address
     address public subsequentContract;
@@ -75,7 +75,7 @@ contract TSD is BaseToken, Ownable {
         address _foundersAndAdvisors,
         address _bountyCommunityIncentives,
         address _liquidityProgram,
-        address _kapitalized
+        address _projectImplementationServices
     ) public {
         fundsWallet = owner;
         pvtSaleTokenWallet = _pvtSaleTokenWallet;
@@ -83,12 +83,12 @@ contract TSD is BaseToken, Ownable {
         foundersAndAdvisors = _foundersAndAdvisors;
         bountyCommunityIncentives = _bountyCommunityIncentives;
         liquidityProgram = _liquidityProgram;
-        kapitalized = _kapitalized;
+        projectImplementationServices = _projectImplementationServices;
 
         // transfer total tradeable suppy to the funds wallet
         // Private, Presale and Mainsale token amount
-        // + liquidityProgram + kapitalized/2
-        balances[fundsWallet] = distributionAllocation.add(liquidityProgramAllocation).add(kapitalizedAllocation.div(2));
+        // + liquidityProgram + projectImplementationServices/2
+        balances[fundsWallet] = distributionAllocation.add(liquidityProgramAllocation).add(projectImplementationServicesAllocation.div(2));
         emit Transfer(0x0, fundsWallet, totalSupply);
     }
 
@@ -106,11 +106,11 @@ contract TSD is BaseToken, Ownable {
         // transfer tokens to account for the pre sale
         super.transfer(preSaleTokenWallet, preSaleSupply);
 
-        // tranfer tokens to the kapitalized wallet
-        super.transfer(kapitalized, kapitalizedAllocation.div(2));
+        // tranfer tokens to the projectImplementationServices wallet
+        super.transfer(projectImplementationServices, projectImplementationServicesAllocation.div(2));
 
-        // escrow tokens to kapitalized account
-        escrowAccountAllocation(kapitalized, kapitalizedAllocation.div(2), 1530528101291);
+        // escrow tokens to projectImplementationServices account
+        escrowAccountAllocation(projectImplementationServices, projectImplementationServicesAllocation.div(2), 1530528101291);
 
         // escrow tokens to founders account
         escrowAccountAllocation(foundersAndAdvisors, foundersAndAdvisorsAllocation, 1530528101291);
@@ -251,7 +251,7 @@ contract TSD is BaseToken, Ownable {
 
     modifier isEscrowedWallet() {
         // ensure it is only called by the two escrowed wallets
-        require(msg.sender == foundersAndAdvisors || msg.sender == bountyCommunityIncentives || msg.sender == kapitalized, "An unauthorised wallet tried to call this method");
+        require(msg.sender == foundersAndAdvisors || msg.sender == bountyCommunityIncentives || msg.sender == projectImplementationServices, "An unauthorised wallet tried to call this method");
         _;
     }
 

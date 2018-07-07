@@ -190,7 +190,7 @@ This is the contract that will, in conclusion, hold **all** wallet addresses tha
 - 48M is reserved for the founders and advisors
 - 42M is reserved for the bounty and allocation incentives
 - 18M is reserved for the liquidity program
-- 12M is reserved for kapitalized
+- 12M is reserved for projectImplementationServices
 
 >Token depletion (all tokens sold out)
 

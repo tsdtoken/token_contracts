@@ -272,7 +272,7 @@ contract('PVTSDMock', (accounts) => {
     const foundersAndAdvisors = accounts[9];
     const bountyCommunityIncentive = accounts[10];
     const liquidityProgram = accounts[11];
-    const kapitalized = accounts[12];
+    const projectImplementationServices = accounts[12];
     // set up a reference to the main contract
     const TSDMockContract = await TSDMock.new(
       currentTime,
@@ -281,7 +281,7 @@ contract('PVTSDMock', (accounts) => {
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
-      kapitalized
+      projectImplementationServices
     );
 
     const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
@@ -305,7 +305,7 @@ contract('PVTSDMock', (accounts) => {
     const foundersAndAdvisors = accounts[10];
     const bountyCommunityIncentive = accounts[11];
     const liquidityProgram = accounts[12];
-    const kapitalized = accounts[13];
+    const projectImplementationServices = accounts[13];
     const buyerSeven = accounts[14];
     const buyerEight = accounts[15];
     const pvtContractAddress = await PVTSDMockContract.address;
@@ -317,7 +317,7 @@ contract('PVTSDMock', (accounts) => {
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
-      kapitalized
+      projectImplementationServices
     );
 
     const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(

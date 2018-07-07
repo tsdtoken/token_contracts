@@ -19,7 +19,7 @@ contract('TSDMock', (accounts) => {
   const foundersAndAdvisors = accounts[firstAccountIdx+3]
   const bountyCommunityIncentives = accounts[firstAccountIdx+4]
   const liquidityProgram = accounts[firstAccountIdx+5]
-  const kapitalized = accounts[firstAccountIdx+6]
+  const projectImplementationServices = accounts[firstAccountIdx+6]
 
   // buyers
   const buyerOne = accounts[firstAccountIdx+7];
@@ -46,7 +46,7 @@ contract('TSDMock', (accounts) => {
       foundersAndAdvisors,
       bountyCommunityIncentives,
       liquidityProgram,
-      kapitalized
+      projectImplementationServices
     );
 
     TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
@@ -102,8 +102,8 @@ contract('TSDMock', (accounts) => {
     assert.equal(await TSDMockContract.liquidityProgram(), liquidityProgram);
   });
 
-  it('sets the correct kapitalized address', async () => {
-    assert.equal(await TSDMockContract.kapitalized(), kapitalized);
+  it('sets the correct projectImplementationServices address', async () => {
+    assert.equal(await TSDMockContract.projectImplementationServices(), projectImplementationServices);
   });
 
  it('TSDCrowdSaleMockContract has a valid start time, end time', async () => {
@@ -167,7 +167,7 @@ contract('TSDMock', (accounts) => {
     assert.equal(numFromWei(liquidityWalletBal), numFromWei(allocation), 'Liquidity program wallet should be allocation 18 million tokens');
   });
 
-  it('transfers kapitalized token allocation to kapitalized wallet', async () => {
+  it('transfers projectImplementationServices token allocation to projectImplementationServices wallet', async () => {
     const allocation = await TSDMockContract.liquidityProgramAllocation();
     const liquidityWalletBal = await TSDMockContract.balanceOf(liquidityProgram);
     assert.equal(numFromWei(liquidityWalletBal), numFromWei(allocation), 'Liquidity program wallet should be allocation 18 million tokens');

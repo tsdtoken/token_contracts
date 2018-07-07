@@ -25,7 +25,7 @@ contract('TSDSubsequentSupply', (accounts) => {
   const foundersAndAdvisors = accounts[firstAccountIdx+5];
   const bountyCommunityIncentive = accounts[firstAccountIdx+6];
   const liquidityProgram = accounts[firstAccountIdx+7];
-  const kapitalized = accounts[firstAccountIdx+8];
+  const projectImplementationServices = accounts[firstAccountIdx+8];
 
   // buyers
   const buyerOne = accounts[firstAccountIdx+9];
@@ -53,7 +53,7 @@ contract('TSDSubsequentSupply', (accounts) => {
       foundersAndAdvisors,
       bountyCommunityIncentive,
       liquidityProgram,
-      kapitalized
+      projectImplementationServices
     );
 
     TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
