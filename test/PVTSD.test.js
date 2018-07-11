@@ -60,19 +60,19 @@ contract('PVTSDMock', (accounts) => {
  it('sets the start time to be Fri Jun 15 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const startTime = await PVTSDMockContract.startTime();
     const dateString = new Date(startTime.c[0]);
-    assert.equal(dateString, 'Fri Jun 15 2018 00:00:00 GMT+1000 (AEST)');
+    assert.equal(dateString.getTime(), 1528984800000);
   });
 
  it('sets the end time to be Sun Jul 15 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const endTime = await PVTSDMockContract.endTime();
     const dateString = new Date(endTime.c[0]);
-    assert.equal(dateString, 'Sun Jul 15 2018 00:00:00 GMT+1000 (AEST)');
+    assert.equal(dateString.getTime(), 1531576800000);
   });
 
  it('sets the release date to be Mon Apr 15 2019 00:00:00 GMT+1000 (AEST)', async () => {
     const tokensReleaseDate = await PVTSDMockContract.tokensReleaseDate();
     const dateString = new Date(tokensReleaseDate.c[0]);
-    assert.equal(dateString, 'Mon Apr 15 2019 00:00:00 GMT+1000 (AEST)');
+    assert.equal(dateString.getTime(), 1555250400000);
   });
 
  it('transfers total supply of tokens (144 million) to the private funds wallet', async () => {

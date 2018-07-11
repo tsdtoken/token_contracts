@@ -116,13 +116,13 @@ contract('TSDMock', (accounts) => {
  it('sets the start time of TSDCrowdSaleMockContract to be Sat Sep 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const startTime = await TSDCrowdSaleMockContract.startTime();
     const dateString = new Date(startTime.c[0]);
-    assert.equal(dateString, 'Sat Sep 01 2018 00:00:00 GMT+1000 (AEST)');
+    assert.equal(dateString.getTime(), 1535724000000);
   });
 
  it('sets the end time of TSDCrowdSaleMockContract to be Mon Oct 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const endTime = await TSDCrowdSaleMockContract.endTime();
     const dateString = new Date(endTime.c[0]);
-    assert.equal(dateString, 'Mon Oct 01 2018 00:00:00 GMT+1000 (AEST)');
+    assert.equal(dateString.getTime(), 1538316000000);
   });
 
  it('transfers the private sale token allocation to pvtSaleTokenWallet', async () => {

@@ -74,19 +74,19 @@ contract('PRETSDMock', (accounts) => {
  it('sets the start time to be Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const startTime = await PRETSDMockContract.startTime();
     const dateString = new Date(startTime.c[0]);
-    assert.equal(dateString, 'Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)');
+    assert.equal(dateString.getTime(), 1533045600000);
   });
 
  it('sets the end time to be Wed Aug 22 2018 00:00:00 GMT+1000 (AEST)', async () => {
     const endTime = await PRETSDMockContract.endTime();
     const dateString = new Date(endTime.c[0]);
-    assert.equal(dateString, 'Wed Aug 22 2018 00:00:00 GMT+1000 (AEST)');
+    assert.equal(dateString.getTime(), 1534860000000);
   });
 
  it('sets the token release time to be Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)', async () => {
     const tokensReleaseDate = await PRETSDMockContract.tokensReleaseDate();
     const dateString = new Date(tokensReleaseDate.c[0]);
-    assert.equal(dateString, 'Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)');
+    assert.equal(dateString.getTime(), 1564581600000);
   });
 
  it('transfers total supply of tokens (240 million) to the pre funds wallet', async () => {
