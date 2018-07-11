@@ -14,7 +14,7 @@ contract TSDSubsequentSupply is BaseCrowdsaleContract {
 
 
     constructor(address _contractAddress) public {
-        dc = TSD(_contractAddress);
+        dc = TSDInterface(_contractAddress);
     }
 
     event IncreaseSupplyOfTSD(uint256 _newSupplyAdded);

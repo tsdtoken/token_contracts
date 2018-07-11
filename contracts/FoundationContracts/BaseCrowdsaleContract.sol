@@ -1,12 +1,13 @@
 pragma solidity ^0.4.23;
 
 import "./Ownable.sol";
-import "../TSD.sol";
+import "./SafeMath.sol";
+import "./TSDInterface.sol";
 
 contract BaseCrowdsaleContract is Ownable {
     using SafeMath for uint256;
     // set up access to main contract for the future distribution
-    TSD public dc;
+    TSDInterface public dc;
     // when the connection is set to the main contract, save a reference for event purposes
     address public TSDContractAddress;
     address private oracleAddress;
@@ -102,7 +103,7 @@ contract BaseCrowdsaleContract is Ownable {
 
     // Create an instance of the main contract
     function setMainContractAddress(address _t) external onlyOwner{
-        dc = TSD(_t);
+        dc = TSDInterface(_t);
         TSDContractAddress = _t;
     }
 

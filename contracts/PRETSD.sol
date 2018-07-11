@@ -251,7 +251,7 @@ contract PRETSD is BaseCrowdsaleContract {
         }
 
         // Event to say distribution is complete
-        // emit DistributedBalancesToTSDContract(address(this), TSDContractAddress, currentDistributionIndex, finalDistributionIndex);
+        emit DistributedBalancesToTSDContract(address(this), TSDContractAddress, currentDistributionIndex, finalDistributionIndex);
 
         // after distribution is complete set the currentDistributionIndex to the latest finalDistributionIndex
         currentDistributionIndex = finalDistributionIndex;
