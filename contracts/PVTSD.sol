@@ -150,7 +150,9 @@ contract PVTSD is BaseCrowdsaleContract {
         for (uint256 i = currentDistributionIndex; i < finalDistributionIndex; i++) {
             // end for loop when currentDistributionIndex reaches the length of the icoParticipants array
             if (i == icoParticipants.length) {
-                return;
+                emit FinalDistributionToTSDContract(address(this), TSDContractAddress)
+                finalDistributionIndex = i;
+                break;
             }
             // skip transfer if balances are empty
             if (balances[icoParticipants[i]] != 0) {
@@ -161,11 +163,12 @@ contract PVTSD is BaseCrowdsaleContract {
                 balances[icoParticipants[i]] = 0;
             }
         }
-        // after distribution is complete set the currentDistributionIndex to the latest finalDistributionIndex
-        currentDistributionIndex = finalDistributionIndex;
 
         // Event to say distribution is complete
-        emit DistributedAllBalancesToTSDContract(address(this), TSDContractAddress);
+        emit DistributedBalancesToTSDContract(address(this), TSDContractAddress, currentDistributionIndex, finalDistributionIndex);
+
+        // after distribution is complete set the currentDistributionIndex to the latest finalDistributionIndex
+        currentDistributionIndex = finalDistributionIndex;
 
         // Boolean is returned to give us a success state.
         return true;

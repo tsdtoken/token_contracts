@@ -46,7 +46,8 @@ contract BaseCrowdsaleContract is Ownable {
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExchangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
-    event DistributedAllBalancesToTSDContract(address _presd, address _tsd);
+    event DistributedBalancesToTSDContract(address _presd, address _tsd, uint256 startIndex, uint256 endIndex);
+    event FinalDistributionToTSDContract(address _presd, address _tsd);
     event Transfer(address from, address to, uint256 value);
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
 
