@@ -228,7 +228,7 @@ contract TSD is BaseToken, Ownable {
 
     function increaseTotalSupplyAndAllocateTokens(address _newTokensWallet, uint256 _amount) external isSubsequentContract returns (bool) {
         totalSupply = totalSupply.add(_amount);
-        balances[_newTokensWallet] = _amount;
+        balances[_newTokensWallet] = balances[_newTokensWallet].add(_amount);
         emit IncreaseTotalSupply(_amount);
         return true;
     }
