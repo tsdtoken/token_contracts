@@ -16,6 +16,7 @@ contract PRETSD is SecondarySaleBaseContract {
 
     // tranche discounts
     uint16[4] tranches = [800, 840, 880, 920];
+
     // tranche token size
     uint256 trancheMaxTokenSize = totalSupply.div(tranches.length);
 
