@@ -1,10 +1,9 @@
 pragma solidity ^0.4.23;
 
-// import "./FoundationContracts/BaseToken.sol";
 import "./Ownable.sol";
 import "../TSD.sol";
 
-contract SecondarySaleBaseContract is Ownable {
+contract BaseCrowdsaleContract is Ownable {
     using SafeMath for uint256;
     // set up access to main contract for the future distribution
     TSD public dc;
@@ -109,7 +108,7 @@ contract SecondarySaleBaseContract is Ownable {
     // sets start and end times
     function setStartTime(uint256 _startTime) external onlyOwner returns (bool) {
         // ensure the start time is before the end time
-        require(_startTime < endTime, , "ensure start time is before end time");
+        require(_startTime < endTime);
         startTime = _startTime;
         return true;
     }
@@ -117,7 +116,7 @@ contract SecondarySaleBaseContract is Ownable {
     function setEndTime(uint256 _endTime) external onlyOwner returns (bool) {
         // ensure the end time is after the start time
         // and that is after the current time
-        require(_endTime > startTime && _endTime > currentTime(), , "ensure end time is after start time");
+        require(_endTime > startTime && _endTime > currentTime());
         endTime = _endTime;
         return true;
     }
@@ -125,8 +124,8 @@ contract SecondarySaleBaseContract is Ownable {
     // only ERC20 standard function, intended to be used for FIAT payments
     function safeTransfer(address _to, uint256 _value) external onlyOwner returns (bool) {
         // msg.sender will only be the owner of the contract
-        require(_to != address(0), "Address cannot be 0");
-        require(_value <= balances[msg.sender], "Senders balance is too low");
+        require(_to != address(0));
+        require(_value <= balances[msg.sender], "balance too low");
 
         // only add to icoParticipants if they're not already part of it, for FIAT payments
         if (balances[msg.sender] == 0) {
@@ -142,7 +141,7 @@ contract SecondarySaleBaseContract is Ownable {
     }
 
     modifier onlyRestricted () {
-        require(msg.sender == owner || msg.sender == oracleAddress, "The calling wallet is not an authorized wallet");
+        require(msg.sender == owner || msg.sender == oracleAddress, "Unauthorized wallet");
         _;
     }
 }

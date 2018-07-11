@@ -1,9 +1,9 @@
 pragma solidity ^0.4.23;
 
-import "./FoundationContracts/SecondarySaleBaseContract.sol";
+import "./FoundationContracts/BaseCrowdsaleContract.sol";
 import "./FoundationContracts/Math.sol";
 
-contract PRETSD is SecondarySaleBaseContract {
+contract PRETSD is BaseCrowdsaleContract {
     using Math for uint256;
 
     string public name = "PRE TSD COIN";

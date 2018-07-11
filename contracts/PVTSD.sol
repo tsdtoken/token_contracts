@@ -1,8 +1,8 @@
 pragma solidity ^0.4.23;
 
-import "./FoundationContracts/SecondarySaleBaseContract.sol";
+import "./FoundationContracts/BaseCrowdsaleContract.sol";
 
-contract PVTSD is SecondarySaleBaseContract {
+contract PVTSD is BaseCrowdsaleContract {
 
     string public name = "PRIVATE TSD COIN";
     string public symbol = "PVTSD";
