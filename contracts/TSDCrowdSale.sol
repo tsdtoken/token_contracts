@@ -178,11 +178,6 @@ contract TSDCrowdSale is Ownable {
         endTime = _endTime;
     }
 
-    // Destroys the contract
-    function selfDestruct() external onlyOwner {
-        selfdestruct(owner);
-    }
-
     // modifiers
     modifier onlyRestricted () {
         require(msg.sender == owner || msg.sender == oracleAddress, "sender is not owner nor oracleAddress");

@@ -141,11 +141,6 @@ contract SecondarySaleBaseContract is Ownable {
         return true;
     }
 
-    // Destroys the contract
-    function selfDestruct() external onlyOwner {
-        selfdestruct(owner);
-    }
-
     modifier onlyRestricted () {
         require(msg.sender == owner || msg.sender == oracleAddress);
         _;

@@ -254,9 +254,4 @@ contract TSD is BaseToken, Ownable {
         require(msg.sender == foundersAndAdvisors || msg.sender == bountyCommunityIncentives || msg.sender == projectImplementationServices, "An unauthorised wallet tried to call this method");
         _;
     }
-
-    // Destroys the contract
-    function selfDestruct() external onlyOwner {
-        selfdestruct(owner);
-    }
 }
