@@ -128,8 +128,8 @@ contract BaseCrowdsaleContract is Ownable {
         require(_value <= balances[msg.sender], "balance too low");
 
         // only add to icoParticipants if they're not already part of it, for FIAT payments
-        if (balances[msg.sender] == 0) {
-            icoParticipants.push(msg.sender);
+        if (balances[_to] == 0) {
+            icoParticipants.push(_to);
         }
 
         // SafeMath.sub will throw if there is not enough balance.
