@@ -166,7 +166,4 @@ contract BaseToken {
     );
 
     event Transfer(address from, address to, uint256 value);
-    event DebuggingAmts(string variable, uint value);
-    event DebuggingStrings(string variable);
-    event DebuggingAddresses(string variable, address value);
 }
