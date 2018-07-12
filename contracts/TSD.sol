@@ -150,7 +150,7 @@ contract TSD is BaseToken, Ownable {
         escrowBalances[msg.sender].amount = 0;
 
         // reduce the remainingDistributionAfterInitAllocation by the amount in escrow for the caller wallet
-        remainingDistributionAfterInitAllocation = remainingDistributionAfterInitAllocation.sub(escrowBalances[msg.sender].amount);
+        remainingDistributionAfterInitAllocation = remainingDistributionAfterInitAllocation.sub(amountToWithdraw);
 
         // allocate the sender with their respective escrowed amount
         balances[msg.sender] = amountToWithdraw;
