@@ -11,7 +11,7 @@ contract('PVTSDMock', (accounts) => {
   const exchangeRate = 50000;
   const decimalMultiplier = Math.pow(10, 18);
   const owner = accounts[0];
-  const pvtFundsWallet = owner;
+  const tokenFundsWallet = owner;
   const whitelistAddresses = [
     accounts[1],
     accounts[2],
@@ -38,14 +38,15 @@ contract('PVTSDMock', (accounts) => {
     );
    
     await PVTSDMockContract.createWhiteListedMapping(whitelistAddresses);
+    await PVTSDMockContract.setDistributionWallet(owner, { from: owner });
   });
 
  it('has an owner', async () => {
     assert.equal(await PVTSDMockContract.owner(), owner);
   });
 
- it('designates the owner as the pvtFundsWallet', async () => {
-    assert.equal(await PVTSDMockContract.pvtFundsWallet(), owner);
+ it('designates the owner as the tokenFundsWallet', async () => {
+    assert.equal(await PVTSDMockContract.tokenFundsWallet(), owner);
   });
 
  it('has a valid start time, end time and token release time', async () => {
@@ -76,9 +77,9 @@ contract('PVTSDMock', (accounts) => {
   });
 
  it('transfers total supply of tokens (144 million) to the private funds wallet', async () => {
-    const pvtFundsWallet = owner;
-    const pvtFundsWalletBalance = await PVTSDMockContract.balanceOf(pvtFundsWallet);
-    assert.equal(numFromWei(pvtFundsWalletBalance), 144000000, 'Balance of pvtFundsWallet should be 144 million');
+    const tokenFundsWallet = owner;
+    const tokenFundsWalletBalance = await PVTSDMockContract.balanceOf(tokenFundsWallet);
+    assert.equal(numFromWei(tokenFundsWalletBalance), 144000000, 'Balance of tokenFundsWallet should be 144 million');
   });
 
  it('can tell you if an address is whitelisted', async () => {
@@ -147,7 +148,7 @@ contract('PVTSDMock', (accounts) => {
     await PVTSDMockContract.changeTime(startTime.c[0]);
     await PVTSDMockContract.sendTransaction(buyTokens(7, buyerOne));
     const balanceOfBuyer = await PVTSDMockContract.balanceOf(buyerOne);
-    const remainingTokens = await PVTSDMockContract.balanceOf(pvtFundsWallet);
+    const remainingTokens = await PVTSDMockContract.balanceOf(tokenFundsWallet);
     assert.equal(numFromWei(balanceOfBuyer), 10000000, 'The buyers balance should 10,000,000 tokens')
     assert.equal(numFromWei(remainingTokens), 134000000, 'The remaining tokens should be 134,000,000')
   });
@@ -180,9 +181,9 @@ contract('PVTSDMock', (accounts) => {
     await PVTSDMockContract.updateTheExchangeRate(newRate);
     const startTime = await PVTSDMockContract.startTime();
     await PVTSDMockContract.changeTime(startTime.c[0]);
-    const balPriorEthTransfer = web3.eth.getBalance(pvtFundsWallet);
+    const balPriorEthTransfer = web3.eth.getBalance(tokenFundsWallet);
     await PVTSDMockContract.sendTransaction(buyTokens(50, buyerTwo));
-    const balPostEthTransfer = web3.eth.getBalance(pvtFundsWallet);
+    const balPostEthTransfer = web3.eth.getBalance(tokenFundsWallet);
     const weiPostTransfer = numFromWei(balPostEthTransfer);
     const weiPriorTransfer = numFromWei(balPriorEthTransfer);
     assert.ok(equalsWithNormalizedRounding((weiPostTransfer - weiPriorTransfer), 50), 'Funds wallet should have received 50 ether from the sale');
@@ -225,12 +226,12 @@ contract('PVTSDMock', (accounts) => {
     // // 7.75 ether should be transfered to the funds wallet
     // // buyer should be returned 12.25 eth - tx costs
     // // buyers balance before tx
-    const fundsWalletEthBalPrior = web3.eth.getBalance(pvtFundsWallet);
+    const fundsWalletEthBalPrior = web3.eth.getBalance(tokenFundsWallet);
     const buyerEThBalPrior = web3.eth.getBalance(buyerFour).toNumber();
     // ERROR IS IN THIS CALL.
     const tx = await PVTSDMockContract.sendTransaction(buyTokens(63.05, buyerFour));
     // balances after sale
-    const fundsWalletEthBalPost = web3.eth.getBalance(pvtFundsWallet);
+    const fundsWalletEthBalPost = web3.eth.getBalance(tokenFundsWallet);
     const buyerTokenBalance = await PVTSDMockContract.balanceOf(buyerFour);
     const buyerEThBalPost = web3.eth.getBalance(buyerFour);
     const tokensRemaining = await PVTSDMockContract.balanceOf(owner);
@@ -251,9 +252,9 @@ contract('PVTSDMock', (accounts) => {
  it('can burn any remaining tokens in the funds wallet', async () => {
     const endTime = await PVTSDMockContract.endTime();
     await PVTSDMockContract.changeTime(endTime);
-    const tokenBal = await PVTSDMockContract.balanceOf(pvtFundsWallet);
+    const tokenBal = await PVTSDMockContract.balanceOf(tokenFundsWallet);
     const burnTokens = await PVTSDMockContract.burnRemainingTokens({ from: owner });
-    const tokenBalPost = await PVTSDMockContract.balanceOf(pvtFundsWallet);
+    const tokenBalPost = await PVTSDMockContract.balanceOf(tokenFundsWallet);
     assert.equal(numFromWei(tokenBal), 144000000, 'The first token balance should be all tokens 55 million');
     assert.equal(tokenBalPost, 0, 'There should be 0 tokens after the burn');
     assert.ok(burnTokens)

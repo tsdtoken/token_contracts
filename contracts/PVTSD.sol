@@ -1,40 +1,33 @@
 pragma solidity ^0.4.23;
 
-import "./FoundationContracts/BaseCrowdsaleContract.sol";
+import "./FoundationContracts/SecondaryCrowdsaleContract.sol";
 
-contract PVTSD is BaseCrowdsaleContract {
+contract PVTSD is SecondaryCrowdsaleContract {
 
     string public name = "PRIVATE TSD COIN";
     string public symbol = "PVTSD";
-    uint256 public totalSupply = 144 * million;
     uint256 public minPurchase = 5000000; // 50,000.00 USD in cents
-
-    // Wallets
-    address public pvtFundsWallet;
 
     // Coordinated Universal Time (abbreviated to UTC) is the primary time standard by which the world regulates clocks and time.
 
     constructor(
         uint256 _ethExchangeRate
     ) public {
-        pvtFundsWallet = owner;
+        // Set Total Supply
+        totalSupply = 144 * million;
 
-        // transfer suppy to the pvtFundsWallet
-        balances[pvtFundsWallet] = totalSupply;
-        emit Transfer(0x0, pvtFundsWallet, totalSupply);
+        tokenFundsWallet = owner;
+
+        // transfer suppy to the tokenFundsWallet
+        balances[tokenFundsWallet] = totalSupply;
+        emit Transfer(0x0, tokenFundsWallet, totalSupply);
 
         // set up the exchangeRate
         updateTheExchangeRate(_ethExchangeRate);
 
-        // Start time "Fri Jun 15 2018 00:00:00 GMT+1000 (AEST)"
-        // new Date(1535724000000).toUTCString() => "Thu, 14 Jun 2018 14:00:00 GMT"
         startTime = 1528984800000;
-        // End time "Fri Jul 15 2018 00:00:00 GMT+1000 (AEST)"
-        // new Date(1531576800000).toUTCString() => "Sat, 14 Jul 2018 14:00:00 GMT"
         endTime = 1531576800000;
         // Token release date 9 months post end date
-        // "Mon April 15 2019 00:00:00 GMT+1000 (AEST)"
-        // new Date(1555250400000).toUTCString() => "Sun, 14 Apr 2019 14:00:00 GMT"
         tokensReleaseDate = 1555250400000;
     }
 
@@ -61,8 +54,8 @@ contract PVTSD is BaseCrowdsaleContract {
         // totalTokenAmount is the total tokens offered including the discount
         // Multiply with the decimalMultiplier to get total tokens (to 18 decimal place)
         uint256 totalTokenAmount = ethAmount.mul(decimalMultiplier).div(discountedExchangeRate);
-        // tokens avaialble to sell are the remaining tokens in the pvtFundsWallet
-        uint256 availableTokens = balances[pvtFundsWallet];
+        // tokens avaialble to sell are the remaining tokens in the tokenFundsWallet
+        uint256 availableTokens = balances[tokenFundsWallet];
         uint256 currentEthRaised = totalEthRaised;
         uint256 ethRefund = 0;
         uint256 unavailableTokens;
@@ -70,7 +63,7 @@ contract PVTSD is BaseCrowdsaleContract {
         if (totalTokenAmount > availableTokens) {
             // additional tokens that aren't avaialble to be sold
             // tokenAmount is the tokens requested by buyer (not including the discount)
-            // availableTokens are all the tokens left in the supplying wallet i.e pvtFundsWallet
+            // availableTokens are all the tokens left in the supplying wallet i.e tokenFundsWallet
             unavailableTokens = totalTokenAmount.sub(availableTokens);
 
             // determine the unused ether amount by seeing how many tokens were surplus
@@ -81,7 +74,7 @@ contract PVTSD is BaseCrowdsaleContract {
             ethAmount = ethAmount.sub(ethRefund);
             // make the token purchase
             // will equal to 0 after these substractions occur
-            balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(availableTokens);
+            balances[tokenFundsWallet] = balances[tokenFundsWallet].sub(availableTokens);
 
             // adding the buyer to the icoParticipants ONLY if they haven't already bought before
             if (balances[msg.sender] == 0) {
@@ -90,14 +83,14 @@ contract PVTSD is BaseCrowdsaleContract {
 
             // add total tokens to the senders balances and Emit transfer event
             balances[msg.sender] = balances[msg.sender].add(availableTokens);
-            emit Transfer(pvtFundsWallet, msg.sender, availableTokens);
+            emit Transfer(tokenFundsWallet, msg.sender, availableTokens);
 
             // refund
             if (ethRefund > 0) {
                 msg.sender.transfer(ethRefund);
             }
             // transfer ether to funds wallet
-            pvtFundsWallet.transfer(ethAmount);
+            tokenFundsWallet.transfer(ethAmount);
             totalEthRaised = totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
             // close token sale as tokens are sold out
@@ -110,13 +103,13 @@ contract PVTSD is BaseCrowdsaleContract {
             }
 
             // complete transfer and emit an event
-            balances[pvtFundsWallet] = balances[pvtFundsWallet].sub(totalTokenAmount);
+            balances[tokenFundsWallet] = balances[tokenFundsWallet].sub(totalTokenAmount);
             balances[msg.sender] = balances[msg.sender].add(totalTokenAmount);
 
             // transfer ether to the wallet and emit and event regarding eth raised
-            pvtFundsWallet.transfer(ethAmount);
+            tokenFundsWallet.transfer(ethAmount);
             totalEthRaised = totalEthRaised.add(ethAmount);
-            emit Transfer(pvtFundsWallet, msg.sender, totalTokenAmount);
+            emit Transfer(tokenFundsWallet, msg.sender, totalTokenAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
         }
     }
@@ -126,11 +119,11 @@ contract PVTSD is BaseCrowdsaleContract {
    // Burn any remaining tokens
     function burnRemainingTokens() external onlyOwner returns (bool) {
         require(currentTime() >= endTime, "can only burn tokens after token sale has concluded");
-        if (balances[pvtFundsWallet] > 0) {
+        if (balances[tokenFundsWallet] > 0) {
             // Subtracting the unsold tokens from the total supply.
             uint256 oldSupply = totalSupply;
-            totalSupply = totalSupply.sub(balances[pvtFundsWallet]);
-            balances[pvtFundsWallet] = 0;
+            totalSupply = totalSupply.sub(balances[tokenFundsWallet]);
+            balances[tokenFundsWallet] = 0;
             emit UpdatedTotalSupply(oldSupply, totalSupply);
         }
 

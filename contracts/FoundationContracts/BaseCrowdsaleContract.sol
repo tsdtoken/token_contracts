@@ -8,6 +8,10 @@ contract BaseCrowdsaleContract is Ownable {
     using SafeMath for uint256;
     // set up access to main contract for the future distribution
     TSDInterface public dc;
+
+    // Define the total supply
+    uint256 public totalSupply;
+
     // when the connection is set to the main contract, save a reference for event purposes
     address public TSDContractAddress;
     address private oracleAddress;
@@ -47,10 +51,7 @@ contract BaseCrowdsaleContract is Ownable {
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExchangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
-    event DistributedBalancesToTSDContract(address _presd, address _tsd, uint256 startIndex, uint256 endIndex);
-    event FinalDistributionToTSDContract(address _presd, address _tsd);
     event Transfer(address from, address to, uint256 value);
-    event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
 
     // Contract utility functions
     function currentTime() public view returns (uint256) {
