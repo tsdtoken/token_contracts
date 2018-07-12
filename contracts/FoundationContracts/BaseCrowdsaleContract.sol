@@ -94,11 +94,6 @@ contract BaseCrowdsaleContract is Ownable {
         return true;
     }
 
-    // Can check to see if an address is whitelisted
-    function isWhiteListed(address _address) external view returns (bool) {
-        return whiteListed[_address];
-    }
-
     // After close functions
 
     // Create an instance of the main contract

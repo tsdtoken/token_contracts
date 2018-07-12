@@ -84,8 +84,6 @@ Functions available:
 > Changes the oracle address which is used to update the ethExchangeRate
 - `updateTheExchangeRate`
 > This is called when the contract is constructed and by the oracle to update the rate periodically, this updates the ethToUSD exchange rate, the USD is calculated and maintained in cents
-- `isWhiteListed`
-> Checks to see if an address is whitelisted
 - `buyTokens`
 > Is called through a fallback function which is payable to accept ether. It calculates the token amount, ensures the validations such as time range, minimum purchase amount, and whitelisted status of the buyer. If a buyer sends more ether than the total token amount, the remainder ETH is refunded to the buyer.
 - `setMainContractAddress✓`
@@ -147,8 +145,6 @@ Functions available:
 > Changes the oracle address which is used to update the ethExchangeRate
 - `updateTheExchangeRate`
 > This is called when the contract is constructed and by the oracle to update the rate periodically, this updates the ethToUSD exchange rate, the USD is calculated and maintained in cents
-- `isWhiteListed`
-> Checks to see if an address is whitelisted
 - `buyTokens`
 > Is called through a fallback function which is payable to accept ether. It calculates the token amount, ensures the validations such as time range, minimum purchase amount, and whitelisted status of the buyer. If a buyer sends more ether than the total token amount, the remainder ETH is refunded to the buyer.
 - `setMainContractAddress✓`
@@ -230,8 +226,6 @@ Functions available:
 > Changes the oracle address which is used to update the ethExchangeRate
 - `updateTheExchangeRate`
 > This is called when the contract is constructed and by the oracle to update the rate periodically, this updates the ethToUSD exchange rate, the USD is calculated and maintained in cents
-- `isWhiteListed`
-> Checks to see if an address is whitelisted
 - `buyTokens`
 > Is called through a fallback function which is payable to accept ether. It calculates the token amount, ensures the validations such as time range, minimum purchase amount, and whitelisted status of the buyer. If a buyer sends more ether than the total token amount, the remainder ETH is refunded to the buyer.
 - `setMainContractAddress✓`

@@ -82,8 +82,8 @@ contract('PVTSDMock', (accounts) => {
   });
 
  it('can tell you if an address is whitelisted', async () => {
-    const whitelisted = await PVTSDMockContract.isWhiteListed(buyerOne);
-    const unlisted = await PVTSDMockContract.isWhiteListed(unlistedBuyer);
+    const whitelisted = await PVTSDMockContract.whiteListed(buyerOne);
+    const unlisted = await PVTSDMockContract.whiteListed(unlistedBuyer);
     assert.equal(whitelisted, true, 'Address should be part of the white list');
     assert.equal(unlisted, false, 'Address should not be part of the white list');
   });

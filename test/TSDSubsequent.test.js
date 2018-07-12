@@ -103,19 +103,19 @@ contract('TSDSubsequentSupply', (accounts) => {
     // manually set up the whitelist inside the contract
     await TSDSubsequentSupplyContract.createWhiteListedMapping(whitelistAddresses, { from: owner });
     // Upon initialization of the contract, whitelisted addresses are placed into a mapping with the value of true
-    const firstWhitelistAddress = await TSDSubsequentSupplyContract.isWhiteListed(buyerOne);
-    const secondWhitelistAddress = await TSDSubsequentSupplyContract.isWhiteListed(buyerTwo);
-    const thirdWhitelistAddress = await TSDSubsequentSupplyContract.isWhiteListed(buyerThree);
+    const firstWhitelistAddress = await TSDSubsequentSupplyContract.whiteListed(buyerOne);
+    const secondWhitelistAddress = await TSDSubsequentSupplyContract.whiteListed(buyerTwo);
+    const thirdWhitelistAddress = await TSDSubsequentSupplyContract.whiteListed(buyerThree);
 
-    assert.equal(firstWhitelistAddress, true, 'Address should exist in the isWhiteListed mapping with a value of true');
+    assert.equal(firstWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
     assert.equal(secondWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
     assert.equal(thirdWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
   });
 
  it('can tell you if an address is whitelisted', async () => {
     await TSDSubsequentSupplyContract.createWhiteListedMapping(whitelistAddresses, { from: owner });
-    const whitelisted = await TSDSubsequentSupplyContract.isWhiteListed(buyerOne);
-    const unlisted = await TSDSubsequentSupplyContract.isWhiteListed(unlistedBuyer);
+    const whitelisted = await TSDSubsequentSupplyContract.whiteListed(buyerOne);
+    const unlisted = await TSDSubsequentSupplyContract.whiteListed(unlistedBuyer);
     assert.equal(whitelisted, true, 'Address should be part of the white list');
     assert.equal(unlisted, false, 'Address should not be part of the white list');
   });
