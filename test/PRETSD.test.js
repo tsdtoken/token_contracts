@@ -13,7 +13,7 @@ contract('PRETSDMock', (accounts) => {
   // exchange rate is 1 szabo or 0.000001
   const exchangeRate = 50000;
   const owner = accounts[0];
-  const preFundsWallet = owner;
+  const tokenFundsWallet = owner;
   const firstBuyerIndex = 15;
   const buyerOne = accounts[firstBuyerIndex];
   const buyerTwo = accounts[firstBuyerIndex+1];
@@ -52,14 +52,15 @@ contract('PRETSDMock', (accounts) => {
     );
     // The contract runs out of gas when being created with the whole whitelist mapping. So we map afterwards.
     await PRETSDMockContract.createWhiteListedMapping(whitelistAddresses, { from: owner });
+    await PRETSDMockContract.setDistributionWallet(owner, { from: owner });
   });
 
  it('has an owner', async () => {
     assert.equal(await PRETSDMockContract.owner(), owner);
   });
 
- it('designates the owner as the preFundsWallet', async () => {
-    assert.equal(await PRETSDMockContract.preFundsWallet(), owner);
+ it('designates the owner as the tokenFundsWallet', async () => {
+    assert.equal(await PRETSDMockContract.tokenFundsWallet(), owner);
   });
 
  it('has a valid start time, end time and token release time', async () => {
@@ -90,9 +91,9 @@ contract('PRETSDMock', (accounts) => {
   });
 
  it('transfers total supply of tokens (240 million) to the pre funds wallet', async () => {
-    const preFundsWallet = owner;
-    const preFundsWalletBalance = await PRETSDMockContract.balanceOf(preFundsWallet);
-    assert.equal(numFromWei(preFundsWalletBalance), 240000000, 'Balance of preFundsWallet should be 240 million');
+    const tokenFundsWallet = owner;
+    const tokenFundsWalletBalance = await PRETSDMockContract.balanceOf(tokenFundsWallet);
+    assert.equal(numFromWei(tokenFundsWalletBalance), 240000000, 'Balance of tokenFundsWallet should be 240 million');
   });
 
   // exchange rate functionality
@@ -140,7 +141,7 @@ contract('PRETSDMock', (accounts) => {
     // 10 ETH == 5,000.00 USD (min buyin)
     await PRETSDMockContract.sendTransaction(buyTokens(10, buyerOne));
     const balanceOfBuyer = await PRETSDMockContract.balanceOf(buyerOne);
-    const remainingTokens = await PRETSDMockContract.balanceOf(preFundsWallet);
+    const remainingTokens = await PRETSDMockContract.balanceOf(tokenFundsWallet);
     assert.equal(numFromWei(balanceOfBuyer), 12500, 'The buyers balance should 12,500 tokens')
     assert.equal(numFromWei(remainingTokens), 239987500, 'The remaining tokens should be 239,987,500')
   });
@@ -148,9 +149,9 @@ contract('PRETSDMock', (accounts) => {
  it('transfer the ether to the funds wallet', async () => {
     const startTime = await PRETSDMockContract.startTime();
     await PRETSDMockContract.changeTime(startTime);
-    const balPriorEthTransfer = web3.eth.getBalance(preFundsWallet);
+    const balPriorEthTransfer = web3.eth.getBalance(tokenFundsWallet);
     await PRETSDMockContract.sendTransaction(buyTokens(50, buyerTwo));
-    const balPostEthTransfer = web3.eth.getBalance(preFundsWallet);
+    const balPostEthTransfer = web3.eth.getBalance(tokenFundsWallet);
     const weiPostTransfer = numFromWei(balPostEthTransfer);
     const weiPriorTransfer = numFromWei(balPriorEthTransfer);
     const epsilon = 0.0000001;
@@ -274,11 +275,11 @@ contract('PRETSDMock', (accounts) => {
     const newTotalCost = await PRETSDMockContract.calculateTotalRemainingTokenCost();
     const costOfRemainingTokens = 55.2;
     // buyers balance before tx
-    const fundsWalletEthBalPrior = web3.eth.getBalance(preFundsWallet);
+    const fundsWalletEthBalPrior = web3.eth.getBalance(tokenFundsWallet);
     const buyerEThBalPrior = web3.eth.getBalance(buyerFour);
     const tx = await PRETSDMockContract.sendTransaction(buyTokens(60, buyerFour));
     // balances after sale
-    const fundsWalletEthBalPost = web3.eth.getBalance(preFundsWallet);
+    const fundsWalletEthBalPost = web3.eth.getBalance(tokenFundsWallet);
     const buyerTokenBalance = await PRETSDMockContract.balanceOf(buyerFour);
     const buyerEThBalPost = web3.eth.getBalance(buyerFour);
 

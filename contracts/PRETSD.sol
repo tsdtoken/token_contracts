@@ -1,46 +1,41 @@
 pragma solidity ^0.4.23;
 
-import "./FoundationContracts/BaseCrowdsaleContract.sol";
+import "./FoundationContracts/SecondaryCrowdsaleContract.sol";
 import "./FoundationContracts/Math.sol";
 
-contract PRETSD is BaseCrowdsaleContract {
+contract PRETSD is SecondaryCrowdsaleContract {
     using Math for uint256;
 
     string public name = "PRE TSD COIN";
     string public symbol = "PRETSD";
-    uint256 public totalSupply = 240 * million;
     uint256 public minPurchase = 500000; // 5,000.00 USD in cents
-
-    // Wallets
-    address public preFundsWallet;
 
     // tranche discounts
     uint16[4] tranches = [800, 840, 880, 920];
 
     // tranche token size
-    uint256 trancheMaxTokenSize = totalSupply.div(tranches.length);
+    uint256 trancheMaxTokenSize;
 
     constructor(
         uint256 _ethExchangeRate
     ) public {
-        preFundsWallet = owner;
+        // Set the Total Supply
+        totalSupply = 240 * million;
+
+        trancheMaxTokenSize = totalSupply.div(tranches.length);
+
+        tokenFundsWallet = owner;
 
         // transfer suppy to the funds wallet
-        balances[preFundsWallet] = totalSupply;
-        emit Transfer(0x0, preFundsWallet, totalSupply);
+        balances[tokenFundsWallet] = totalSupply;
+        emit Transfer(0x0, tokenFundsWallet, totalSupply);
 
         // set exchange rate
         updateTheExchangeRate(_ethExchangeRate);
 
-        // Start time "Wed Aug 01 2018 00:00:00 GMT+1000 (AEST)"
-        // new Date(1533045600000).toUTCString() => "Tue, 31 Jul 2018 14:00:00 GMT"
         startTime = 1533045600000;
-        // End time "Tue Aug 21 2018 00:00:00 GMT+1000 (AEST)"
-        // new Date(1534860000000).toUTCString() => "Tue, 21 Aug 2018 14:00:00 GMT"
         endTime = 1534860000000;
         // Token release date 12 month post end date
-        // "Thu Aug 01 2019 00:00:00 GMT+1000 (AEST)"
-        // new Date(1564581600000).toUTCString() => "Wed, 31 Jul 2019 14:00:00 GMT"
         tokensReleaseDate = 1564581600000;
     }
 
@@ -82,7 +77,7 @@ contract PRETSD is BaseCrowdsaleContract {
 
         // The tranching algorithm will only ever return a value equal or lower than the remainingTokens.
         // If the tokenAmount is equal to the remaining tokens we know its the last purchase.
-        if (tokenAmount == balances[preFundsWallet]) {
+        if (tokenAmount == balances[tokenFundsWallet]) {
             // recalculate the amount of eth that can be spent for the remaining tokens.
             uint256 totalRemainingCostOfTokens = calculateTotalRemainingTokenCost();
             // determine the refund by subtracting the the new ethamount from what was originally sent in
@@ -90,8 +85,8 @@ contract PRETSD is BaseCrowdsaleContract {
             ethAmount = ethAmount.sub(ethRefund);
             // make the token purchase
             // sub general token amount
-            uint256 remainingTokens = balances[preFundsWallet];
-            balances[preFundsWallet] = balances[preFundsWallet].sub(remainingTokens);
+            uint256 remainingTokens = balances[tokenFundsWallet];
+            balances[tokenFundsWallet] = balances[tokenFundsWallet].sub(remainingTokens);
 
             // adding the buyer to the icoParticipants ONLY if they haven't already bought before
             if (balances[msg.sender] == 0) {
@@ -100,14 +95,14 @@ contract PRETSD is BaseCrowdsaleContract {
             
             // sub bonus token amount
             balances[msg.sender] = balances[msg.sender].add(remainingTokens);
-            emit Transfer(preFundsWallet, msg.sender, remainingTokens);
+            emit Transfer(tokenFundsWallet, msg.sender, remainingTokens);
             
             // refund
             if (ethRefund > 0) {
                 msg.sender.transfer(ethRefund);
             }
             // transfer ether to funds wallet
-            preFundsWallet.transfer(ethAmount);
+            tokenFundsWallet.transfer(ethAmount);
             totalEthRaised = totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
             // close token sale as tokens are sold out
@@ -118,13 +113,13 @@ contract PRETSD is BaseCrowdsaleContract {
             }
             // make the token purchase
             // sub general token amount
-            balances[preFundsWallet] = balances[preFundsWallet].sub(tokenAmount);
+            balances[tokenFundsWallet] = balances[tokenFundsWallet].sub(tokenAmount);
             balances[msg.sender] = balances[msg.sender].add(tokenAmount);
 
-            emit Transfer(preFundsWallet, msg.sender, tokenAmount);
+            emit Transfer(tokenFundsWallet, msg.sender, tokenAmount);
 
             // transfer ether to the wallet and emit and event regarding eth raised
-            preFundsWallet.transfer(ethAmount);
+            tokenFundsWallet.transfer(ethAmount);
             totalEthRaised = totalEthRaised.add(ethAmount);
             emit EthRaisedUpdated(currentEthRaised, totalEthRaised);
         }
@@ -132,7 +127,7 @@ contract PRETSD is BaseCrowdsaleContract {
 
     function calculateTotalRemainingTokenCost() public view returns(uint256) {
         uint256 totalCost = 0;
-        uint256 sold = totalSupply.sub(balances[preFundsWallet]);
+        uint256 sold = totalSupply.sub(balances[tokenFundsWallet]);
         // Calculate the remaining tranche tokens.
         uint256 currentTrancheRemainder = totalSupply.sub(sold) % trancheMaxTokenSize;
         // On the first initialisation we need to set the current tranche to a full tranche;
@@ -159,7 +154,7 @@ contract PRETSD is BaseCrowdsaleContract {
         uint256 returnTokens = 0;
         uint256 tokensFromTranche = 0;
         uint256 ethRemaining = _ethAmount;
-        uint256 sold = totalSupply.sub(balances[preFundsWallet]);
+        uint256 sold = totalSupply.sub(balances[tokenFundsWallet]);
 
         // Calculate the remaining tranche tokens.
         uint256 currentTrancheRemainder = totalSupply.sub(sold) % trancheMaxTokenSize;
@@ -206,57 +201,5 @@ contract PRETSD is BaseCrowdsaleContract {
             ethRemaining = ethRemaining.sub(tokenToEth(tokensFromTranche, tranches[currentTranche]));
         }
         return returnTokens;
-    }
-
-    // After close functions
-
-    // Burn any remaining tokens
-    function burnRemainingTokens() external onlyOwner returns (bool) {
-        require(currentTime() >= endTime, "can only burn tokens after token sale has concluded");
-        if (balances[preFundsWallet] > 0) {
-            // Subtracting the unsold tokens from the total supply.
-            uint256 oldSupply = totalSupply;
-            totalSupply = totalSupply.sub(balances[preFundsWallet]);
-            balances[preFundsWallet] = 0;
-            emit UpdatedTotalSupply(oldSupply, totalSupply);
-        }
-
-        return true;
-    }
-
-    // This can only be called by the owner on or after the token release date.
-    // This will be a two step process.
-    // This function will be called by the preSaleTokenWallet
-    // This wallet will need to be approved in the main contract to make these distributions
-    function distributeTokens(uint256 _numberOfTransfers) external onlyRestricted returns (bool) {
-        require(currentTime() >= tokensReleaseDate, "can only distribute after tokensReleaseDate");
-        address preSaleTokenWallet = dc.preSaleTokenWallet();
-        uint256 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);
-
-        for (uint256 i = currentDistributionIndex; i < finalDistributionIndex; i++) {
-            // end for loop when currentDistributionIndex reaches the length of the icoParticipants array
-            if (i == icoParticipants.length) {
-                emit FinalDistributionToTSDContract(address(this), TSDContractAddress);
-                finalDistributionIndex = i;
-                break;
-            }
-            // skip transfer if balances are empty
-            if (balances[icoParticipants[i]] != 0) {
-                dc.transferFrom(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
-                emit Transfer(preSaleTokenWallet, icoParticipants[i], balances[icoParticipants[i]]);
-                
-                // set balances to 0 to prevent re-transfer
-                balances[icoParticipants[i]] = 0;
-            }
-        }
-
-        // Event to say distribution is complete
-        emit DistributedBalancesToTSDContract(address(this), TSDContractAddress, currentDistributionIndex, finalDistributionIndex);
-
-        // after distribution is complete set the currentDistributionIndex to the latest finalDistributionIndex
-        currentDistributionIndex = finalDistributionIndex;
-
-        // Boolean is returned to give us a success state.
-        return true;
     }
 }
