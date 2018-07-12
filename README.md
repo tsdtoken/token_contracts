@@ -11,6 +11,11 @@ We also have the 4 independent contracts that will be used for **4 phases** of t
 > Standard ERC20 contract with a buy in asset freeze of 12 Months from main ICO close.
 	
 - The **Main Sale Contract** which will host a set of rules for the private sale buyers.
+> Time lockouts
+> Refunds
+> Trigger transfer methods in the main contract
+
+- The **Main TSD Contract** which will host a set of rules for the private sale buyers.
 > Standard ERC20 contract with rules regarding whitelisting.
 > Time lockouts
 > Refunds
@@ -31,13 +36,90 @@ A further discussion into the inspirations and rules of the contracts used for d
 -  It is at minimum an ERC-20 Compliant Smart Contract
 - Safemath is used throughout all contracts to prevent any mathematical edge case errors
 - Tokens are offered with 18 decimal places
-- Initial token distribution supply which can be mutated by the owners of the smart contract, note
+- Initial token distribution supply which can be mutated by the owners of the smart contract, through the use of a Subsequent Supply Contract
 - Pre-allocation of tokens to accounts nominated by Maoneng
 -  Whitelisting (i.e only whitelisted token users are allowed to transfer their tokens, this whitelisting is dependent upon which token period they participated in - private/pre or mainsale ICO)
 -  Ability to exchange Ether for pre-allocated tokens
 -  Automatically transfer ETH sent to smart contract to wallet nominated by Maoneng(this ETH is real money i.e fiat converted ETH)
 -  Restrictions based on start and end dates as well as total sale value
 - Tokens can only be traded once the ICO has come to a conclusion
+
+## Foundation Contracts
+Strong programming principles emulate abstraction and DRY (Don't Repeat Yourself) code. Using the extensibility ability of solidity, the Foundation contracts act as a storage hub for logic that is either repeated amongst several contracts or holds seperate context and functionality from the crowd sale or ERC20 contract.
+
+*Ownable Contract*
+
+Open Zeppelin inspired Ownable contract that:
+
+- Sets owner
+- has a transferOwnership function
+- has a renounceOwnership function
+- has an onlyOwner modifier
+---
+*SafeMath*
+
+Safemath library is used across all contracts for all and any mathematical functions. Since unsigned integers are used in the contract code, overflow of digits is a possible issue, Safemath adds protective guards to prevent and overflows.
+Overflow example:
+5-9 = 4 (instead of -4)
+
+---
+*SafeMath*
+
+A library used for comparison checks between integers
+
+*BaseToken*
+BaseToken is Open Zeppelin inspired and consists of all the required ERC20 standard functions and events, this contract is used in the main TSD contract
+
+---
+*BaseCrowdsaleContract*
+The BaseCrowdsaleContract holds abstracted logic from the multiple crowdsale contracts. The purpose of this contract is to act as a singleton hub hosting consistent sale logic, minimising maintenance overheads.
+
+- Checks CurrentTime
+- has balanceOf function
+- ability to *createWhiteListedMapping* 
+- ability to *removeFromWhitelist*
+- ability to *changeOracleAddress*
+- ability to *updateTheExchangeRate*
+- ability to *setMainContractAddress* via a TSD interface
+- ability to set *startTime* and *endTime*
+- ability to call *safeTransfer* for FIAT payment transactions
+- an *onlyRestricted* modifier for owner and oracleAddress
+
+Functions available:
+
+- `balanceOf`
+> Returns the balance of an address
+- `createWhiteListedMapping`
+> Called externally to create whitelist for sale. Only whitelisted addresses can participate in the ico.
+- `removeFromWhitelist`
+> Enables restricted wallet to remove someone from the whitelist mapping
+- `changeOracleAddress`
+> Changes the oracle address which is used to update the ethExchangeRate
+- `updateTheExchangeRate`
+> This is called when the contract is constructed and by the oracle to update the rate periodically, this updates the ethToUSD exchange rate, the USD is calculated and maintained in cents
+- `setMainContractAddress`
+> Sets the main contract address reference, this instance is used during distribution of tokens
+
+- `setStartTime & setEndTime`
+> Custom sets the start and end time
+- `safeTransferFrom`
+> Is used to transfer tokens manually primarily for FIAT buyers. Adds the buyer to the icoParticipants array - to ensure they're accommodated for when distributing tokens.
+---
+*SecondaryCrowdsaleContract*
+The SecondaryCrowdsaleContract contains methods used in the PRE and PRIVATE contracts, this contract holds further logic abstraction for these two contracts.
+
+- ability to *burnRemainingTokens*
+- ability to *distributeTokens* to the main TSD contract
+- ability to *setDistributionWallet*
+
+- `burnRemainingTokens`
+> Burns the remaining tokens and updates the supply, a safety check is placed to ensure that its only called after the end time has concluded.
+- `distributeTokens`
+> This can only be called by the owner on or after the token release date.
+> This will be a two step process.
+>  This function will be called by the pvtSaleTokenWallet
+>  This wallet will need to be approved in the main contract to make these distributions
+
 
 ## Private Sale Token Contract
 
@@ -62,43 +144,24 @@ The address participating in the Private round is cross checked in the balances 
 
 Upon initiation, the `exchange rate`,  `start time`, `end time` and `token release date` are passed in the constructor function. When invoked, the allocated supply is transferred from the contract to the `owner's wallet`. I.e the wallet that deployed the contract.
 
-> Considering whitelisted addresses will be from our DB, and we'll sync it with the Private contract `createWhiteListedMapping✓` is used to populate the above mapping. An oracle has been scripted for this which will automatically execute the mapping from our database.
+The Private Token contract inherits from the `SecondaryCrowdsaleContract` automatically giving it access to all the methods defined in *SecondaryCrowdsaleContract* as well as *BaseCrowdsaleContract*
+
+> Considering whitelisted addresses will be from our DB, and we'll sync it with the Private contract `createWhiteListedMapping` is used to populate the above mapping. An oracle has been scripted for this which will automatically execute the mapping from our database.
 
 >  `buyTokens` acts as the fallback function and is used to allow ETH deposits. A consistent if **if-else** statement exists to confirm if the total ETH sent does not equate to more than the tokens available, and if so, **refund** the remaining ETH back to the sender.
 
->  All unsold tokens can be burn with `burnRemainingTokensAfterClose✓` which confirms the close of the Private ICO round before burning them.
+>  All unsold tokens can be burn with `burnRemainingTokensAfterClose` which confirms the close of the Private ICO round before burning them.
 
 > We keep track of the total ETH raised, to help with a easy infographic in the website
 
-> `distrubuteTokens✓` uses instance access to the main contract to transfer tokens from the pvtSaleTokenWallet to the respective ICO participants.
+> `distrubuteTokens` uses instance access to the main contract to transfer tokens from the pvtSaleTokenWallet to the respective ICO participants.
 
-> Transfer and TransferFrom are wrapped with modifications to prevent the use of them until token release date has reached.
+> Transfer and TransferFrom in the main TSD contract are wrapped with modifications to prevent the use of them until token release date has reached.
 
-Functions available:
 
-- `balanceOf`
-> Returns the balance of an address
-- `createWhiteListedMapping✓`
-> Called externally to create whitelist for sale. Only whitelisted addresses can participate in the ico.
-- `changeOracleAddress✓`
-> Changes the oracle address which is used to update the ethExchangeRate
-- `updateTheExchangeRate`
-> This is called when the contract is constructed and by the oracle to update the rate periodically, this updates the ethToUSD exchange rate, the USD is calculated and maintained in cents
 - `buyTokens`
 > Is called through a fallback function which is payable to accept ether. It calculates the token amount, ensures the validations such as time range, minimum purchase amount, and whitelisted status of the buyer. If a buyer sends more ether than the total token amount, the remainder ETH is refunded to the buyer.
-- `setMainContractAddress✓`
-> Sets the main contract address reference, this instance is used during distribution of tokens
-- `burnRemainingTokens✓`
-> Burns the remaining tokens and updates the supply, a safety check is placed to ensure that its only called after the end time has concluded.
-- `distributeTokens`
-> This can only be called by the owner on or after the token release date.
-> This will be a two step process.
->  This function will be called by the pvtSaleTokenWallet
->  This wallet will need to be approved in the main contract to make these distributions
-- `setStartTime & setEndTime`
-> Custom sets the start and end time
- - `selfDestruct`
-> Kills the contract instance and its existence from the blockchain merkle tree
+
 
 ## Pre-Sale Token Contract
 
@@ -114,7 +177,7 @@ The second of three token sales organised by Transcendence. This round offers th
 - First tranche at 20% discount ($0.5 * 0.8 = $0.40)
 - Second tranche at 16% discount ($0.5 * 0.84 = $0.42)
 - Third tranche at 12% discount ($0.5 * 0.88 = $0.44)
-- Fourth tranche at 8% discount ($0.5 * 0.925 = $0.46)
+- Fourth tranche at 8% discount ($0.5 * 0.92 = $0.46)
 
 Address  | Bool
 ------------- | -------------
@@ -125,41 +188,18 @@ The address participating in the Presale round is cross checked in the balances 
 
 Considering whitelisted addresses will be from our DB, and we'll sync it with the Private contract `createWhiteListedMapping` is used to populate the above mapping.
 
-`buyTokens` acts as the fallback function and is used to allow ETH deposits. A consistent if **if-else** statement exists to confirm if the total ETH sent does not equate to more than the tokens available, and if so, **refund** the remaining ETH back to the sender. The tokens are sold in tranches, where when remainder tokens traverse between tranches, ETH gains power in reference to TSD. Going with a nominal rate of 50 cents, the tranches go with 20%, 16%, 12% and 8%.
+`buyTokens` acts as the fallback function and is used to allow ETH deposits. A consistent if **if-else** statement exists to confirm if the total ETH sent does not equate to more than the tokens available, and if so, **refund** the remaining ETH back to the sender. The tokens are sold in tranches, where when remainder tokens traverse between tranches, ETH gains power in reference to TSD. Going with a nominal rate of 50 cents, the tranches go with 20%, 16%, 12% and 7.5%.
 
 All unsold tokens can be burn with `burnRemainingTokensAfterClose` which confirms the close of the Presale ICO round before burning them.
 
 We keep track of the total ETH raised, to help with a easy infographic in the website
 
-`distrubuteTokens✓` uses instance access to the main contract to transfer tokens from the pvtSaleTokenWallet to the respective ICO participants.
+`distrubuteTokens` uses instance access to the main contract to transfer tokens from the pvtSaleTokenWallet to the respective ICO participants.
 
-> Transfer and TransferFrom are wrapped with modifications to prevent the use of them until token release date has reached.
+The Pre Token contract inherits from the `SecondaryCrowdsaleContract` automatically giving it access to all the methods defined in *SecondaryCrowdsaleContract* as well as *BaseCrowdsaleContract*
 
-Functions available:
+> Transfer and TransferFrom are wrapped with modifications in the main TSD contract to prevent the use of them until token release date has reached.
 
-- `balanceOf`
-> Returns the balance of an address
-- `createWhiteListedMapping`
-> Called externally to create whitelist for sale. Only whitelisted addresses can participate in the ico.
-- `changeOracleAddress✓`
-> Changes the oracle address which is used to update the ethExchangeRate
-- `updateTheExchangeRate`
-> This is called when the contract is constructed and by the oracle to update the rate periodically, this updates the ethToUSD exchange rate, the USD is calculated and maintained in cents
-- `buyTokens`
-> Is called through a fallback function which is payable to accept ether. It calculates the token amount, ensures the validations such as time range, minimum purchase amount, and whitelisted status of the buyer. If a buyer sends more ether than the total token amount, the remainder ETH is refunded to the buyer.
-- `setMainContractAddress✓`
-> Sets the main contract address reference, this instance is used during distribution of tokens
-- `burnRemainingTokens`
-> Burns the remaining tokens and updates the supply, a safety check is placed to ensure that its only called after the end time has concluded.
-- `distributeTokens✓`
-> This can only be called by the owner on or after the token release date.
-> This will be a two step process.
->  This function will be called by the pvtSaleTokenWallet
->  This wallet will need to be approved in the main contract to make these distributions
-- `setStartTime✓ & setEndTime✓`
-> Custom sets the start and end time
- - `selfDestruct`
-> Kills the contract instance and its existence from the blockchain merkle tree
 - `tokenToEth`
 > Usage:
 >  Pass in the amount of tokens and the discount rate.
@@ -174,7 +214,20 @@ Functions available:
  - `calculateTokenAmountWithDiscounts`
 > Calculates the number tokens that can be purchased based on the diluting power of the eth in respect to the TSD that can be bought.
 
-## Main token sale Contract
+## Main token sale Contract (Crowdsale Contract)
+The main crowdsale acts as a pure proxy contract to the main TSD contract. It inherits from the *BaseCrowdsaleContract* giving it all the base crowdsale abilities. Custom to itself is the buyTokens method.
+
+Prior to kicking off the crowdsale, the fundsWallet in the main TSD contract, needs to approve the crowdsale contract to transfer tokens on its behalf, as the crowdsale acts as an interlay between the main TSD contract and the buyer.
+
+The crowdsale contract makes use of the *safeTransferFrom* method in the main TSD contract, since the *transferFrom* methods are blocked by the *canTrade* boolean up until the ICO is finished and users can actually trade.
+
+Functions available:
+
+- `buyTokens`
+> Is called through a fallback function which is payable to accept ether. It calculates the token amount, ensures the validations such as time range, minimum purchase amount, and whitelisted status of the buyer. If a buyer sends more ether than the total token amount, the remainder ETH is refunded to the buyer.
+
+## Main TSD Contract
+
 This is the contract that will, in conclusion, hold **all** wallet addresses that own TSD coin. This is the contract where no bonus will be offered during sale. The length of the ICO will be subjective to which of the following milestones are achieved first:
 
 > End of sale date
@@ -186,7 +239,7 @@ This is the contract that will, in conclusion, hold **all** wallet addresses tha
 - 48M is reserved for the founders and advisors
 - 42M is reserved for the bounty and allocation incentives
 - 18M is reserved for the liquidity program
-- 12M is reserved for projectImplementationServices
+- 12M is reserved for kapitalized
 
 >Token depletion (all tokens sold out)
 
@@ -197,7 +250,7 @@ Upon contract initialisation:
 - Start and End dates are decided (these can be mutated)
 - Exchange rate is decided (this can be changed)
 
-Once the contract is launched, the `contractInitialAllocation` method is to be called immediately.  When this happens.
+Once the contract is launched, the `contractInitialAllocation` method is to be called immediately.  When this happens:
 
 - Private and Presale supply is subtracted from the total supply to prevent over sell
 - Tokens are transferred to the respective private and presale wallets
@@ -214,41 +267,38 @@ No tokens purchased can be traded until the ICO is closed, in perspective to the
 
 Token trade can be frozen by the owner. This contract is ERC20 compliant, however the transfer and tranferFrom method have requirements, the `canTrade` boolean needs to be set to true, which is controlled by the contract owner.
 
-Functions available:
+The TSD contract inherits from the BaseToken, giving it the core background of an ERC20 base standard contract, as well as the Ownable contract..
 
-- `balanceOf`
-> Returns the balance of an address
+Functions available:
+- `contractInitialAllocation`
+>Transfer all of the allocations. The inherited transfer method from the BaseToken, emits Transfer events and subtracts/adds respective amounts to respective accounts. Some wallets have tokens immediately allocated to them whilst others are given an escrowAllocation, i.e the supply amount it reduced, to accomodate for this allocation, however the target wallets cannot receive their tokens up until their respective escrowed time.
+- `escrowAccountAllocation`
+> Creates a struct containing token amount and escrow period - allocates this struct to an address in the *escrowBalances* mapping used as a reference in *withdrawFromEscrow*
+- `withdrawFromEscrow`
+> Can only be called by an escrowed wallet, i.e foundersAndAdvisors, bountyCommunityIncentives or projectImplementationServices. Checks to see if the current time is past the escrow period of the calling wallet, it sets the escrow balance of that wallet to 0 and allocates that escrowed amount to the calling wallet.
 - `toggleTrading`
-> Toggles the trading ability of TSD token holders (refer to the transfer and transferFrom method)
-- `createWhiteListedMapping`
-> Called externally to create whitelist for sale. Only whitelisted addresses can participate in the ico.
-- `changeOracleAddress`
-> Changes the oracle address which is used to update the ethExchangeRate
-- `updateTheExchangeRate`
-> This is called when the contract is constructed and by the oracle to update the rate periodically, this updates the ethToUSD exchange rate, the USD is calculated and maintained in cents
-- `buyTokens`
-> Is called through a fallback function which is payable to accept ether. It calculates the token amount, ensures the validations such as time range, minimum purchase amount, and whitelisted status of the buyer. If a buyer sends more ether than the total token amount, the remainder ETH is refunded to the buyer.
-- `setMainContractAddress✓`
-> Sets the main contract address reference, this instance is used during distribution of tokens
-- `burnRemainingTokens✓`
-> Burns the remaining tokens and updates the supply, a safety check is placed to ensure that its only called after the end time has concluded.
-- `setSubsequentContract✓`
+> Used to toggle the ability of trading, *canTrade* a boolean value used in the *transfer* and *transferFrom* methods
+- `burnRemainingTokensAfterClose`
+> Burns the remaining tokens and updates the supply, a safety check is placed to ensure that its only called after the end time has concluded. This method can be called by the private, pre or main funds wallets only
+- `transfer`
+> Consists of the inherited ERC20 standard transfer method, however is decorated with the *canTrade* boolean
+- `transferFrom`
+> Consists of the inherited ERC20 standard transferFrom method, however is decorated with the *canTrade* boolean
+- `setAuthorisedContractAddress`
+> Sets the crowndsale contract address or airdrop / designed to be used by any one external contract. This address is used in the modifier that guards *safeTranferFrom* which is explained next
+-`safeTransferFrom`
+> Implementation of the standard ERC20 *transferFrom* inherited from *BaseToken* decorated with an *isAuthorised* modifier. The concept of this function is to be used by the main *crowdsale contract* for immediate allocation of tokens, We can't use the traditional *transferFrom* methods because those are safeguarded with the *canTrade* boolean.
+- `setSubsequentContract`
 >  Sets the subsequent contract address
 - `increaseTotalSupplyAndAllocateTokens`
 >  Called by the subsequent contract, and is used to increase the total supply and allocate tokens to the new token wallet
 - `increaseEthRaisedBySubsequentSale`
 > Keeps track of the ETH raised and emits an event to reflect so
-- `setStartTime✓ & setEndTime✓`
+- `setStartTime & setEndTime`
 > Custom sets the start and end time
- - `escrowAccountAllocation`
-> Called internally within `contractInitialAllocation✓` to allocate a struct with amount and cliffTime
- - `withdrawFromEscrow✓`
-> Can be only called by the escrowed wallets and will only work once the respective wallet's escrow period has lapsed
-- `selfDestruct✓`
-> Kills the contract instance and its existence from the blockchain merkle tree
 ## Subsequent Contract
 
-The uniqueness of the Transcendence project is the close tie between the utility token and assets the tokens back in the eventual platform Transcendence will create.
+The uniqueness of the Transcendence project is the close tie between the utility token and assets the tokens back in the eventual platform Transcendence will create. This contract inherits from the *BaseCrowdsaleContract*
 
 The use of the subsequent contract will be to increase the supply of the TSD token and offer a additional token sale. The occurrence  of this would be in situations a new asset has entered the platform that cannot be backed by the current circulatory supply of TSD tokens.
 
@@ -262,9 +312,9 @@ Functions available:
 > Sets the exchange rate, which is dynamic per contract round, and sets the wallet that will initially hold the tokens
 - `increaseTotalSupplyAndAllocateTokens`
 > Sets the new token wallet in the main contract and allocates it the designated increased supply
-- `openSubsequentSale✓`
+- `openSubsequentSale`
 > The contract will by default state be shut, this function is accessible only by the owner (the person who deployed this contract in the first place) and sets the contract active
-- `closeSubsequentSale✓`
+- `closeSubsequentSale`
 > Closes the current active subsequent contract token sale
 - `buySubsequentTokens`
 > Considering we want to encourage people to buy through our dApp, we set this function to a payable modifier enabling it to receive real ETH, the tokens are calculated with the exchange rate, and the allocated to the sender in the main token sale

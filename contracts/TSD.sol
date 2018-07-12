@@ -97,8 +97,8 @@ contract TSD is BaseToken, Ownable {
         require(!isInitialAllocationDone, "Initial allocation has already completed");
 
         // Transfer all of the allocations
-        // The inherited transfer method from the StandardToken which inherits
-        // from BasicToken emits Transfer events and subtracts/adds respective
+        // The inherited transfer method from the BaseToken
+        // emits Transfer events and subtracts/adds respective
         // amounts to respective accounts
         // transfer tokens to account for the private sale
         super.transfer(pvtSaleTokenWallet, pvtSaleSupply);
@@ -109,6 +109,9 @@ contract TSD is BaseToken, Ownable {
         // tranfer tokens to the projectImplementationServices wallet
         super.transfer(projectImplementationServices, projectImplementationServicesAllocation.div(2));
 
+        // transfer tokens to the liquidity program account
+        super.transfer(liquidityProgram, liquidityProgramAllocation);
+
         // escrow tokens to projectImplementationServices account
         escrowAccountAllocation(projectImplementationServices, projectImplementationServicesAllocation.div(2), 1530528101291);
 
@@ -117,9 +120,6 @@ contract TSD is BaseToken, Ownable {
 
         // escrow tokens to bounty and community incentives account
         escrowAccountAllocation(bountyCommunityIncentives, bountyCommunityIncentivesAllocation, 1530533101291);
-
-        // transfer tokens to the liquidity program account
-        super.transfer(liquidityProgram, liquidityProgramAllocation);
 
         // set the initialAllocationDone value to true
         isInitialAllocationDone = true;
