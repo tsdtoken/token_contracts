@@ -89,7 +89,7 @@ contract TSD is BaseToken, Ownable {
         // Private, Presale and Mainsale token amount
         // + liquidityProgram + projectImplementationServices/2
         balances[fundsWallet] = distributionAllocation.add(liquidityProgramAllocation).add(projectImplementationServicesAllocation.div(2));
-        emit Transfer(0x0, fundsWallet, totalSupply);
+        emit Transfer(0x0, fundsWallet, balances[fundsWallet]);
     }
 
     function contractInitialAllocation() external onlyOwner {
@@ -154,6 +154,7 @@ contract TSD is BaseToken, Ownable {
 
         // allocate the sender with their respective escrowed amount
         balances[msg.sender] = amountToWithdraw;
+        emit Transfer(0x0, msg.sender, amountToWithdraw);
     }
  
     // Contract utility functions

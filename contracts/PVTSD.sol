@@ -56,7 +56,7 @@ contract PVTSD is BaseCrowdsaleContract {
         uint256 ethAmount = msg.value;
         // token amount based on ETH / exchangeRate result
         // exchange rate is 1 TSD => x ETH
-        // with a 40% discount attached
+        // with a 30% discount attached
         uint256 discountedExchangeRate = exchangeRate.mul(70).div(100);
         // totalTokenAmount is the total tokens offered including the discount
         // Multiply with the decimalMultiplier to get total tokens (to 18 decimal place)
