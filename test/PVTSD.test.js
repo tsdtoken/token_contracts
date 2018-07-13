@@ -140,7 +140,7 @@ contract('PVTSDMock', (accounts) => {
  it('accepts ether at the exact moment the sale opens', async () => {
     // buyer sends in 10 ether
     // discount of 30% is applied
-    // discounted exchangeRate is 0.7 ETH to 1,000,000 PVTSD
+    // discounted exchangeRate is 1 ETH to 1,000,000 PVTSD
     const newRate = 50000000;
     await PVTSDMockContract.updateTheExchangeRate(newRate);
     const startTime = await PVTSDMockContract.startTime();
