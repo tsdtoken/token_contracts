@@ -41,15 +41,11 @@ contract SecondaryCrowdsaleContract is BaseCrowdsaleContract {
     // _numberOfTransfers states the number of transfers that can happen at one time
     function distributeTokens(uint256 _numberOfTransfers) external onlyRestricted returns (bool) {
         require(currentTime() >= tokensReleaseDate, "can only distribute after tokensReleaseDate");
+        require(_numberOfTransfers > 0, "number of transfers must be more than zero");
+        require(currentDistributionIndex < icoParticipants.length, "all tokens have been distributed already");
         uint256 finalDistributionIndex = currentDistributionIndex.add(_numberOfTransfers);
 
         for (uint256 i = currentDistributionIndex; i < finalDistributionIndex; i++) {
-            // end for loop when currentDistributionIndex reaches the length of the icoParticipants array
-            if (i == icoParticipants.length) {
-                emit FinalDistributionToTSDContract(address(this), TSDContractAddress);
-                finalDistributionIndex = i;
-                break;
-            }
             // skip transfer if balances are empty
             if (balances[icoParticipants[i]] != 0) {
                 dc.transferFrom(distributionWallet, icoParticipants[i], balances[icoParticipants[i]]);
@@ -57,6 +53,12 @@ contract SecondaryCrowdsaleContract is BaseCrowdsaleContract {
 
                 // set balances to 0 to prevent re-transfer
                 balances[icoParticipants[i]] = 0;
+            }
+            // end for loop when currentDistributionIndex reaches the length of the icoParticipants array
+            if (i == icoParticipants.length - 1) {
+                emit FinalDistributionToTSDContract(address(this), TSDContractAddress);
+                finalDistributionIndex = i + 1;
+                break;
             }
         }
 
