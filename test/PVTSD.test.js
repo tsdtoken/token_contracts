@@ -403,6 +403,7 @@ contract('PVTSDMock', (accounts) => {
 
     assert.equal(isWhitelisted, false, 'Should not be whitelisted');
 
+<<<<<<< HEAD
   });
 
   it('ability to change the oracle address', async () => {
@@ -430,6 +431,11 @@ contract('PVTSDMock', (accounts) => {
     const buyerFiveAddress = await PVTSDMockContract.icoParticipants(0);
 
     assert.equal(buyerFiveAddress, buyerFive, 'Address is addedd to icoParticipantsList');
+=======
+  })
+
+  it('ability to add people to icoList via safeTransfer', async () => {
+>>>>>>> e139bc92d778af237dcba2768d28ed440c353f50
 
   })
 });
