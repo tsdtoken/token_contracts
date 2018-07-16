@@ -402,7 +402,6 @@ contract('PVTSDMock', (accounts) => {
     isWhitelisted = await PVTSDMockContract.whiteListed(accounts[1]);
 
     assert.equal(isWhitelisted, false, 'Should not be whitelisted');
-
   });
 
   it('ability to change the oracle address', async () => {
