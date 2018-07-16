@@ -139,6 +139,7 @@ contract BaseCrowdsaleContract is Ownable {
     }
 
     modifier onlyRestricted () {
+        require(msg.sender != address(0));
         require(msg.sender == owner || msg.sender == oracleAddress, "Unauthorized wallet");
         _;
     }
