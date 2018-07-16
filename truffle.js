@@ -11,7 +11,7 @@ module.exports = {
       host: 'localhost',
       port: 8545,
       network_id: '4224',
-      gas: 4800000
+      gas: 4900000
     },
     homeskills: {
       host: 'localhost',

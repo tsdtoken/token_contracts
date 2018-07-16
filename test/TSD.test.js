@@ -394,4 +394,41 @@ contract('TSDMock', (accounts) => {
     const newTokenWallet = accounts[firstAccountIdx+14];
     await assertExpectedError(TSDMockContract.increaseEthRaisedBySubsequentSale(1000000, { from: owner }));
   });
+
+ it('only owner can call setAuthorisedContractAddress', async () => {
+
+   await TSDMockContract.setAuthorisedContractAddress(buyerFour, { from: owner })
+
+   const currentAuthorisedContract = await TSDMockContract.authorisedContract();
+
+   assert.equal(currentAuthorisedContract, buyerFour, 'The authorised wallet should be buyerFour');
+
+   await assertExpectedError(TSDMockContract.setAuthorisedContractAddress(unlistedBuyer, { from: pvtSaleTokenWallet }));
+ })
+
+ it('can trade only when canTrade boolean is active', async () => {
+
+    const startTime = await TSDCrowdSaleMockContract.startTime();
+    await TSDCrowdSaleMockContract.changeTime(startTime.c[0]);
+    await TSDCrowdSaleMockContract.sendTransaction(buyTokens(10, buyerOne));
+
+    let canTradeState = await TSDMockContract.canTrade();
+
+    assert.equal(canTradeState, false, 'canTrade should be false');
+
+    await assertExpectedError(TSDMockContract.transfer(unlistedBuyer, 100, { from: buyerOne }));
+
+    await TSDMockContract.toggleTrading({ from: owner });
+
+    canTradeState = await TSDMockContract.canTrade();
+
+    assert.equal(canTradeState, true, 'canTrade should be true');
+
+    await TSDMockContract.transfer(unlistedBuyer, numToWei(100), { from: buyerOne });
+
+    const balanceOfReceiver = await TSDMockContract.balanceOf(unlistedBuyer);
+
+    assert.equal(numFromWei(balanceOfReceiver), 100, 'canTrade should be true');
+  
+  })
 })
