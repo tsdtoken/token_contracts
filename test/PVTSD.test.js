@@ -3,6 +3,7 @@ const TSDMock = artifacts.require("./TSDMock.sol");
 const TSDCrowdSaleMock = artifacts.require("./TSDCrowdSaleMock.sol");
 const moment = require('moment');
 const { stringFromWei, numFromWei, numToWei, buyTokens, assertExpectedError, equalsWithNormalizedRounding } = require('./testHelpers');
+require('truffle-test-utils').init();
 
 contract('PVTSDMock', (accounts) => {
   let PVTSDMockContract;
@@ -320,6 +321,9 @@ contract('PVTSDMock', (accounts) => {
       projectImplementationServices
     );
 
+    const mainTsdContractAddress = await TSDMockContract.address;
+
+
     const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
       currentTime,
       exchangeRate,
@@ -355,7 +359,17 @@ contract('PVTSDMock', (accounts) => {
     const firstBuyerPvtBal = await PVTSDMockContract.balanceOf(buyerSeven);
     const secondBuyerPvtBal = await PVTSDMockContract.balanceOf(buyerEight);
 
-    await PVTSDMockContract.distributeTokens(20, { from: owner });
+    const result = await PVTSDMockContract.distributeTokens(20, { from: owner });
+
+    // Check event
+    assert.web3Event(result, {
+      event: 'FinalDistributionToTSDContract',
+        args: {
+          _tsd: mainTsdContractAddress,
+          _presd: pvtContractAddress,
+          _finalWallet: buyerEight
+      }
+    }, 'The FinalDistributionToTSDContract event is emitted');
 
     // check the balance of the pvt sale buyer in the main contract
     const firstBuyerMainBal = await TSDMockContract.balanceOf(buyerSeven);
@@ -376,4 +390,46 @@ contract('PVTSDMock', (accounts) => {
     const startTime = await PVTSDMockContract.endTime();
     assert.equal(startTime, 1531576900000, 'The end date should change');
   });
+
+  it('ability to remove people from whitelist mapping', async () => {
+
+    let isWhitelisted = await PVTSDMockContract.whiteListed(accounts[1]);
+
+    assert.equal(isWhitelisted, true, 'Should be whitelisted');
+
+    await PVTSDMockContract.removeFromWhitelist(accounts[1], { from: owner });
+
+    isWhitelisted = await PVTSDMockContract.whiteListed(accounts[1]);
+
+    assert.equal(isWhitelisted, false, 'Should not be whitelisted');
+
+  });
+
+  it('ability to change the oracle address', async () => {
+
+    await assertExpectedError(PVTSDMockContract.updateTheExchangeRate(25000, { from: buyerFive }));
+
+    await PVTSDMockContract.changeOracleAddress(buyerFive, { from: owner });
+
+    await PVTSDMockContract.updateTheExchangeRate(25000, { from: buyerFive });
+
+    const ethExchangeRate = await PVTSDMockContract.ethExchangeRate();
+
+    assert.equal(ethExchangeRate, 25000, 'Should be 25000');
+
+  });
+
+  it('ability to safeTransfer to FIAT buyers and add them to icoParticipants', async () => {
+
+    await PVTSDMockContract.safeTransfer(buyerFive, numToWei(500), { from: owner });
+
+    const buyerFiveBalance = await PVTSDMockContract.balanceOf(buyerFive);
+
+    assert.equal(numFromWei(buyerFiveBalance), 500, 'Should be 500 PVTSD');
+
+    const buyerFiveAddress = await PVTSDMockContract.icoParticipants(0);
+
+    assert.equal(buyerFiveAddress, buyerFive, 'Address is addedd to icoParticipantsList');
+
+  })
 });

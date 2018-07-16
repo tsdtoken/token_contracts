@@ -241,16 +241,19 @@ contract TSD is BaseToken, Ownable {
 
      // modifiers
     modifier isSubsequentContract() {
+        require(msg.sender != address(0));
         require(msg.sender == subsequentContract, "sender is not subsequentContract");
         _;
     }
 
     modifier isAuthorisedContract() {
+        require(msg.sender != address(0));
         require(msg.sender == authorisedContract, "sender is not authorisedContract");
         _;
     }
 
     modifier isEscrowedWallet() {
+        require(msg.sender != address(0));
         // ensure it is only called by the two escrowed wallets
         require(msg.sender == foundersAndAdvisors || msg.sender == bountyCommunityIncentives || msg.sender == projectImplementationServices, "An unauthorised wallet tried to call this method");
         _;

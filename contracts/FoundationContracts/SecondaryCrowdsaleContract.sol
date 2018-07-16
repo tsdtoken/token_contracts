@@ -13,7 +13,7 @@ contract SecondaryCrowdsaleContract is BaseCrowdsaleContract {
     // Events
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
     event DistributedBalancesToTSDContract(address _presd, address _tsd, uint256 startIndex, uint256 endIndex);
-    event FinalDistributionToTSDContract(address _presd, address _tsd);
+    event FinalDistributionToTSDContract(address _presd, address _tsd, address _finalWallet);
 
     // After close functions
     // Burn any remaining tokens
@@ -56,7 +56,7 @@ contract SecondaryCrowdsaleContract is BaseCrowdsaleContract {
             }
             // end for loop when currentDistributionIndex reaches the length of the icoParticipants array
             if (i == icoParticipants.length - 1) {
-                emit FinalDistributionToTSDContract(address(this), TSDContractAddress);
+                emit FinalDistributionToTSDContract(address(this), TSDContractAddress, icoParticipants[i]);
                 finalDistributionIndex = i + 1;
                 break;
             }

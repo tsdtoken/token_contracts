@@ -20,7 +20,9 @@ contract BaseCrowdsaleContract is Ownable {
     uint256 public decimalMultiplier = uint256(10) ** decimals;
     uint256 public million = 1000000 * decimalMultiplier;
     uint256 public tokenPrice = 50; // 50 cents (USD) - this is discounted accordingly to contract that inherits this contract
+    // ETH => USD exchange rate
     uint256 public ethExchangeRate;
+    // ETH => TSD
     uint256 public exchangeRate;
     uint256 public totalEthRaised = 0;
 
@@ -139,6 +141,7 @@ contract BaseCrowdsaleContract is Ownable {
     }
 
     modifier onlyRestricted () {
+        require(msg.sender != address(0));
         require(msg.sender == owner || msg.sender == oracleAddress, "Unauthorized wallet");
         _;
     }
