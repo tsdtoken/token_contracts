@@ -52,6 +52,8 @@ contract TSDSubsequentSupply is BaseCrowdsaleContract {
     }
 
     function setTokenWalletAddressAndExchangeRate(address _newTokensWallet, address _newFundsWallet, uint256 _rate) external onlyOwner {
+        require(_newTokensWallet != 0x0, "newTokensWallet is an invalid wallet address");
+        require(_newFundsWallet != 0x0, "newFundsWallet is an invalid wallet address");
         updateTheExchangeRate(_rate);
         newFundsWallet = _newFundsWallet;
         newTokensWallet = _newTokensWallet;
@@ -64,7 +66,7 @@ contract TSDSubsequentSupply is BaseCrowdsaleContract {
         uint256 newTotalSupply = currentTotalSupply.add(increaseAmount);
         subsequentTotalSupply = increaseAmount;
         dc.increaseTotalSupplyAndAllocateTokens(newTokensWallet, increaseAmount);
-        emit IncreaseSupplyOfTSD(_amount);
+        emit IncreaseSupplyOfTSD(increaseAmount);
         emit NewTotalSupplyOfTSD(newTotalSupply);
     }
 

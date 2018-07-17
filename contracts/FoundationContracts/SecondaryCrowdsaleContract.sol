@@ -10,6 +10,9 @@ contract SecondaryCrowdsaleContract is BaseCrowdsaleContract {
     // wallet in the main contract used to convert PV/PRE to TSD
     address public distributionWallet;
 
+    // current distribution Index
+    uint256 public currentDistributionIndex = 0;
+
     // Events
     event UpdatedTotalSupply(uint256 oldSupply, uint256 newSupply);
     event DistributedBalancesToTSDContract(address _presd, address _tsd, uint256 startIndex, uint256 endIndex);

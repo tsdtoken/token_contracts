@@ -47,13 +47,11 @@ contract BaseCrowdsaleContract is Ownable {
     // When all tokens are sold this value will be set to false
     bool public tokensAvailable = true;
 
-    // current distribution Index
-    uint256 public currentDistributionIndex = 0;
-
     // Events
     event EthRaisedUpdated(uint256 oldEthRaisedVal, uint256 newEthRaisedVal);
     event ExchangeRateUpdated(uint256 prevExchangeRate, uint256 newExchangeRate);
     event Transfer(address from, address to, uint256 value);
+    event SafeTransfer(address from, address to, uint256 value);
 
     // Contract utility functions
     function currentTime() public view returns (uint256) {
@@ -136,7 +134,8 @@ contract BaseCrowdsaleContract is Ownable {
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
         emit Transfer(msg.sender, _to, _value);
-
+        // custom SafeTransfer event to signify an off-chain transaction (manual FIAT payment allocation)
+        emit SafeTransfer(msg.sender, _to, _value);
         return true;
     }
 

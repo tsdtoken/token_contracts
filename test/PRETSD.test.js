@@ -267,12 +267,12 @@ contract('PRETSDMock', (accounts) => {
     // T4 => 55.2 ETH
 
     // check the total cost of all remaining tokens (240,000,000 PRETSD)
-    const totalCost = await PRETSDMockContract.calculateTotalRemainingTokenCost();
+    // const totalCost = await PRETSDMockContract.calculateTotalRemainingTokenCost();
     // you'd buy out first three tranches
     await PRETSDMockContract.sendTransaction(buyTokens(151.2, buyerThree));
     // remaining tokens are now 60,000,000
     // remaining tokens cost 55.5 eth with the discount and increased exchange rate.
-    const newTotalCost = await PRETSDMockContract.calculateTotalRemainingTokenCost();
+    // const newTotalCost = await PRETSDMockContract.calculateTotalRemainingTokenCost();
     const costOfRemainingTokens = 55.2;
     // buyers balance before tx
     const fundsWalletEthBalPrior = web3.eth.getBalance(tokenFundsWallet);

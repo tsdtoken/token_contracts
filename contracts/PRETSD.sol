@@ -125,7 +125,7 @@ contract PRETSD is SecondaryCrowdsaleContract {
         }
     }
 
-    function calculateTotalRemainingTokenCost() public view returns(uint256) {
+    function calculateTotalRemainingTokenCost() internal view returns(uint256) {
         uint256 totalCost = 0;
         uint256 sold = totalSupply.sub(balances[tokenFundsWallet]);
         // Calculate the remaining tranche tokens.
@@ -150,7 +150,7 @@ contract PRETSD is SecondaryCrowdsaleContract {
         return totalCost;
     }
 
-    function calculateTokenAmountWithDiscounts(uint256 _ethAmount) public view returns(uint256) {
+    function calculateTokenAmountWithDiscounts(uint256 _ethAmount) internal view returns(uint256) {
         uint256 returnTokens = 0;
         uint256 tokensFromTranche = 0;
         uint256 ethRemaining = _ethAmount;

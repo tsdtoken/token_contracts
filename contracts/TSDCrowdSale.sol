@@ -9,9 +9,6 @@ contract TSDCrowdSale is BaseCrowdsaleContract {
     // Wallets
     address public fundsWallet;
 
-    // ico concluded due to all tokens sold
-    bool public tokensAvailable = true;
-
     // events
     event IncreaseTotalSupply(uint256 additionalSupply);
 
