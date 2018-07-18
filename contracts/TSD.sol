@@ -88,6 +88,7 @@ contract TSD is BaseToken, Ownable {
         // transfer total tradeable suppy to the funds wallet
         // Private, Presale and Mainsale token amount
         // + liquidityProgram + projectImplementationServices/2
+        // = 504 M tokens
         balances[fundsWallet] = distributionAllocation.add(liquidityProgramAllocation).add(projectImplementationServicesAllocation.div(2));
         emit Transfer(0x0, fundsWallet, balances[fundsWallet]);
     }
