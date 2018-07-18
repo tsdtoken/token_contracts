@@ -85,6 +85,7 @@ contract BaseCrowdsaleContract is Ownable {
     // Updates the ETH => TSD exchange rate
     // This is called when the contract is constructed and by the oracle to update the rate periodically
     function updateTheExchangeRate(uint256 _newRate) public onlyRestricted returns (bool) {
+        require(_newRate != 0, "new ETH=>USD rate cannot be 0");
         ethExchangeRate = _newRate;
         uint256 currentRate = exchangeRate;
         uint256 oneSzabo = 1 szabo;

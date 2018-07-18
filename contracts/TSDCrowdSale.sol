@@ -9,9 +9,6 @@ contract TSDCrowdSale is BaseCrowdsaleContract {
     // Wallets
     address public fundsWallet;
 
-    // events
-    event IncreaseTotalSupply(uint256 additionalSupply);
-
     constructor(
         uint256 _ethExchangeRate,
         address _fundsWallet
