@@ -37,7 +37,7 @@ contract TSDSubsequentSupply is BaseCrowdsaleContract {
 
     function openSubsequentSale() external onlyOwner returns (bool) {
         require(newTokensWallet != 0x0, "newTokensWallet is an invalid wallet address");
-        require(_newFundsWallet != 0x0, "newFundsWallet is an invalid wallet address");
+        require(newFundsWallet != 0x0, "newFundsWallet is an invalid wallet address");
         require(exchangeRate != 0, "exchange rate is 0");
         isOpen = true;
 

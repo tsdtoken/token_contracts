@@ -323,7 +323,6 @@ contract('PVTSDMock', (accounts) => {
 
     const mainTsdContractAddress = await TSDMockContract.address;
 
-
     const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
       currentTime,
       exchangeRate,
@@ -420,15 +419,56 @@ contract('PVTSDMock', (accounts) => {
 
   it('ability to safeTransfer to FIAT buyers and add them to icoParticipants', async () => {
 
+    const pvtSaleTokenWallet = accounts[8];
+    const preSaleTokenWallet = accounts[9];
+    const foundersAndAdvisors = accounts[10];
+    const bountyCommunityIncentive = accounts[11];
+    const liquidityProgram = accounts[12];
+    const projectImplementationServices = accounts[13];
+    const pvtContractAddress = await PVTSDMockContract.address;
+
+    // set up a reference to the main contract
+    const TSDMockContract = await TSDMock.new(
+      currentTime,
+      pvtSaleTokenWallet,
+      preSaleTokenWallet,
+      foundersAndAdvisors,
+      bountyCommunityIncentive,
+      liquidityProgram,
+      projectImplementationServices
+    );
+    // contract token allocations
+    await TSDMockContract.contractInitialAllocation({ from: owner });
+
+    // set distribution wallet
+    await PVTSDMockContract.setDistributionWallet(pvtSaleTokenWallet, { from: owner })
+
+    // get balance of pvtwallet in main tsd contract
+    const mainContractPvtTokenAllocation = await TSDMockContract.balanceOf(pvtSaleTokenWallet);
+
+    // safeTransfer PVTSD tokens to buyerFive
     await PVTSDMockContract.safeTransfer(buyerFive, numToWei(500), { from: owner });
-
     const buyerFiveBalance = await PVTSDMockContract.balanceOf(buyerFive);
-
     assert.equal(numFromWei(buyerFiveBalance), 500, 'Should be 500 PVTSD');
-
     const buyerFiveAddress = await PVTSDMockContract.icoParticipants(0);
+    assert.equal(buyerFiveAddress, buyerFive, 'Address is added to icoParticipantsList');
 
-    assert.equal(buyerFiveAddress, buyerFive, 'Address is addedd to icoParticipantsList');
+    // set virtual time to tokenReleaseDate
+    const tokensReleaseDate = await PVTSDMockContract.tokensReleaseDate();
+    await PVTSDMockContract.changeTime(tokensReleaseDate);
+    await TSDMockContract.changeTime(tokensReleaseDate);
+    // approve pvtContractAddress to spend 144M on behalf of pvtwallet
+    await TSDMockContract.approve(pvtContractAddress, mainContractPvtTokenAllocation, { from: pvtSaleTokenWallet });
+    //toggle trading
+    await TSDMockContract.toggleTrading();
+    // set a reference to the main contract address
+    await PVTSDMockContract.setMainContractAddress(TSDMockContract.address, { from: owner });
+    
+    // call distribute
+    await PVTSDMockContract.distributeTokens(20, { from: owner });
 
+    // const buyerFiveMainBal = await TSDMockContract.balanceOf(buyerFive);
+
+    // assert.equal(numFromWei(buyerFiveBalance), numFromWei(buyerFiveMainBal));
   })
 });

@@ -3,6 +3,7 @@ const TSDMock = artifacts.require("./TSDMock.sol");
 const TSDCrowdSaleMock = artifacts.require("./TSDCrowdSaleMock.sol");
 const moment = require('moment');
 const { numFromWei, stringFromWei, numToWei, buyTokens, assertExpectedError, equalsWithNormalizedRounding } = require('./testHelpers');
+require('truffle-test-utils').init();
 
 contract('PRETSDMock', (accounts) => {
   let PRETSDMockContract;
@@ -356,6 +357,8 @@ contract('PRETSDMock', (accounts) => {
       projectImplementationServices
     );
 
+    const mainTsdContractAddress = await TSDMockContract.address;
+
     const TSDCrowdSaleMockContract = await TSDCrowdSaleMock.new(
       currentTime,
       exchangeRate,
@@ -388,7 +391,17 @@ contract('PRETSDMock', (accounts) => {
     const firstBuyerPreBal = await PRETSDMockContract.balanceOf(buyerSeven);
     const secondBuyerPreBal = await PRETSDMockContract.balanceOf(buyerEight);
     
-    await PRETSDMockContract.distributeTokens(20, { from: owner });
+    const result = await PRETSDMockContract.distributeTokens(20, { from: owner });
+
+    // Check event
+    assert.web3Event(result, {
+      event: 'FinalDistributionToTSDContract',
+        args: {
+          _tsd: mainTsdContractAddress,
+          _presd: preContractAddress,
+          _finalWallet: buyerEight
+      }
+    }, 'The FinalDistributionToTSDContract event is emitted');
     
     // check the balance of the pvt sale buyer in the main contract
     const firstBuyerMainBal = await TSDMockContract.balanceOf(buyerSeven);
@@ -409,4 +422,43 @@ contract('PRETSDMock', (accounts) => {
     const startTime = await PRETSDMockContract.endTime();
     assert.equal(startTime, 1534870000000, 'The end date should change');
   });
+
+  it('ability to remove people from whitelist mapping', async () => {
+
+    let isWhitelisted = await PRETSDMockContract.whiteListed(buyerOne);
+    assert.equal(isWhitelisted, true, 'Should be whitelisted');
+
+    await PRETSDMockContract.removeFromWhitelist(buyerOne, { from: owner });
+
+    isWhitelisted = await PRETSDMockContract.whiteListed(buyerOne);
+    assert.equal(isWhitelisted, false, 'Should not be whitelisted');
+  });
+
+  it('ability to change the oracle address', async () => {
+
+    await assertExpectedError(PRETSDMockContract.updateTheExchangeRate(25000, { from: buyerFive }));
+
+    await PRETSDMockContract.changeOracleAddress(buyerFive, { from: owner });
+
+    await PRETSDMockContract.updateTheExchangeRate(25000, { from: buyerFive });
+
+    const ethExchangeRate = await PRETSDMockContract.ethExchangeRate();
+
+    assert.equal(ethExchangeRate, 25000, 'Should be 25000');
+
+  });
+
+  it('ability to safeTransfer to FIAT buyers and add them to icoParticipants', async () => {
+
+    await PRETSDMockContract.safeTransfer(buyerFive, numToWei(500), { from: owner });
+
+    const buyerFiveBalance = await PRETSDMockContract.balanceOf(buyerFive);
+
+    assert.equal(numFromWei(buyerFiveBalance), 500, 'Should be 500 PRETSD');
+
+    const buyerFiveAddress = await PRETSDMockContract.icoParticipants(0);
+
+    assert.equal(buyerFiveAddress, buyerFive, 'Address is addedd to icoParticipantsList');
+
+  })
 });
