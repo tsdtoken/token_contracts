@@ -22,7 +22,7 @@ contract BaseCrowdsaleContract is Ownable {
     uint256 public tokenPrice = 50; // 50 cents (USD) - this is discounted accordingly to contract that inherits this contract
     // ETH => USD exchange rate
     uint256 public ethExchangeRate;
-    // ETH => TSD
+    // ETH => TSD / cost of 1 TSD in ETH
     uint256 public exchangeRate;
     uint256 public totalEthRaised = 0;
 
@@ -91,6 +91,7 @@ contract BaseCrowdsaleContract is Ownable {
         uint256 oneSzabo = 1 szabo;
         // 1 ETH = 1000000 szabo
         // The exchangerate is saved in Szabo.
+        // 0.000001 ETH * 50 cents * 1000000 / _newRate => cost of 1 TSD in ETH
         exchangeRate = oneSzabo.mul(tokenPrice).mul(1000000).div(_newRate);
         emit ExchangeRateUpdated(currentRate, exchangeRate);
         return true;

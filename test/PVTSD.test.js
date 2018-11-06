@@ -76,10 +76,10 @@ contract('PVTSDMock', (accounts) => {
     assert.equal(dateString.getTime(), 1555250400000);
   });
 
- it('transfers total supply of tokens (144 million) to the private funds wallet', async () => {
+ it('transfers total supply of tokens (62.5 million) to the private funds wallet', async () => {
     const tokenFundsWallet = owner;
     const tokenFundsWalletBalance = await PVTSDMockContract.balanceOf(tokenFundsWallet);
-    assert.equal(numFromWei(tokenFundsWalletBalance), 144000000, 'Balance of tokenFundsWallet should be 144 million');
+    assert.equal(numFromWei(tokenFundsWalletBalance), 62500000, 'Balance of tokenFundsWallet should be 62.5 million');
   });
 
  it('can tell you if an address is whitelisted', async () => {
@@ -150,8 +150,8 @@ contract('PVTSDMock', (accounts) => {
     const balanceOfBuyer = await PVTSDMockContract.balanceOf(buyerOne);
     const remainingTokens = await PVTSDMockContract.balanceOf(tokenFundsWallet);
     assert.equal(numFromWei(balanceOfBuyer), 10000000, 'The buyers balance should 10,000,000 tokens')
-    assert.equal(numFromWei(remainingTokens), 134000000, 'The remaining tokens should be 134,000,000')
-  });
+    assert.equal(numFromWei(remainingTokens), 52500000, 'The remaining tokens should be 52,500,000')
+  });7
 
  it('applies a 30% discount on token sales', async () => {
     const newRate = 50000000;
@@ -175,7 +175,7 @@ contract('PVTSDMock', (accounts) => {
     assert.equal(addressAtZeroInx, buyerSix, `The first address in the array should be buyer three ${buyerThree}`);
   });
 
- it('transfers the ether to the funds wallet', async () => {
+ it('transfers the ether to the funds wallet and returns surplus', async () => {
     const newRate = 50000000;
     // New rate is set to 1 ETH == 1,000,000 TSD
     await PVTSDMockContract.updateTheExchangeRate(newRate);
@@ -186,7 +186,7 @@ contract('PVTSDMock', (accounts) => {
     const balPostEthTransfer = web3.eth.getBalance(tokenFundsWallet);
     const weiPostTransfer = numFromWei(balPostEthTransfer);
     const weiPriorTransfer = numFromWei(balPriorEthTransfer);
-    assert.ok(equalsWithNormalizedRounding((weiPostTransfer - weiPriorTransfer), 50), 'Funds wallet should have received 50 ether from the sale');
+    assert.ok(equalsWithNormalizedRounding((weiPostTransfer - weiPriorTransfer), 43.75), 'Funds wallet should have received 43.75 ether from the sale as 6.25 is returned');
   });
 
  it('rejects ether from an address that isn\'t whitelisted', async () => {
@@ -214,22 +214,22 @@ contract('PVTSDMock', (accounts) => {
     const startTime = await PVTSDMockContract.startTime();
     await PVTSDMockContract.changeTime(startTime.c[0]);
     await PVTSDMockContract.updateTheExchangeRate(inflatedExchangeRate);
-    // Total ETH to buy deplete supply = 100.8 ETH
-    // first purchase removes 71,428,571.428571428571428571
-    await PVTSDMockContract.sendTransaction(buyTokens(50, buyerThree));
-    // // remaining tokens are now 72,571,428.571428571428571429
-    // // buyer should be allowed to purchase 72,571,428.571428571428571429 Tokens
-    // // rate will be 72,571,428.571428571428571429 tokens at the rate of 1 TSD => 0.00000035 ETH (discounted rate)
-    // // this should cost the user 7.75ETH
-    const costOfRemainingTokens = 50.8;
-    // // buyer should be transfered the 5 million tokens
-    // // 7.75 ether should be transfered to the funds wallet
-    // // buyer should be returned 12.25 eth - tx costs
+    // Total ETH to buy deplete supply = 43.75 ETH
+    // first purchase removes 14,285,714.28571428571429
+    await PVTSDMockContract.sendTransaction(buyTokens(10, buyerThree));
+    // // remaining tokens are now 625000000 - 14,285,714.28571428571429 = 48214285.71428571428571
+    // // buyer should be allowed to purchase 48214285.71428571428571 Tokens
+    // // rate will be 48214285.71428571428571 tokens at the rate of 1 TSD => 0.0000007 ETH (discounted rate)
+    // // this should cost the user 33.75ETH
+    const costOfRemainingTokens = 33.75;
+    // // buyer should be transfered the 48214285.71428571428571 tokens
+    // // 33.75 ether should be transfered to the funds wallet
+    // // buyer should be returned 6.25 eth - tx costs
     // // buyers balance before tx
     const fundsWalletEthBalPrior = web3.eth.getBalance(tokenFundsWallet);
     const buyerEThBalPrior = web3.eth.getBalance(buyerFour).toNumber();
     // ERROR IS IN THIS CALL.
-    const tx = await PVTSDMockContract.sendTransaction(buyTokens(63.05, buyerFour));
+    const tx = await PVTSDMockContract.sendTransaction(buyTokens(40, buyerFour));
     // balances after sale
     const fundsWalletEthBalPost = web3.eth.getBalance(tokenFundsWallet);
     const buyerTokenBalance = await PVTSDMockContract.balanceOf(buyerFour);
@@ -241,7 +241,7 @@ contract('PVTSDMock', (accounts) => {
     // this is to handle a javascript rounding error
     const finalFundsWalletBal = (numFromWei(fundsWalletEthBalPrior) * 10000000 + costOfRemainingTokens * 10000000) / 10000000;
     const bnExpectedEthBal = new web3.BigNumber(expectedEthBal.toString());
-    assert.equal(stringFromWei(buyerTokenBalance), 72571428.57142857, 'Buyer should be transfered the remaining tokens');
+    assert.equal(stringFromWei(buyerTokenBalance), 48214285.714285714286, 'Buyer should be transfered the remaining tokens');
     assert.ok(equalsWithNormalizedRounding(numFromWei(buyerEThBalPost), numFromWei(bnExpectedEthBal)), 'The current balance should equal before total - (token cost + transaction cost)');
     assert.equal(tokensRemaining, 0, 'There should be no remaining tokens');
     assert.ok(equalsWithNormalizedRounding(finalFundsWalletBal, numFromWei(fundsWalletEthBalPost)));
@@ -255,7 +255,7 @@ contract('PVTSDMock', (accounts) => {
     const tokenBal = await PVTSDMockContract.balanceOf(tokenFundsWallet);
     const burnTokens = await PVTSDMockContract.burnRemainingTokens({ from: owner });
     const tokenBalPost = await PVTSDMockContract.balanceOf(tokenFundsWallet);
-    assert.equal(numFromWei(tokenBal), 144000000, 'The first token balance should be all tokens 55 million');
+    assert.equal(numFromWei(tokenBal), 62500000, 'The first token balance should be all tokens 62.5 million');
     assert.equal(tokenBalPost, 0, 'There should be 0 tokens after the burn');
     assert.ok(burnTokens)
   });

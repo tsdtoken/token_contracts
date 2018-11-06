@@ -14,7 +14,7 @@ contract PVTSD is SecondaryCrowdsaleContract {
         uint256 _ethExchangeRate
     ) public {
         // Set Total Supply
-        totalSupply = 144 * million;
+        totalSupply = 625 * 100000 * decimalMultiplier;
 
         tokenFundsWallet = owner;
 

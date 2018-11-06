@@ -71,7 +71,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     TSDSubsequentContractAddress = await TSDSubsequentSupplyContract.address;
   });
 
- it('can set the token wallet address and exchange rate by owner', async () => {
+ xit('can set the token wallet address and exchange rate by owner', async () => {
     await TSDSubsequentSupplyContract.setTokenWalletAddressAndExchangeRate(newTokensWallet, newFundsWallet, exchangeRate, { from: owner })
     const fundsWallet = await TSDSubsequentSupplyContract.newFundsWallet();
     const tokensWallet = await TSDSubsequentSupplyContract.newTokensWallet();
@@ -83,11 +83,11 @@ contract('TSDSubsequentSupply', (accounts) => {
     assert.equal(tokensWallet, newTokensWallet, `New funds wallet should be set to ${newTokensWallet}`);
   });
 
- it('cannot set the token wallet address and exchange rate by a different address', async () => {
+ xit('cannot set the token wallet address and exchange rate by a different address', async () => {
     await assertExpectedError(TSDSubsequentSupplyContract.setTokenWalletAddressAndExchangeRate(newTokensWallet, newFundsWallet, exchangeRate, { from: buyerOne }));
   });
 
- it('can change the token price as the owner', async () => {
+ xit('can change the token price as the owner', async () => {
     const tokenPricePrior = await TSDSubsequentSupplyContract.tokenPrice();
     await TSDSubsequentSupplyContract.updateTokenPrice(10, { from: owner });
     const tokenPricePost = await TSDSubsequentSupplyContract.tokenPrice();
@@ -95,11 +95,11 @@ contract('TSDSubsequentSupply', (accounts) => {
     assert.equal(10, tokenPricePost, 'New Token price should match 10.');
   });
 
- it('cannot change the token price if not the owner', async () => {
+ xit('cannot change the token price if not the owner', async () => {
     await assertExpectedError(TSDSubsequentSupplyContract.updateTokenPrice(10, { from: buyerOne }));
   });
 
- it('creates a mapping of all whitelisted addresses', async () => {
+ xit('creates a mapping of all whitelisted addresses', async () => {
     // manually set up the whitelist inside the contract
     await TSDSubsequentSupplyContract.createWhiteListedMapping(whitelistAddresses, { from: owner });
     // Upon initialization of the contract, whitelisted addresses are placed into a mapping with the value of true
@@ -112,7 +112,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     assert.equal(thirdWhitelistAddress, true, 'Address should exist in the whiteListed mapping with a value of true');
   });
 
- it('can tell you if an address is whitelisted', async () => {
+ xit('can tell you if an address is whitelisted', async () => {
     await TSDSubsequentSupplyContract.createWhiteListedMapping(whitelistAddresses, { from: owner });
     const whitelisted = await TSDSubsequentSupplyContract.whiteListed(buyerOne);
     const unlisted = await TSDSubsequentSupplyContract.whiteListed(unlistedBuyer);
@@ -120,7 +120,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     assert.equal(unlisted, false, 'Address should not be part of the white list');
   });
 
- it('can increase the total supply in the main contract and allocate tokens to new token wallet', async () => {
+ xit('can increase the total supply in the main contract and allocate tokens to new token wallet', async () => {
     // set all necessary values in subsequent contract
     await TSDSubsequentSupplyContract.setTokenWalletAddressAndExchangeRate(newTokensWallet, newFundsWallet, exchangeRate, { from: owner });
     // set subsequent contract address in main contract
@@ -134,7 +134,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     assert.equal(numFromWei(newTokensWalletBal), 5000000, 'Balance of newTokensWallet should be 5 million');
   });
 
- it('can open the subsequent token sale when called by the owner', async () => {
+ xit('can open the subsequent token sale when called by the owner', async () => {
     // set all necessary values in subsequent contract
     await TSDSubsequentSupplyContract.setTokenWalletAddressAndExchangeRate(newTokensWallet, newFundsWallet, exchangeRate, { from: owner });
     await TSDSubsequentSupplyContract.openSubsequentSale({ from: owner });
@@ -142,7 +142,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     assert.ok(isOpen);
   });
 
- it('cannot open the subsequent token sale when called by a different address', async () => {
+ xit('cannot open the subsequent token sale when called by a different address', async () => {
     // set all necessary values in subsequent contract
     await TSDSubsequentSupplyContract.setTokenWalletAddressAndExchangeRate(newTokensWallet, newFundsWallet, exchangeRate, { from: owner });
     await assertExpectedError(TSDSubsequentSupplyContract.openSubsequentSale({ from: buyerOne }));
@@ -150,7 +150,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     assert.ok(!isOpen);
   });
 
- it('can close the subsequent token sale when called by the owner', async () => {
+ xit('can close the subsequent token sale when called by the owner', async () => {
     // set all necessary values in subsequent contract
     await TSDSubsequentSupplyContract.setTokenWalletAddressAndExchangeRate(newTokensWallet, newFundsWallet, exchangeRate, { from: owner });
     await TSDSubsequentSupplyContract.closeSubsequentSale({ from: owner });
@@ -158,7 +158,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     assert.ok(!isOpen);
   });
 
- it('cannot close the subsequent token sale when called by a different address', async () => {
+ xit('cannot close the subsequent token sale when called by a different address', async () => {
     // set all necessary values in subsequent contract
     await TSDSubsequentSupplyContract.setTokenWalletAddressAndExchangeRate(newTokensWallet, newFundsWallet, exchangeRate, { from: owner });
     await TSDSubsequentSupplyContract.openSubsequentSale({ from: owner });
@@ -167,7 +167,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     assert.ok(isOpen);
   });
 
- it('accepts ether when sale is open', async () => {
+ xit('accepts ether when sale is open', async () => {
     // exchange rate 1000 szabo or 0.001ETH
     // buyer sends in 10 ether
     // 10ETH / 0.001 = 10000 Tokens
@@ -204,7 +204,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     assert.ok(equalsWithNormalizedRounding(numFromWei(ethBalOfNewFundsWalletPrior) + 10, numFromWei(ethBalOfNewFundsWalletPost)));
   });
 
- it('does not accept ether when sale is closed', async () => {
+ xit('does not accept ether when sale is closed', async () => {
     // exchange rate 1000 szabo or 0.001ETH
     // buyer sends in 10 ether
     // 10ETH / 0.001 = 10000 Tokens
@@ -229,7 +229,7 @@ contract('TSDSubsequentSupply', (accounts) => {
     await assertExpectedError(TSDSubsequentSupplyContract.sendTransaction(buyTokens(10, buyerOne)));
   });
 
- it('sells the last remaining tokens and issues a refund for ether unspent, closes sale', async () => {
+ xit('sells the last remaining tokens and issues a refund for ether unspent, closes sale', async () => {
     // exchange rate 1000 szabo or 0.001ETH
     // buyer sends in 10 ether
     // 10ETH / 0.001 = 10000 Tokens
